@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>돌고래 - 정보 탐색</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #eeeffe;
+            --bg-light: #f8fafc;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --border: #e2e8f0;
+            --accent: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        body {
+            color: var(--text-main);
+            background-color: var(--bg-light);
+            padding-top: 70px;
+        }
+
+        /* 0. 상단 네비게이션 (고정) */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 1.25rem; font-weight: 800; color: var(--primary); letter-spacing: -1px; text-decoration: none; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-main);
+            margin-left: 2rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+
+        /* 메인 레이아웃 컨테이너 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+        }
+
+        /* 1. 기능: 통합 검색 섹션 (추천 검색어 제거로 더욱 심플해진 구조) */
+        .search-wrapper {
+            background: #ffffff;
+            padding: 3rem 2.5rem;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .search-wrapper h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+        .search-bar {
+            display: flex;
+            max-width: 700px;
+            margin: 0 auto;
+            border: 2px solid var(--primary);
+            border-radius: 50px;
+            overflow: hidden;
+            background: #ffffff;
+        }
+        .search-bar input {
+            flex: 1;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            outline: none;
+        }
+        .search-bar button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .search-bar button:hover { background: #3730a3; }
+
+        /* 콘텐츠 2분할 구조 (좌: 맞춤 추천 / 우: 서류 가이드) */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 7fr 4fr;
+            gap: 2rem;
+        }
+
+        /* 2. 기능: 맞춤 정책 추천 섹션 */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-condition-badge {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+        }
+
+        .policy-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .policy-item {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .policy-item:hover, .policy-item.selected {
+            border-color: var(--primary);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
+        }
+        .policy-item.selected {
+            background-color: #fbfbfe;
+        }
+        
+        .policy-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+        .policy-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: var(--text-sub);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        .d-day-badge {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            background: #fee2e2;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+        .policy-item h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .policy-desc {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 1rem;
+        }
+        .policy-meta {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* 3. 기능: 서류 준비 가이드 섹션 (사이드바 고정형) */
+        .guide-sidebar {
+            position: sticky;
+            top: 90px;
+            height: fit-content;
+        }
+        .guide-box {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01);
+        }
+        .guide-target-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        
+        .document-checklist {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .doc-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 10px;
+            background: var(--bg-light);
+            font-size: 0.9rem;
+        }
+        .doc-item input[type="checkbox"] {
+            margin-top: 0.2rem;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+        .doc-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .doc-name { font-weight: 600; }
+        .doc-hint { font-size: 0.75rem; color: var(--text-sub); margin-top: 0.25rem; }
+        
+        .btn-doc-link {
+            display: block;
+            text-align: center;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            transition: background 0.2s;
+        }
+        .btn-doc-link:hover { background: #3730a3; }
+
+        /* 반응형 레이아웃 처리 */
+        @media (max-width: 1024px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .guide-sidebar { position: static; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-inner">
+            <a href="home.html" class="logo">🐬 청년정책 돌고래</a>
+            <div class="nav-links">
+                <a href="home.html" id="nav-home">홈</a>
+                <a href="explore.html" id="nav-explore">정보 탐색</a>
+                <a href="community.html" id="nav-community">커뮤니티</a>
+                <a href="mypage.html" id="nav-mypage">마이페이지</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <section class="search-wrapper">
+            <h2>어떤 혜택을 찾고 계신가요?</h2>
+            <div class="search-bar">
+                <input type="text" placeholder="정책명, 자격요건, 관심 분야를 입력하세요 (예: 월세, 청년도약)">
+                <button>검색</button>
+            </div>
+        </section>
+
+        <div class="content-grid">
+            
+            <section>
+                <div class="section-title">
+                    <span>추천 정책 결과</span>
+                    <span class="user-condition-badge">👤 만 25세 · 서울 거주 · 소득 1순위 조건 맞춤</span>
+                </div>
+                
+                <div class="policy-list">
+                    <div class="policy-item selected">
+                        <div class="policy-top">
+                            <span class="policy-tag" style="color: #2563eb; background: #dbeafe;">주거금융</span>
+                            <span class="d-day-badge">D-3</span>
+                        </div>
+                        <h3>서울시 청년월세 특별지원 사업</h3>
+                        <p class="policy-desc">서울에 거주하는 무주택 청년들의 주거비 부담을 덜어주기 위해 월 최대 20만 원씩 최대 12달 동안 월세를 지원하는 정책입니다.</p>
+                        <div class="policy-meta">
+                            <span>📍 서울특별시</span>
+                            <span>💰 월 최대 20만원</span>
+                            <span>⏱️ ~ 2026.05.23 마감</span>
+                        </div>
+                    </div>
+
+                    <div class="policy-item">
+                        <div class="policy-top">
+                            <span class="policy-tag" style="color: #16a34a; background: #dcfce7;">자산형성</span>
+                            <span class="d-day-badge" style="color:#16a34a; background:#dcfce7;">상시모집</span>
+                        </div>
+                        <h3>정부 청년도약계좌 (연계 가입)</h3>
+                        <p class="policy-desc">청년의 중장기 자산형성을 지원하기 위해 매월 일정 금액을 저축하면 정부 기여금을 매칭하고 비과세 혜택을 주는 계좌입니다.</p>
+                        <div class="policy-meta">
+                            <span>📍 전국 공통</span>
+                            <span>💰 만기 시 최대 5천만원 안팎</span>
+                            <span>⏱️ 매월 초 접수</span>
+                        </div>
+                    </div>
+
+                    <div class="policy-item">
+                        <div class="policy-top">
+                            <span class="policy-tag" style="color: #ea580c; background: #ffedd5;">취업지원</span>
+                            <span class="d-day-badge">D-12</span>
+                        </div>
+                        <h3>청년 자격증 시험 응시료 지원</h3>
+                        <p class="policy-desc">구직 활동 중인 청년들의 경제적 부담을 완화하기 위해 토익, 컴활, 기사 자격증 등 시험 응시료의 80%를 지원합니다.</p>
+                        <div class="policy-meta">
+                            <span>📍 고용노동부</span>
+                            <span>💰 연 최대 10만원</span>
+                            <span>⏱️ 예산 소진 시 마감</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="guide-sidebar">
+                <div class="section-title">
+                    <span>서류 준비 가이드</span>
+                </div>
+                <div class="guide-box">
+                    <div class="guide-target-title">📌 서울시 청년월세 특별지원</div>
+                    
+                    <ul class="document-checklist">
+                        <li class="doc-item">
+                            <input type="checkbox" id="doc1" checked>
+                            <div class="doc-info">
+                                <label for="doc1" class="doc-name" style="text-decoration: line-through; color: #94a3b8;">주민등록등본</label>
+                                <span class="doc-hint">정부24에서 온라인 무료 발급 가능</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="doc2">
+                            <div class="doc-info">
+                                <label for="doc2" class="doc-name">임대차계약서 사본</label>
+                                <span class="doc-hint">확정일자가 날인된 서류 필수</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="doc3">
+                            <div class="doc-info">
+                                <label for="doc3" class="doc-name">가족관계증명서(상세)</label>
+                                <span class="doc-hint">대법원 전자가족관계등록시스템 발급</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="doc4">
+                            <div class="doc-info">
+                                <label for="doc4" class="doc-name">최근 3개월간 월세 이체 내역서</label>
+                                <span class="doc-hint">은행 앱에서 이체확인증으로 발급</span>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <a href="#" class="btn-doc-link">선택 정책 신청 페이지로 이동 ↗</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+</body>
+</html>
