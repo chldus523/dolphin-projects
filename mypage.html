@@ -1,217 +1,14 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>돌고래 - 마이페이지</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-        /* 1. 디자인 시스템 정의 */
-        :root {
-            --primary: #4f46e5;
-            --primary-dark: #3730a3;
-            --primary-light: #f5f7ff;
-            --bg-gray: #f8fafc;
-            --text-main: #0f172a;
-            --text-sub: #475569;
-            --border: #e2e8f0;
-            --accent: #10b981;
-            --scrap: #f59e0b;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Pretendard', sans-serif;
-            scroll-behavior: smooth;
-        }
-
-        body {
-            background-color: var(--bg-gray);
-            color: var(--text-main);
-            padding-top: 70px;
-        }
-
-        /* 2. 네비게이션 헤더 */
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            border-bottom: 1px solid var(--border);
-        }
-        .nav-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo { font-size: 1.25rem; font-weight: 800; color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 8px; }
-        .nav-links a { text-decoration: none; color: var(--text-main); margin-left: 2rem; font-weight: 600; font-size: 0.95rem; transition: color 0.2s; }
-        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
-
-        /* 3. 레이아웃 컨테이너 */
-        .container {
-            max-width: 1100px;
-            margin: 2rem auto;
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 2.5rem;
-            padding: 0 2rem;
-        }
-
-        /* 4. 사이드바 프로필 */
-        .profile-card {
-            background: white;
-            border-radius: 24px;
-            padding: 2rem;
-            text-align: center;
-            border: 1px solid var(--border);
-            height: fit-content;
-            position: sticky;
-            top: 100px;
-        }
-        .avatar-circle {
-            width: 100px;
-            height: 100px;
-            background: var(--primary-light);
-            color: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            margin: 0 auto 1.5rem;
-        }
-        .profile-name { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem; }
-        .profile-status { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 2rem; }
-        
-        .mypage-menu { list-style: none; text-align: left; }
-        .mypage-menu li { margin-bottom: 0.5rem; }
-        .mypage-menu a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 0.75rem 1rem;
-            text-decoration: none;
-            color: var(--text-sub);
-            font-weight: 600;
-            border-radius: 12px;
-            transition: 0.2s;
-        }
-        .mypage-menu a:hover, .mypage-menu a.active {
-            background: var(--primary-light);
-            color: var(--primary);
-        }
-
-        /* 5. 메인 콘텐츠 영역 */
-        .content-box {
-            background: white;
-            border-radius: 24px;
-            padding: 2.5rem;
-            border: 1px solid var(--border);
-            min-height: 600px;
-        }
-        .section-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
-        .section-desc { color: var(--text-sub); margin-bottom: 2rem; font-size: 0.95rem; }
-
-        /* [기능 1] 내 정보 관리 폼 */
-        .info-form { display: grid; gap: 1.5rem; }
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        .input-group label { font-size: 0.9rem; font-weight: 700; color: var(--text-sub); }
-        .input-group input, .input-group select {
-            padding: 0.8rem 1rem;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            font-size: 1rem;
-            outline-color: var(--primary);
-        }
-        .checkbox-group { display: flex; gap: 20px; padding: 0.5rem 0; }
-        .checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; }
-        .checkbox-label input { width: 18px; height: 18px; accent-color: var(--primary); }
-        
-        .btn-save {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 1rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: 0.2s;
-        }
-        .btn-save:hover { background: var(--primary-dark); transform: translateY(-2px); }
-
-        /* [기능 2] 서류함 체크리스트 */
-        .doc-checklist { list-style: none; }
-        .doc-card {
-            background: var(--bg-gray);
-            border-radius: 16px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .doc-info { display: flex; align-items: center; gap: 15px; }
-        .doc-checkbox { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
-        .doc-text .name { font-weight: 700; display: block; margin-bottom: 4px; }
-        .doc-text .hint { font-size: 0.8rem; color: var(--text-sub); }
-        .btn-link {
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--primary);
-            background: white;
-            transition: 0.2s;
-        }
-        .btn-link:hover { background: var(--primary-light); }
-
-        /* [기능 3] 찜한 목록 (탭) */
-        .tabs { display: flex; gap: 2rem; border-bottom: 2px solid var(--border); margin-bottom: 2rem; }
-        .tab-btn { background: none; border: none; padding-bottom: 1rem; font-size: 1rem; font-weight: 700; color: var(--text-sub); cursor: pointer; position: relative; }
-        .tab-btn.active { color: var(--primary); }
-        .tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: var(--primary); }
-
-        .scrapped-item {
-            padding: 1.25rem;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: 0.2s;
-        }
-        .scrapped-item:hover { border-color: var(--primary); background: var(--primary-light); }
-        .item-content h4 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
-        .item-content span { font-size: 0.85rem; color: var(--text-sub); }
-        .btn-remove { color: #cbd5e1; background: none; border: none; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
-        .btn-remove:hover { color: #ef4444; }
-
-        /* 반응형 */
-        @media (max-width: 768px) {
-            .container { grid-template-columns: 1fr; gap: 1.5rem; }
-            .profile-card { position: static; }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <header>
@@ -231,7 +28,7 @@
             <div class="avatar-circle">🐬</div>
             <h2 class="profile-name">홍길동 님</h2>
             <p class="profile-status">서울 거주 · 만 25세</p>
-            
+
             <ul class="mypage-menu">
                 <li><a href="#info-section" class="active"><i class="fa-solid fa-user-gear"></i> 내 정보 관리</a></li>
                 <li><a href="#docs-section"><i class="fa-solid fa-folder-open"></i> 내 서류함</a></li>
@@ -240,11 +37,11 @@
         </aside>
 
         <div class="content-box">
-            
+
             <section id="info-section">
                 <h2 class="section-title"><i class="fa-solid fa-sliders"></i> 개인 맞춤 정보 설정</h2>
                 <p class="section-desc">정보를 수정하면 돌고래가 실시간으로 가장 적합한 정책을 다시 계산해 드립니다.</p>
-                
+
                 <form class="info-form">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                         <div class="input-group">
@@ -274,10 +71,22 @@
 
                     <div class="input-group">
                         <label>돌봄 대상자 여부 (해당 시 체크)</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-label"><input type="checkbox"> 영유아</label>
-                            <label class="checkbox-label"><input type="checkbox"> 노인</label>
-                            <label class="checkbox-label"><input type="checkbox"> 장애인</label>
+                        <div class="input-group">
+                            <label>돌봄 대상자 여부 (해당 시 체크)</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-card">
+                                    <span class="checkbox-content">영유아</span>
+                                    <input type="checkbox">
+                                </label>
+                                <label class="checkbox-card">
+                                    <span class="checkbox-content">노인</span>
+                                    <input type="checkbox">
+                                </label>
+                                <label class="checkbox-card">
+                                    <span class="checkbox-content">장애인</span>
+                                    <input type="checkbox">
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -316,12 +125,12 @@
 
             <section id="scrap-section" style="margin-top: 5rem;">
                 <h2 class="section-title"><i class="fa-solid fa-star"></i> 나의 보관함</h2>
-                
+
                 <div class="tabs">
                     <button class="tab-btn active">찜한 정책 (2)</button>
                     <button class="tab-btn">스크랩한 커뮤니티 글 (12)</button>
                 </div>
-                
+
                 <div class="scrapped-item">
                     <div class="item-content">
                         <h4>서울시 청년월세 특별지원 사업</h4>
@@ -329,7 +138,7 @@
                     </div>
                     <button class="btn-remove" title="삭제"><i class="fa-solid fa-circle-xmark"></i></button>
                 </div>
-                
+
                 <div class="scrapped-item">
                     <div class="item-content">
                         <h4>청년 자격증 시험 응시료 지원</h4>
@@ -342,4 +151,5 @@
         </div>
     </main>
 </body>
+
 </html>

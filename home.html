@@ -5,264 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>청년정책 돌고래</title>
-    <style>
-        /* Pretendard 현대적 폰트 적용 */
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-        :root {
-            --primary: #4f46e5;
-            /* 인디고 블루 - 신뢰, 트렌디 */
-            --bg-light: #f8fafc;
-            /* 연한 slate gray 배경 */
-            --text-main: #0f172a;
-            /* 거의 검은색 */
-            --text-sub: #475569;
-            /* 진한 그레이 */
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Pretendard', sans-serif;
-            scroll-behavior: smooth;
-            /* 부드러운 스크롤 */
-        }
-
-        body {
-            color: var(--text-main);
-            background-color: #ffffff;
-            line-height: 1.6;
-        }
-
-        /* 0. 상단 네비게이션 (고정) */
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            /* 약간 투명하게 */
-            backdrop-filter: blur(10px);
-            /* 블러 효과 */
-            z-index: 1000;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .nav-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1.2rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--primary);
-            letter-spacing: -1px;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-main);
-            margin-left: 2rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        /* 1. 첫 번째 화면: 서비스 소개 (히어로 섹션) */
-        #hero {
-            height: 100vh;
-            /* 화면 높이 전체 차지 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
-            padding-top: 6rem;
-            /* 헤더 공간 */
-            text-align: center;
-        }
-
-        .hero-inner {
-            max-width: 900px;
-            padding: 0 2rem;
-        }
-
-        .hero-inner .badge {
-            display: inline-block;
-            background-color: #e0e7ff;
-            color: var(--primary);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-        }
-
-        .hero-inner h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            line-height: 1.25;
-            letter-spacing: -1.5px;
-            margin-bottom: 1.5rem;
-            word-break: keep-all;
-        }
-
-        .hero-inner p {
-            font-size: 1.25rem;
-            color: var(--text-sub);
-            margin-bottom: 2.5rem;
-            word-break: keep-all;
-        }
-
-        .btn-main {
-            display: inline-block;
-            background: var(--primary);
-            color: white;
-            padding: 1rem 2.5rem;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            text-decoration: none;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
-            transition: all 0.2s;
-        }
-
-        .btn-main:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4);
-        }
-
-        /* 2. 두 번째 화면: 핵심 기능 4개 네모 (서비스 대시보드 그리드) */
-        #features {
-            background-color: #ffffff;
-            padding: 8rem 2rem;
-            /* 위아래 넉넉한 여백 */
-            display: flex;
-            justify-content: center;
-        }
-
-        .features-inner {
-            max-width: 1200px;
-            width: 100%;
-        }
-
-        .features-header {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-
-        .features-header h2 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.5px;
-        }
-
-        .features-header p {
-            font-size: 1rem;
-            color: var(--text-sub);
-        }
-
-        /* 4개 카드 한 줄(4컬럼) 그리드 배치 */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            /* 정확히 4개 균등 배치 */
-            gap: 1.5rem;
-            /* 카드 사이 여백 */
-        }
-
-        /* 네모 카드 공통 스타일 */
-        .card {
-            background: #ffffff;
-            border: 1px solid #f1f5f9;
-            border-radius: 20px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 300px;
-            /* 카드 높이 통일 */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
-            transition: all 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-color: #e0e7ff;
-        }
-
-        .card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            color: var(--primary);
-        }
-
-        .card-header h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            line-height: 1.4;
-            margin-bottom: 0.75rem;
-            word-break: keep-all;
-        }
-
-        .card-header p {
-            font-size: 0.9rem;
-            color: var(--text-sub);
-            margin-bottom: 1.5rem;
-            word-break: keep-all;
-        }
-
-        .card-link {
-            font-size: 0.9rem;
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 700;
-            margin-top: auto;
-        }
-
-        .card-link:hover {
-            text-decoration: underline;
-        }
-
-        /* AI 챗봇 카드 특수 디자인 (배경 포인트) */
-        .card-chatbot {
-            background-color: #f7faff;
-            border-color: #dbeafe;
-        }
-
-        /* 반응형 대책 */
-        @media (max-width: 1024px) {
-            .dashboard-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            /* 태블릿에선 2열 */
-            .hero-inner h1 {
-                font-size: 2.5rem;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-
-            /* 모바일에선 1열 */
-            .nav-links {
-                display: none;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -276,6 +19,7 @@
                 <a href="community.html" id="nav-community">커뮤니티</a>
                 <a href="mypage.html" id="nav-mypage">마이페이지</a>
             </div>
+            <div id="nav-right"></div>
         </div>
     </header>
 
@@ -345,7 +89,40 @@
             </div>
         </div>
     </section>
+    <script>
+        // 페이지가 켜지자마자 브라우저 창고에서 로그인 정보가 있는지 확인합니다.
+        const loggedInUser = localStorage.getItem('userid');
 
+        if (!loggedInUser) {
+            // 🔒 비로그인 상태: 비정상적인 접근이므로 쫓아냅니다.
+            alert('로그인이 필요한 페이지입니다!');
+            window.location.href = 'index.html';
+        } else {
+            // 🔓 로그인 상태: 정상 진입 허용!
+            console.log(loggedInUser + "님 환영합니다.");
+
+            // [상태에 따른 UI 변경 예시]
+            // 네비게이션 바(상단 메뉴) 영역을 찾아 로그인 상태에 맞게 뜯어고칩니다.
+            // (내 HTML에 <div id="nav-right"></div> 같은 상단 우측 영역이 있다고 가정해볼게요!)
+            const navRight = document.getElementById('nav-right');
+
+            if (navRight) {
+                navRight.innerHTML = `
+                    <span style="margin-right: 15px; color: #333;">
+                        👤 <b>${loggedInUser}</b>님 환영합니다!
+                    </span>
+                    <button id="btn-logout" style="padding: 5px 10px; cursor: pointer;">로그아웃</button>
+                `;
+
+                // 🔴 로그아웃 버튼 클릭 이벤트 추가
+                document.getElementById('btn-logout').addEventListener('click', () => {
+                    localStorage.removeItem('userid'); // 창고에서 로그인 정보 삭제
+                    alert('로그아웃 되었습니다.');
+                    window.location.href = 'index.html'; // 로그인 화면으로 튕궈내기
+                });
+            }
+        }
+    </script>
 </body>
 
 </html>
