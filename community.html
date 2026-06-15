@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>돌고래 - 커뮤니티</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-inner">
+            <a href="home.html" class="logo">🐬 청년정책 돌고래</a>
+            <div class="nav-links">
+                <a href="home.html" id="nav-home">홈</a>
+                <a href="explore.html" id="nav-explore">정보 탐색</a>
+                <a href="community.html" id="nav-community">커뮤니티</a>
+                <a href="mypage.html" id="nav-mypage">마이페이지</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container community-grid">
+        
+        <aside class="sidebar">
+            <button class="btn-write">📝 새로운 글쓰기</button>
+            
+            <div class="sidebar-menu-box">
+                <div class="menu-title">게시판 카테고리</div>
+                <ul class="category-list">
+                    <li class="category-item active">
+                        <a href="#">✨ 전체 보기</a>
+                    </li>
+                    <li class="category-item">
+                        <a href="#">🤫 고민 게시판 <span class="post-count">42</span></a>
+                    </li>
+                    <li class="category-item">
+                        <a href="#">📝 정책 후기 <span class="post-count">128</span></a>
+                    </li>
+                    <li class="category-item">
+                        <a href="#">✅ 합격/탈락 사례 <span class="post-count">96</span></a>
+                    </li>
+                    <li class="category-item">
+                        <a href="#">💡 정보 교류 <span class="post-count">210</span></a>
+                    </li>
+                </ul>
+
+                <div class="divider"></div>
+
+                <div class="menu-title">개인 보관함</div>
+                <ul class="category-list">
+                    <li class="category-item">
+                        <a href="#" style="color: var(--scrap-color);">⭐ 내가 스크랩한 글 <span class="post-count" style="background:#fef3c7; color:var(--scrap-color);">14</span></a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <section class="board-main">
+            
+            <div class="board-header-search">
+                <input type="text" placeholder="관심 있는 키워드나 정책명을 검색해 보세요 (예: 청년월세 후기, 도약계좌 심사)">
+                <button>검색</button>
+            </div>
+
+            <div class="feed-container">
+                
+                <div class="feed-item">
+                    <div class="feed-top">
+                        <span class="feed-category-badge">📝 정책 후기</span>
+                        <span class="feed-author">취뽀돌고래</span>
+                        <span class="feed-time">10분 전</span>
+                    </div>
+                    <div class="feed-content">
+                        <h3>서울시 청년월세지원 실지급 1회차 후기 및 미세 팁</h3>
+                        <p>저번달에 최종 선정 문자 받고 이번에 첫 회차 20만 원 통장에 찍혔습니다! 신청할 때 서류 보완 요청 들어왔던 부분이랑 이체 확인증 증빙할 때 은행 앱에서 어떤 걸로 출력해야 빠꾸 안 먹는지 정리해 드려요.</p>
+                    </div>
+                    <div class="feed-bottom">
+                        <div class="feed-stats">
+                            <span class="stat-item">👍 24</span>
+                            <span class="stat-item">💬 18</span>
+                        </div>
+                        <button class="btn-scrap scrapped">⭐ 스크랩 취소</button>
+                    </div>
+                </div>
+
+                <div class="feed-item">
+                    <div class="feed-top">
+                        <span class="feed-category-badge" style="color: #65a30d; background: #f7fee7;">🤫 고민 게시판</span>
+                        <span class="feed-author">익명돌고래</span>
+                        <span class="feed-time">1시간 전</span>
+                    </div>
+                    <div class="feed-content">
+                        <h3>청년도약계좌 조건 중에서 가구소득 기준 헷갈리는데 봐주실 분..</h3>
+                        <p>1인가구이고 직장인인데 작년 기준으로는 건강보험료 액수가 아슬아슬하거든요. 혹시 전년도 소득 확정 안 되었을 때는 전전년도 기준으로 심사하나요? 고객센터 전화가 안 연결돼서 여기 남겨봅니다.</p>
+                    </div>
+                    <div class="feed-bottom">
+                        <div class="feed-stats">
+                            <span class="stat-item">👍 4</span>
+                            <span class="stat-item">💬 7</span>
+                        </div>
+                        <button class="btn-scrap">⭐ 스크랩</button>
+                    </div>
+                </div>
+
+                <div class="feed-item">
+                    <div class="feed-top">
+                        <span class="feed-category-badge" style="color: #dc2626; background: #fef2f2;">✅ 합격/탈락 사례</span>
+                        <span class="feed-author">주거안정원츄</span>
+                        <span class="feed-time">3시간 전</span>
+                    </div>
+                    <div class="feed-content">
+                        <h3>[탈락] 역세권 청년주택 서류 심사 탈락 이유 분석 공유</h3>
+                        <p>이번에 서류 제출까지는 갔는데 최종 자격 검증에서 소득 자산 초과로 탈락했습니다. 차량 가액 계산할 때 중고차 시세 기준이 제가 생각한 거랑 완전히 다르더라고요. 다음 회차 준비하시는 분들 차량 소유 여부 꼭 체크하세요.</p>
+                    </div>
+                    <div class="feed-bottom">
+                        <div class="feed-stats">
+                            <span class="stat-item">👍 41</span>
+                            <span class="stat-item">💬 32</span>
+                        </div>
+                        <button class="btn-scrap scrapped">⭐ 스크랩 취소</button>
+                    </div>
+                </div>
+
+                <div class="feed-item">
+                    <div class="feed-top">
+                        <span class="feed-category-badge" style="color: #ca8a04; background: #fef9c3;">💡 정보 교류</span>
+                        <span class="feed-author">꿀팁수집가</span>
+                        <span class="feed-time">어제</span>
+                    </div>
+                    <div class="feed-content">
+                        <h3>2026년 상반기 자격증 시험 응시료 환급 가능한 리스트 총정리 (.xlsx)</h3>
+                        <p>고용노동부랑 지자체별로 지원해 주는 시험 종류(토익, 오픽, 기사 자격증, 컴활 등)가 조금씩 다른 거 아시죠? 중복 수령 불가능한 부분이랑 1인당 연간 한도 금액 시도별로 엑셀 파일에 보기 편하게 매핑해 뒀습니다.</p>
+                    </div>
+                    <div class="feed-bottom">
+                        <div class="feed-stats">
+                            <span class="stat-item">👍 89</span>
+                            <span class="stat-item">💬 14</span>
+                        </div>
+                        <button class="btn-scrap">⭐ 스크랩</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+</body>
+</html>

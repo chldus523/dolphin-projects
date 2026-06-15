@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>돌고래 - 마이페이지</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="nav-inner">
+            <a href="home.html" class="logo">🐬 청년정책 돌고래</a>
+            <div class="nav-links">
+                <a href="home.html" id="nav-home">홈</a>
+                <a href="explore.html" id="nav-explore">정보 탐색</a>
+                <a href="community.html" id="nav-community">커뮤니티</a>
+                <a href="mypage.html" id="nav-mypage">마이페이지</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <aside class="profile-card">
+            <div class="avatar-circle">🐬</div>
+            <h2 class="profile-name">홍길동 님</h2>
+            <p class="profile-status">서울 거주 · 만 25세</p>
+
+            <ul class="mypage-menu">
+                <li><a href="#info-section" class="active"><i class="fa-solid fa-user-gear"></i> 내 정보 관리</a></li>
+                <li><a href="#docs-section"><i class="fa-solid fa-folder-open"></i> 내 서류함</a></li>
+                <li><a href="#scrap-section"><i class="fa-solid fa-star"></i> 찜한 목록</a></li>
+            </ul>
+        </aside>
+
+        <div class="content-box">
+
+            <section id="info-section">
+                <h2 class="section-title"><i class="fa-solid fa-sliders"></i> 개인 맞춤 정보 설정</h2>
+                <p class="section-desc">정보를 수정하면 돌고래가 실시간으로 가장 적합한 정책을 다시 계산해 드립니다.</p>
+
+                <form class="info-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="input-group">
+                            <label>나이 (만)</label>
+                            <input type="number" value="25">
+                        </div>
+                        <div class="input-group">
+                            <label>거주 지역</label>
+                            <select>
+                                <option selected>서울특별시</option>
+                                <option>경기도</option>
+                                <option>인천광역시</option>
+                                <option>기타 지역</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>소득 구간</label>
+                        <select>
+                            <option selected>기준 중위소득 60% 이하 (1순위)</option>
+                            <option>기준 중위소득 100% 이하 (2순위)</option>
+                            <option>기준 중위소득 150% 이하 (3순위)</option>
+                            <option>해당 없음</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>돌봄 대상자 여부 (해당 시 체크)</label>
+                        <div class="input-group">
+                            <label>돌봄 대상자 여부 (해당 시 체크)</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-card">
+                                    <span class="checkbox-content">영유아</span>
+                                    <input type="checkbox">
+                                </label>
+                                <label class="checkbox-card">
+                                    <span class="checkbox-content">노인</span>
+                                    <input type="checkbox">
+                                </label>
+                                <label class="checkbox-card">
+                                    <span class="checkbox-content">장애인</span>
+                                    <input type="checkbox">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-save">
+                        <i class="fa-solid fa-calculator"></i> 정보 저장 및 맞춤 정책 재계산
+                    </button>
+                </form>
+            </section>
+
+            <section id="docs-section" style="margin-top: 5rem;">
+                <h2 class="section-title"><i class="fa-solid fa-briefcase"></i> 최근 신청 정책 서류함</h2>
+                <p class="section-desc">📌 서울시 청년월세 특별지원 준비 서류</p>
+                <div class="doc-checklist">
+                    <div class="doc-card">
+                        <div class="doc-info">
+                            <input type="checkbox" class="doc-checkbox" checked>
+                            <div class="doc-text">
+                                <span class="name">주민등록등본</span>
+                                <span class="hint">정부24에서 무료 발급 가능 (주민번호 뒷자리 포함)</span>
+                            </div>
+                        </div>
+                        <a href="https://www.gov.kr" target="_blank" class="btn-link">정부24 바로가기</a>
+                    </div>
+                    <div class="doc-card">
+                        <div class="doc-info">
+                            <input type="checkbox" class="doc-checkbox">
+                            <div class="doc-text">
+                                <span class="name">가족관계증명서 (상세)</span>
+                                <span class="hint">대법원 전자가족관계등록시스템 발급</span>
+                            </div>
+                        </div>
+                        <a href="https://efamily.scourt.go.kr" target="_blank" class="btn-link">발급처 연결</a>
+                    </div>
+                </div>
+            </section>
+
+            <section id="scrap-section" style="margin-top: 5rem;">
+                <h2 class="section-title"><i class="fa-solid fa-star"></i> 나의 보관함</h2>
+
+                <div class="tabs">
+                    <button class="tab-btn active">찜한 정책 (2)</button>
+                    <button class="tab-btn">스크랩한 커뮤니티 글 (12)</button>
+                </div>
+
+                <div class="scrapped-item">
+                    <div class="item-content">
+                        <h4>서울시 청년월세 특별지원 사업</h4>
+                        <span>D-12일 마감 · 서울특별시 · 주거금융</span>
+                    </div>
+                    <button class="btn-remove" title="삭제"><i class="fa-solid fa-circle-xmark"></i></button>
+                </div>
+
+                <div class="scrapped-item">
+                    <div class="item-content">
+                        <h4>청년 자격증 시험 응시료 지원</h4>
+                        <span>상시 모집 · 고용노동부 · 취업지원</span>
+                    </div>
+                    <button class="btn-remove" title="삭제"><i class="fa-solid fa-circle-xmark"></i></button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+</body>
+
+</html>

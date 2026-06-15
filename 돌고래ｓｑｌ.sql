@@ -1,0 +1,11 @@
+CREATE DATABASE IF NOT EXISTS dolgorae_db;
+USE dolgorae_db;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userid VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO users (userid, password) VALUES ('test', '1234');

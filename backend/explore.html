@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>돌고래 - 정보 탐색</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #guide-section {
+            background: #ffffff;
+            border: 1.5px solid #e0f2fe;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            margin: 2rem 0 0 0;
+            scroll-margin-top: 90px;
+        }
+        #guide-section .guide-section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        #guide-section .guide-section-header h2 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+        #guide-section .guide-section-header span {
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+        .guide-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        .guide-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        .guide-card:hover {
+            box-shadow: 0 4px 20px rgba(14,165,233,0.1);
+            border-color: #bae6fd;
+        }
+        .guide-card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0369a1;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .guide-card ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+        }
+        .guide-card .doc-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+        }
+        .guide-card .doc-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-top: 2px;
+            accent-color: #0ea5e9;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .guide-card .doc-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .guide-card .doc-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+        .guide-card .doc-name:hover { color: #0ea5e9; }
+        .guide-card .doc-name.checked {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+        .guide-card .doc-hint {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        .guide-card .btn-doc-link {
+            display: inline-block;
+            margin-top: 1.2rem;
+            background: #0ea5e9;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.5rem 1.1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .guide-card .btn-doc-link:hover {
+            background: #0284c7;
+            transform: translateY(-1px);
+        }
+        .progress-wrap {
+            margin-bottom: 1rem;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+        .progress-bar-bg {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 6px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-inner">
+            <a href="home.html" class="logo">🐬 청년정책 돌고래</a>
+            <div class="nav-links">
+                <a href="home.html" id="nav-home">홈</a>
+                <a href="explore.html" id="nav-explore" class="active">정보 탐색</a>
+                <a href="community.html" id="nav-community">커뮤니티</a>
+                <a href="mypage.html" id="nav-mypage">마이페이지</a>
+            </div>
+            <span id="nav-right" style="display: flex; align-items: center; font-size: 0.95rem; font-weight: 600;"></span>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <section class="search-wrapper">
+            <h2>어떤 혜택을 찾고 계신가요?</h2>
+            <div class="search-bar">
+                <input type="text" placeholder="정책명, 자격요건, 관심 분야를 입력하세요 (예: 월세, 청년도약)">
+                <button>검색</button>
+            </div>
+        </section>
+
+        <div class="content-grid">
+
+            <section>
+                <div class="section-title">
+                    <span>추천 정책 결과</span>
+                    <span class="user-condition-badge">👤 만 25세 · 서울 거주 · 소득 1순위 조건 맞춤</span>
+                </div>
+
+                <div class="policy-list">
+                    <div class="policy-item selected">
+                        <div class="policy-top">
+                            <span class="policy-tag" style="color: #2563eb; background: #dbeafe;">주거금융</span>
+                            <span class="d-day-badge">D-3</span>
+                        </div>
+                        <h3>서울시 청년월세 특별지원 사업</h3>
+                        <p class="policy-desc">서울에 거주하는 무주택 청년들의 주거비 부담을 덜어주기 위해 월 최대 20만 원씩 최대 12달 동안 월세를 지원하는 정책입니다.</p>
+                        <div class="policy-meta">
+                            <span>📍 서울특별시</span>
+                            <span>💰 월 최대 20만원</span>
+                            <span>⏱️ ~ 2026.05.23 마감</span>
+                        </div>
+                    </div>
+
+                    <div class="policy-item">
+                        <div class="policy-top">
+                            <span class="policy-tag" style="color: #16a34a; background: #dcfce7;">자산형성</span>
+                            <span class="d-day-badge" style="color:#16a34a; background:#dcfce7;">상시모집</span>
+                        </div>
+                        <h3>정부 청년도약계좌 (연계 가입)</h3>
+                        <p class="policy-desc">청년의 중장기 자산형성을 지원하기 위해 매월 일정 금액을 저축하면 정부 기여금을 매칭하고 비과세 혜택을 주는 계좌입니다.</p>
+                        <div class="policy-meta">
+                            <span>📍 전국 공통</span>
+                            <span>💰 만기 시 최대 5천만원 안팎</span>
+                            <span>⏱️ 매월 초 접수</span>
+                        </div>
+                    </div>
+
+                    <div class="policy-item">
+                        <div class="policy-top">
+                            <span class="policy-tag" style="color: #ea580c; background: #ffedd5;">취업지원</span>
+                            <span class="d-day-badge">D-12</span>
+                        </div>
+                        <h3>청년 자격증 시험 응시료 지원</h3>
+                        <p class="policy-desc">구직 활동 중인 청년들의 경제적 부담을 완화하기 위해 토익, 컴활, 기사 자격증 등 시험 응시료의 80%를 지원합니다.</p>
+                        <div class="policy-meta">
+                            <span>📍 고용노동부</span>
+                            <span>💰 연 최대 10만원</span>
+                            <span>⏱️ 예산 소진 시 마감</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="guide-sidebar">
+                <div class="section-title">
+                    <span>서류 준비 가이드</span>
+                </div>
+                <div class="guide-box">
+                    <div class="guide-target-title">📌 서울시 청년월세 특별지원</div>
+                    <ul class="document-checklist">
+                        <li class="doc-item">
+                            <input type="checkbox" id="doc1" checked>
+                            <div class="doc-info">
+                                <label for="doc1" class="doc-name" style="text-decoration: line-through; color: #94a3b8;">주민등록등본</label>
+                                <span class="doc-hint">정부24에서 온라인 무료 발급 가능</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="doc2">
+                            <div class="doc-info">
+                                <label for="doc2" class="doc-name">임대차계약서 사본</label>
+                                <span class="doc-hint">확정일자가 날인된 서류 필수</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="doc3">
+                            <div class="doc-info">
+                                <label for="doc3" class="doc-name">가족관계증명서(상세)</label>
+                                <span class="doc-hint">대법원 전자가족관계등록시스템 발급</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="doc4">
+                            <div class="doc-info">
+                                <label for="doc4" class="doc-name">최근 3개월간 월세 이체 내역서</label>
+                                <span class="doc-hint">은행 앱에서 이체확인증으로 발급</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <a href="#" class="btn-doc-link">선택 정책 신청 페이지로 이동 ↗</a>
+                </div>
+            </section>
+
+        </div>
+
+        <section id="guide-section">
+            <div class="guide-section-header">
+                <h2>📋 서류 발급 누락 방지 가이드</h2>
+                <span>체크리스트</span>
+            </div>
+
+            <div class="guide-cards-grid">
+
+                <div class="guide-card">
+                    <div class="guide-card-title">🏠 청년월세 특별지원</div>
+                    <div class="progress-wrap">
+                        <div class="progress-label">
+                            <span>준비 현황</span>
+                            <span id="prog1-label">0 / 4</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="prog1-bar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <ul>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g1d1" onchange="updateProgress('g1',4)">
+                            <div class="doc-info">
+                                <label for="g1d1" class="doc-name">주민등록등본</label>
+                                <span class="doc-hint">정부24 무료 발급 (주민번호 뒷자리 포함)</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g1d2" onchange="updateProgress('g1',4)">
+                            <div class="doc-info">
+                                <label for="g1d2" class="doc-name">임대차계약서 사본</label>
+                                <span class="doc-hint">확정일자가 날인된 서류 필수</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g1d3" onchange="updateProgress('g1',4)">
+                            <div class="doc-info">
+                                <label for="g1d3" class="doc-name">가족관계증명서(상세)</label>
+                                <span class="doc-hint">대법원 전자가족관계등록시스템 발급</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g1d4" onchange="updateProgress('g1',4)">
+                            <div class="doc-info">
+                                <label for="g1d4" class="doc-name">최근 3개월 월세 이체 내역서</label>
+                                <span class="doc-hint">은행 앱에서 이체확인증으로 발급</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <a href="https://www.bokjiro.go.kr" target="_blank" class="btn-doc-link">복지로 신청하기 ↗</a>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-title">🤝 가족돌봄청년 지원사업</div>
+                    <div class="progress-wrap">
+                        <div class="progress-label">
+                            <span>준비 현황</span>
+                            <span id="prog2-label">0 / 3</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="prog2-bar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <ul>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g2d1" onchange="updateProgress('g2',3)">
+                            <div class="doc-info">
+                                <label for="g2d1" class="doc-name">주민등록등본</label>
+                                <span class="doc-hint">정부24 무료 발급</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g2d2" onchange="updateProgress('g2',3)">
+                            <div class="doc-info">
+                                <label for="g2d2" class="doc-name">가족관계증명서</label>
+                                <span class="doc-hint">돌봄 대상자 관계 확인용</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g2d3" onchange="updateProgress('g2',3)">
+                            <div class="doc-info">
+                                <label for="g2d3" class="doc-name">돌봄 확인 서류</label>
+                                <span class="doc-hint">진단서 또는 장애인 등록증 등</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <a href="https://www.mogef.go.kr" target="_blank" class="btn-doc-link">여성가족부 신청하기 ↗</a>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-title">💰 청년도약계좌</div>
+                    <div class="progress-wrap">
+                        <div class="progress-label">
+                            <span>준비 현황</span>
+                            <span id="prog3-label">0 / 3</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="prog3-bar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <ul>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g3d1" onchange="updateProgress('g3',3)">
+                            <div class="doc-info">
+                                <label for="g3d1" class="doc-name">신분증 (주민등록증/운전면허증)</label>
+                                <span class="doc-hint">본인 명의 신분증</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g3d2" onchange="updateProgress('g3',3)">
+                            <div class="doc-info">
+                                <label for="g3d2" class="doc-name">소득 확인 서류</label>
+                                <span class="doc-hint">건강보험료 납부확인서 또는 근로소득 원천징수영수증</span>
+                            </div>
+                        </li>
+                        <li class="doc-item">
+                            <input type="checkbox" id="g3d3" onchange="updateProgress('g3',3)">
+                            <div class="doc-info">
+                                <label for="g3d3" class="doc-name">본인 명의 통장</label>
+                                <span class="doc-hint">취급 은행 계좌 (은행 앱에서 신청 가능)</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <a href="https://www.kinfa.or.kr" target="_blank" class="btn-doc-link">청년도약계좌 신청하기 ↗</a>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const loggedInUser = localStorage.getItem('userid');
+        const navRight = document.getElementById('nav-right');
+
+        if (loggedInUser) {
+            if (navRight) {
+                navRight.innerHTML = `
+                    <span style="color: var(--text-main); margin-left: 2rem;">👤 <b>${loggedInUser}</b>님</span>
+                    <button id="btn-logout" style="background: none; border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 6px; font-weight: 600; cursor: pointer; margin-left: 1rem; color: var(--text-sub); font-size: 0.85rem; transition: all 0.2s;">로그아웃</button>
+                `;
+                const logoutBtn = document.getElementById('btn-logout');
+                logoutBtn.addEventListener('mouseenter', () => { logoutBtn.style.borderColor = 'var(--accent)'; logoutBtn.style.color = 'var(--accent)'; });
+                logoutBtn.addEventListener('mouseleave', () => { logoutBtn.style.borderColor = 'var(--border)'; logoutBtn.style.color = 'var(--text-sub)'; });
+                logoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('userid');
+                    alert('로그아웃 되었습니다.');
+                    window.location.reload();
+                });
+            }
+        } else {
+            if (navRight) {
+                navRight.innerHTML = `
+                    <a href="index.html">로그인</a>
+                    <a href="#">회원가입</a>
+                `;
+            }
+        }
+
+        function updateProgress(groupId, total) {
+            const checkboxes = document.querySelectorAll(`[id^="${groupId}d"]`);
+            let checked = 0;
+            checkboxes.forEach(cb => {
+                const label = document.querySelector(`label[for="${cb.id}"]`);
+                if (cb.checked) {
+                    checked++;
+                    if (label) label.classList.add('checked');
+                } else {
+                    if (label) label.classList.remove('checked');
+                }
+            });
+            const pct = Math.round((checked / total) * 100);
+            document.getElementById(`${groupId.replace('g','prog')}-label`).textContent = `${checked} / ${total}`;
+            document.getElementById(`${groupId.replace('g','prog')}-bar`).style.width = pct + '%';
+        }
+
+        window.addEventListener('load', () => {
+            if (window.location.hash === '#guide-section') {
+                setTimeout(() => {
+                    document.getElementById('guide-section').scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
