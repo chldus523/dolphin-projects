@@ -21,7 +21,7 @@ app.use(express.static(__dirname));
 const db = mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '1309',
+    password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'dolgorae_db'
 });
 
