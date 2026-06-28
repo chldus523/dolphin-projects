@@ -6,7 +6,7 @@ const Groq    = require('groq-sdk');
 require('dotenv').config();
 
 const app  = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // ==========================================
 // 1. 서버 환경 설정 (미들웨어)
@@ -19,10 +19,10 @@ app.use(express.static(__dirname));
 // 2. MySQL 데이터베이스 연결 설정
 // ==========================================
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '1309',
-    database: 'dolgorae_db'
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '1309',
+    database: process.env.DB_NAME || 'dolgorae_db'
 });
 
 db.connect((err) => {
