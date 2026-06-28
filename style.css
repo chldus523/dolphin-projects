@@ -397,23 +397,60 @@ header {
 }
 
 /* 🎯 카테고리와 D-Day 뱃지에 컬러 테두리 추가 (이 부분이 추가되었습니다!) */
-.policy-tag {
-    font-size: 0.75rem;
+.policy-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.7rem;
+}
+
+.policy-item h3 {
+    font-size: 1rem;
     font-weight: 700;
-    padding: 0.25rem 0.6rem;
+    color: #0f172a;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+.policy-desc {
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.65;
+    margin-bottom: 1rem;
+    word-break: keep-all;
+}
+
+.policy-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.2rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.policy-meta span {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.policy-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.22rem 0.6rem;
     border-radius: 6px;
     border: 1px solid currentColor;
-    margin-right: 0.7rem;
-    margin-bottom: 0.6rem;
 }
 
 .d-day-badge {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    padding: 0.25rem 0.6rem;
+    padding: 0.22rem 0.6rem;
     border-radius: 6px;
-    border: 1px solid currentColor;
-    margin-bottom: 0.6rem;
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
 }
 
 .container.community-grid {

@@ -5,6 +5,145 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>돌고래 - 커뮤니티</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ── 글쓰기 모달 ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            width: 92%;
+            max-width: 560px;
+            box-shadow: 0 20px 60px rgba(15,23,42,0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-box h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .modal-box select,
+        .modal-box input[type="text"],
+        .modal-box textarea {
+            width: 100%;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.6rem 0.9rem;
+            font-size: 0.88rem;
+            font-family: 'Pretendard', sans-serif;
+            color: #0f172a;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #f8fafc;
+        }
+        .modal-box select:focus,
+        .modal-box input[type="text"]:focus,
+        .modal-box textarea:focus { border-color: #0ea5e9; }
+        .modal-box textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+        .modal-btns { display: flex; gap: 0.7rem; justify-content: flex-end; }
+        .btn-cancel {
+            background: none;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            font-family: 'Pretendard', sans-serif;
+        }
+        .btn-submit {
+            background: #0ea5e9;
+            border: none;
+            border-radius: 10px;
+            padding: 0.5rem 1.4rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            font-family: 'Pretendard', sans-serif;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover { background: #0284c7; }
+
+        /* ── 카테고리 필터 칩 ── */
+        .cat-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .cat-chip {
+            padding: 0.38rem 1rem;
+            border-radius: 20px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .cat-chip.active {
+            background: #0ea5e9;
+            border-color: #0ea5e9;
+            color: #fff;
+        }
+
+        /* ── 검색바 ── */
+        .search-row {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+        }
+        .search-row input {
+            flex: 1;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.55rem 1rem;
+            font-size: 0.85rem;
+            font-family: 'Pretendard', sans-serif;
+            color: #0f172a;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-row input:focus { border-color: #0ea5e9; }
+        .search-row button {
+            background: #0ea5e9;
+            border: none;
+            border-radius: 12px;
+            padding: 0.55rem 1.2rem;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Pretendard', sans-serif;
+            transition: background 0.2s;
+        }
+        .search-row button:hover { background: #0284c7; }
+
+        /* ── 피드 ── */
+        .feed-item { cursor: default; }
+        .feed-time { margin-left: auto; }
+        .no-posts {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
 
@@ -12,37 +151,28 @@
         <div class="nav-inner">
             <a href="home.html" class="logo">🐬 청년정책 돌고래</a>
             <div class="nav-links">
-                <a href="home.html" id="nav-home">홈</a>
-                <a href="explore.html" id="nav-explore">정보 탐색</a>
-                <a href="community.html" id="nav-community">커뮤니티</a>
-                <a href="mypage.html" id="nav-mypage">마이페이지</a>
+                <a href="home.html">홈</a>
+                <a href="explore.html">정보 탐색</a>
+                <a href="community.html" class="active">커뮤니티</a>
+                <a href="mypage.html">마이페이지</a>
             </div>
+            <div id="nav-right"></div>
         </div>
     </header>
 
     <main class="container community-grid">
-        
+
         <aside class="sidebar">
-            <button class="btn-write">📝 새로운 글쓰기</button>
-            
+            <button class="btn-write" onclick="openModal()">📝 새로운 글쓰기</button>
+
             <div class="sidebar-menu-box">
                 <div class="menu-title">게시판 카테고리</div>
                 <ul class="category-list">
-                    <li class="category-item active">
-                        <a href="#">✨ 전체 보기</a>
-                    </li>
-                    <li class="category-item">
-                        <a href="#">🤫 고민 게시판 <span class="post-count">42</span></a>
-                    </li>
-                    <li class="category-item">
-                        <a href="#">📝 정책 후기 <span class="post-count">128</span></a>
-                    </li>
-                    <li class="category-item">
-                        <a href="#">✅ 합격/탈락 사례 <span class="post-count">96</span></a>
-                    </li>
-                    <li class="category-item">
-                        <a href="#">💡 정보 교류 <span class="post-count">210</span></a>
-                    </li>
+                    <li class="category-item active" onclick="selectCategory('전체', this)"><a href="#">✨ 전체 보기</a></li>
+                    <li class="category-item" onclick="selectCategory('고민 게시판', this)"><a href="#">🤫 고민 게시판</a></li>
+                    <li class="category-item" onclick="selectCategory('정책 후기', this)"><a href="#">📝 정책 후기</a></li>
+                    <li class="category-item" onclick="selectCategory('합격/탈락 사례', this)"><a href="#">✅ 합격/탈락 사례</a></li>
+                    <li class="category-item" onclick="selectCategory('정보 교류', this)"><a href="#">💡 정보 교류</a></li>
                 </ul>
 
                 <div class="divider"></div>
@@ -50,101 +180,237 @@
                 <div class="menu-title">개인 보관함</div>
                 <ul class="category-list">
                     <li class="category-item">
-                        <a href="#" style="color: var(--scrap-color);">⭐ 내가 스크랩한 글 <span class="post-count" style="background:#fef3c7; color:var(--scrap-color);">14</span></a>
+                        <a href="#" style="color: var(--scrap-color);">⭐ 내가 스크랩한 글 <span class="post-count" id="scrap-count" style="background:#fef3c7; color:var(--scrap-color);">0</span></a>
                     </li>
                 </ul>
             </div>
         </aside>
 
         <section class="board-main">
-            
-            <div class="board-header-search">
-                <input type="text" placeholder="관심 있는 키워드나 정책명을 검색해 보세요 (예: 청년월세 후기, 도약계좌 심사)">
-                <button>검색</button>
+
+            <div class="search-row">
+                <input type="text" id="search-input" placeholder="키워드나 정책명을 검색해 보세요 (예: 청년월세 후기, 도약계좌)">
+                <button onclick="loadPosts()">검색</button>
             </div>
 
-            <div class="feed-container">
-                
-                <div class="feed-item">
-                    <div class="feed-top">
-                        <span class="feed-category-badge">📝 정책 후기</span>
-                        <span class="feed-author">취뽀돌고래</span>
-                        <span class="feed-time">10분 전</span>
-                    </div>
-                    <div class="feed-content">
-                        <h3>서울시 청년월세지원 실지급 1회차 후기 및 미세 팁</h3>
-                        <p>저번달에 최종 선정 문자 받고 이번에 첫 회차 20만 원 통장에 찍혔습니다! 신청할 때 서류 보완 요청 들어왔던 부분이랑 이체 확인증 증빙할 때 은행 앱에서 어떤 걸로 출력해야 빠꾸 안 먹는지 정리해 드려요.</p>
-                    </div>
-                    <div class="feed-bottom">
-                        <div class="feed-stats">
-                            <span class="stat-item">👍 24</span>
-                            <span class="stat-item">💬 18</span>
-                        </div>
-                        <button class="btn-scrap scrapped">⭐ 스크랩 취소</button>
-                    </div>
-                </div>
-
-                <div class="feed-item">
-                    <div class="feed-top">
-                        <span class="feed-category-badge" style="color: #65a30d; background: #f7fee7;">🤫 고민 게시판</span>
-                        <span class="feed-author">익명돌고래</span>
-                        <span class="feed-time">1시간 전</span>
-                    </div>
-                    <div class="feed-content">
-                        <h3>청년도약계좌 조건 중에서 가구소득 기준 헷갈리는데 봐주실 분..</h3>
-                        <p>1인가구이고 직장인인데 작년 기준으로는 건강보험료 액수가 아슬아슬하거든요. 혹시 전년도 소득 확정 안 되었을 때는 전전년도 기준으로 심사하나요? 고객센터 전화가 안 연결돼서 여기 남겨봅니다.</p>
-                    </div>
-                    <div class="feed-bottom">
-                        <div class="feed-stats">
-                            <span class="stat-item">👍 4</span>
-                            <span class="stat-item">💬 7</span>
-                        </div>
-                        <button class="btn-scrap">⭐ 스크랩</button>
-                    </div>
-                </div>
-
-                <div class="feed-item">
-                    <div class="feed-top">
-                        <span class="feed-category-badge" style="color: #dc2626; background: #fef2f2;">✅ 합격/탈락 사례</span>
-                        <span class="feed-author">주거안정원츄</span>
-                        <span class="feed-time">3시간 전</span>
-                    </div>
-                    <div class="feed-content">
-                        <h3>[탈락] 역세권 청년주택 서류 심사 탈락 이유 분석 공유</h3>
-                        <p>이번에 서류 제출까지는 갔는데 최종 자격 검증에서 소득 자산 초과로 탈락했습니다. 차량 가액 계산할 때 중고차 시세 기준이 제가 생각한 거랑 완전히 다르더라고요. 다음 회차 준비하시는 분들 차량 소유 여부 꼭 체크하세요.</p>
-                    </div>
-                    <div class="feed-bottom">
-                        <div class="feed-stats">
-                            <span class="stat-item">👍 41</span>
-                            <span class="stat-item">💬 32</span>
-                        </div>
-                        <button class="btn-scrap scrapped">⭐ 스크랩 취소</button>
-                    </div>
-                </div>
-
-                <div class="feed-item">
-                    <div class="feed-top">
-                        <span class="feed-category-badge" style="color: #ca8a04; background: #fef9c3;">💡 정보 교류</span>
-                        <span class="feed-author">꿀팁수집가</span>
-                        <span class="feed-time">어제</span>
-                    </div>
-                    <div class="feed-content">
-                        <h3>2026년 상반기 자격증 시험 응시료 환급 가능한 리스트 총정리 (.xlsx)</h3>
-                        <p>고용노동부랑 지자체별로 지원해 주는 시험 종류(토익, 오픽, 기사 자격증, 컴활 등)가 조금씩 다른 거 아시죠? 중복 수령 불가능한 부분이랑 1인당 연간 한도 금액 시도별로 엑셀 파일에 보기 편하게 매핑해 뒀습니다.</p>
-                    </div>
-                    <div class="feed-bottom">
-                        <div class="feed-stats">
-                            <span class="stat-item">👍 89</span>
-                            <span class="stat-item">💬 14</span>
-                        </div>
-                        <button class="btn-scrap">⭐ 스크랩</button>
-                    </div>
-                </div>
-
+            <div class="feed-container" id="feed-container">
+                <div class="no-posts">불러오는 중...</div>
             </div>
+
         </section>
-
     </main>
+
+    <!-- 글쓰기 모달 -->
+    <div class="modal-overlay" id="writeModal" onclick="handleModalClick(event)">
+        <div class="modal-box">
+            <h3>📝 새 글 작성</h3>
+            <select id="write-category">
+                <option value="고민 게시판">🤫 고민 게시판</option>
+                <option value="정책 후기">📝 정책 후기</option>
+                <option value="합격/탈락 사례">✅ 합격/탈락 사례</option>
+                <option value="정보 교류">💡 정보 교류</option>
+            </select>
+            <input type="text" id="write-title" placeholder="제목을 입력하세요">
+            <textarea id="write-content" placeholder="내용을 입력하세요"></textarea>
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeModal()">취소</button>
+                <button class="btn-submit" onclick="submitPost()">게시하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CAT_STYLE = {
+            '정책 후기':     { color: '#0369a1', bg: '#e0f2fe' },
+            '고민 게시판':   { color: '#65a30d', bg: '#f7fee7' },
+            '합격/탈락 사례': { color: '#dc2626', bg: '#fef2f2' },
+            '정보 교류':     { color: '#ca8a04', bg: '#fef9c3' },
+        };
+        const CAT_EMOJI = {
+            '정책 후기': '📝', '고민 게시판': '🤫', '합격/탈락 사례': '✅', '정보 교류': '💡'
+        };
+
+        // ── 로그인 체크 & 네비 ──
+        const loggedInUser = localStorage.getItem('userid');
+        const navRight = document.getElementById('nav-right');
+
+        if (!loggedInUser) {
+            alert('로그인이 필요한 페이지입니다!');
+            window.location.href = 'index.html';
+        } else {
+            navRight.innerHTML = `
+                <span style="margin-right:12px;color:#0f172a;font-size:0.9rem;">👤 <b>${loggedInUser}</b>님</span>
+                <button id="btn-logout" style="background:none;border:1px solid #e2e8f0;padding:0.3rem 0.8rem;border-radius:8px;font-weight:600;cursor:pointer;color:#475569;font-size:0.82rem;transition:all 0.2s;font-family:'Pretendard',sans-serif;">로그아웃</button>
+            `;
+            const lb = document.getElementById('btn-logout');
+            lb.addEventListener('mouseenter', () => { lb.style.borderColor='#0ea5e9'; lb.style.color='#0ea5e9'; });
+            lb.addEventListener('mouseleave', () => { lb.style.borderColor='#e2e8f0'; lb.style.color='#475569'; });
+            lb.addEventListener('click', () => {
+                localStorage.removeItem('userid');
+                window.location.href = 'index.html';
+            });
+        }
+
+        // ── 스크랩 (localStorage) ──
+        let scrapped = JSON.parse(localStorage.getItem('scrappedPosts') || '[]');
+        function updateScrapCount() {
+            document.getElementById('scrap-count').textContent = scrapped.length;
+        }
+        function toggleScrap(id, btn) {
+            const idx = scrapped.indexOf(id);
+            if (idx === -1) {
+                scrapped.push(id);
+                btn.textContent = '⭐ 스크랩 취소';
+                btn.classList.add('scrapped');
+            } else {
+                scrapped.splice(idx, 1);
+                btn.textContent = '⭐ 스크랩';
+                btn.classList.remove('scrapped');
+            }
+            localStorage.setItem('scrappedPosts', JSON.stringify(scrapped));
+            updateScrapCount();
+        }
+
+        // ── 좋아요 ──
+        async function likePost(id, btn) {
+            btn.disabled = true;
+            await fetch(`/posts/${id}/like`, { method: 'POST' });
+            const count = parseInt(btn.dataset.count) + 1;
+            btn.dataset.count = count;
+            btn.textContent = `👍 ${count}`;
+        }
+
+        // ── 시간 표시 ──
+        function timeAgo(dateStr) {
+            const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+            if (diff < 60) return '방금 전';
+            if (diff < 3600) return `${Math.floor(diff/60)}분 전`;
+            if (diff < 86400) return `${Math.floor(diff/3600)}시간 전`;
+            return `${Math.floor(diff/86400)}일 전`;
+        }
+
+        // ── 게시글 렌더링 ──
+        function renderPosts(posts) {
+            const container = document.getElementById('feed-container');
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="no-posts">😥 게시글이 없습니다.</div>';
+                return;
+            }
+            container.innerHTML = posts.map(p => {
+                const cs = CAT_STYLE[p.category] || { color: '#475569', bg: '#f1f5f9' };
+                const emoji = CAT_EMOJI[p.category] || '';
+                const isScrapped = scrapped.includes(p.id);
+                return `
+                <div class="feed-item" id="post-${p.id}">
+                    <div class="feed-top">
+                        <span class="feed-category-badge" style="color:${cs.color};background:${cs.bg};">${emoji} ${p.category}</span>
+                        <span class="feed-author">${p.userid}</span>
+                        <span class="feed-time">${timeAgo(p.created_at)}</span>
+                    </div>
+                    <div class="feed-content">
+                        <h3>${p.title}</h3>
+                        <p>${p.content}</p>
+                    </div>
+                    <div class="feed-bottom">
+                        <div class="feed-stats">
+                            <span class="stat-item">
+                                <button onclick="likePost(${p.id}, this)" data-count="${p.likes}"
+                                    style="background:none;border:none;cursor:pointer;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;">
+                                    👍 ${p.likes}
+                                </button>
+                            </span>
+                        </div>
+                        <button class="btn-scrap ${isScrapped ? 'scrapped' : ''}"
+                            onclick="toggleScrap(${p.id}, this)">
+                            ${isScrapped ? '⭐ 스크랩 취소' : '⭐ 스크랩'}
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // ── 게시글 불러오기 ──
+        let currentCategory = '전체';
+
+        async function loadPosts() {
+            const search = document.getElementById('search-input').value.trim();
+            const params = new URLSearchParams();
+            if (currentCategory !== '전체') params.append('category', currentCategory);
+            if (search) params.append('search', search);
+
+            const res = await fetch(`/posts?${params.toString()}`);
+            const posts = await res.json();
+            renderPosts(posts);
+        }
+
+        // ── 카테고리 선택 ──
+        function selectCategory(cat, el) {
+            document.querySelectorAll('.category-item').forEach(li => li.classList.remove('active'));
+            el.classList.add('active');
+            currentCategory = cat;
+            document.getElementById('search-input').value = '';
+            loadPosts();
+        }
+
+        // ── 검색 엔터키 ──
+        document.getElementById('search-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') loadPosts();
+        });
+
+        // ── 글쓰기 모달 ──
+        function openModal() {
+            document.getElementById('writeModal').classList.add('open');
+        }
+        function closeModal() {
+            document.getElementById('writeModal').classList.remove('open');
+            document.getElementById('write-title').value = '';
+            document.getElementById('write-content').value = '';
+        }
+        function handleModalClick(e) {
+            if (e.target === document.getElementById('writeModal')) closeModal();
+        }
+
+        async function submitPost() {
+            const category = document.getElementById('write-category').value;
+            const title    = document.getElementById('write-title').value.trim();
+            const content  = document.getElementById('write-content').value.trim();
+
+            if (!title || !content) {
+                alert('제목과 내용을 모두 입력해 주세요.');
+                return;
+            }
+
+            const res = await fetch('/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userid: loggedInUser, category, title, content })
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModal();
+                loadPosts();
+            } else {
+                alert('게시글 저장에 실패했습니다.');
+            }
+        }
+
+        // ── 초기 로드 ──
+        updateScrapCount();
+        loadPosts().then(() => {
+            const targetId = new URLSearchParams(window.location.search).get('post');
+            if (targetId) {
+                setTimeout(() => {
+                    const el = document.getElementById(`post-${targetId}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.style.transition = 'box-shadow 0.3s';
+                        el.style.boxShadow = '0 0 0 3px #0ea5e9';
+                        setTimeout(() => el.style.boxShadow = '', 2500);
+                    }
+                }, 300);
+            }
+        });
+    </script>
 
 </body>
 </html>

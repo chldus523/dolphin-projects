@@ -65,13 +65,12 @@
     </div>
     <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); // 폼 제출 시 페이지가 새로고침되는 것을 막습니다.
+            e.preventDefault();
 
             const userid = document.getElementById('userid').value;
             const password = document.getElementById('password').value;
 
             try {
-                // 내 컴퓨터 서버(localhost:3000)로 아이디/비번을 담아 요청을 보냅니다.
                 const response = await fetch('http://localhost:3000/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -80,13 +79,12 @@
 
                 const result = await response.json();
 
-                // 서버에서 온 응답(success)에 따라 행동을 결정합니다.
                 if (result.success) {
-                    alert(result.message); // "로그인 성공!" 팝업
+                    alert(result.message);
                     localStorage.setItem('userid', userid);
-                    window.location.href = 'home.html'; // 실제 홈 화면으로 이동!
+                    window.location.href = 'home.html';
                 } else {
-                    alert(result.message); // "아이디 또는 비밀번호가 틀렸습니다." 팝업
+                    alert(result.message);
                 }
             } catch (error) {
                 alert('서버와 연결할 수 없습니다. 서버가 켜져 있는지 확인해주세요!');

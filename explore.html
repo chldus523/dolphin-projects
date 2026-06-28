@@ -6,6 +6,176 @@
     <title>돌고래 - 정보 탐색</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* ── 키워드 + 페르소나 필터 영역 ── */
+        .filter-wrapper {
+            background: #fff;
+            border: 1.5px solid #e0f2fe;
+            border-radius: 20px;
+            padding: 1.8rem 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .filter-section-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #0369a1;
+            letter-spacing: 0.3px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .keyword-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1.4rem;
+        }
+        .k-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.5rem 1.1rem;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 0.83rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s;
+            user-select: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .k-chip input[type="checkbox"] { display: none; }
+        .k-chip .chip-check {
+            display: none;
+            font-size: 0.75rem;
+        }
+        .k-chip.active .chip-check { display: inline; }
+        .k-chip[data-cat="전체"].active  { background:#0ea5e9; border-color:#0ea5e9; color:#fff; }
+        .k-chip[data-cat="주거"].active  { background:#dbeafe; border-color:#2563eb; color:#1d4ed8; }
+        .k-chip[data-cat="취업"].active  { background:#ffedd5; border-color:#ea580c; color:#c2410c; }
+        .k-chip[data-cat="자산형성"].active { background:#dcfce7; border-color:#16a34a; color:#15803d; }
+        .k-chip[data-cat="돌봄"].active  { background:#ede9fe; border-color:#7c3aed; color:#6d28d9; }
+        .k-chip[data-cat="금융"].active  { background:#e0f2fe; border-color:#0369a1; color:#075985; }
+        .k-chip:hover {
+            border-color: #94a3b8;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .k-chip.active:hover { opacity: 0.9; }
+        .persona-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+        .persona-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .persona-field label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #475569;
+        }
+        .persona-field select,
+        .persona-field input[type="number"] {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.42rem 0.8rem;
+            font-size: 0.84rem;
+            font-family: 'Pretendard', sans-serif;
+            color: #0f172a;
+            background: #f8fafc;
+            outline: none;
+            transition: border-color 0.2s;
+            min-width: 110px;
+        }
+        .persona-field select:focus,
+        .persona-field input[type="number"]:focus {
+            border-color: #0ea5e9;
+        }
+        .btn-filter-reset {
+            background: none;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.42rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            font-family: 'Pretendard', sans-serif;
+            transition: all 0.18s;
+            align-self: flex-end;
+        }
+        .btn-filter-reset:hover { border-color: #0ea5e9; color: #0ea5e9; }
+
+        /* ── 정책 결과 ── */
+        .result-count {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 0.75rem;
+        }
+        .result-count b { color: #0ea5e9; }
+        .no-result {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* ── 탈락 정책 섹션 ── */
+        .excluded-section {
+            margin-top: 1.8rem;
+        }
+        .excluded-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #64748b;
+            background: #e2e8f0;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 0.7rem 1.1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.18s;
+        }
+        .excluded-header:hover { background: #cbd5e1; }
+        .excluded-header .toggle-icon {
+            margin-left: auto;
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+        }
+        .excluded-header.open .toggle-icon { transform: rotate(180deg); }
+        .excluded-list { display: none; flex-direction: column; gap: 0.6rem; }
+        .excluded-list.open { display: flex; }
+        .policy-item.excluded {
+            opacity: 0.6;
+            border-style: dashed;
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+            position: relative;
+        }
+        .exclude-reason {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #ef4444;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            padding: 0.2rem 0.6rem;
+            margin-left: 0.4rem;
+        }
+
         #guide-section {
             background: #ffffff;
             border: 1.5px solid #e0f2fe;
@@ -156,241 +326,115 @@
 
     <main class="container">
 
-        <section class="search-wrapper">
-            <h2>어떤 혜택을 찾고 계신가요?</h2>
-            <div class="search-bar">
-                <input type="text" placeholder="정책명, 자격요건, 관심 분야를 입력하세요 (예: 월세, 청년도약)">
-                <button>검색</button>
+        <!-- ── 키워드 + 페르소나 필터 ── -->
+        <div class="filter-wrapper">
+            <div class="filter-section-title">🏷️ 관심 정책 키워드 선택</div>
+            <div class="keyword-chips" id="keywordChips">
+                <label class="k-chip active" data-cat="전체">
+                    <input type="checkbox" checked><span class="chip-check">✓</span> 전체
+                </label>
+                <label class="k-chip" data-cat="주거">
+                    <input type="checkbox"><span class="chip-check">✓</span> 🏠 주거
+                </label>
+                <label class="k-chip" data-cat="취업">
+                    <input type="checkbox"><span class="chip-check">✓</span> 💼 취업
+                </label>
+                <label class="k-chip" data-cat="자산형성">
+                    <input type="checkbox"><span class="chip-check">✓</span> 💰 자산형성
+                </label>
+                <label class="k-chip" data-cat="돌봄">
+                    <input type="checkbox"><span class="chip-check">✓</span> 🤝 돌봄
+                </label>
+                <label class="k-chip" data-cat="금융">
+                    <input type="checkbox"><span class="chip-check">✓</span> 💳 금융
+                </label>
             </div>
-        </section>
 
-        <div class="content-grid">
+            <div class="filter-section-title">👤 내 조건 설정 <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">(기본값: 페르소나 나돌봄 · 만 29세 · 경기도 · 중위소득 150%)</span></div>
+            <div class="persona-row">
+                <div class="persona-field">
+                    <label>나이 (만)</label>
+                    <input type="number" id="f-age" value="29" min="13" max="39" style="width:80px;">
+                </div>
+                <div class="persona-field">
+                    <label>거주 지역</label>
+                    <select id="f-region">
+                        <option value="전국">전국 공통</option>
+                        <option value="서울">서울</option>
+                        <option value="경기" selected>경기</option>
+                        <option value="인천">인천</option>
+                        <option value="부산">부산</option>
+                        <option value="기타">기타 지역</option>
+                    </select>
+                </div>
+                <div class="persona-field">
+                    <label>소득 수준</label>
+                    <select id="f-income">
+                        <option value="1순위">1순위 (중위소득 120% 이하)</option>
+                        <option value="2순위" selected>2순위 (중위소득 150% 이하)</option>
+                        <option value="전체">전체 (소득 제한 없음)</option>
+                    </select>
+                </div>
+                <button class="btn-filter-reset" onclick="resetFilters()">↺ 초기화</button>
+            </div>
+        </div>
 
-            <section>
+        <div style="display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start;">
+
+            <!-- 왼쪽: 정책 결과 -->
+            <div>
                 <div class="section-title">
                     <span>추천 정책 결과</span>
-                    <span class="user-condition-badge">👤 만 25세 · 서울 거주 · 소득 1순위 조건 맞춤</span>
+                    <span class="user-condition-badge" id="condition-badge">👤 만 29세 · 경기 거주 · 소득 2순위(중위소득 150%) 조건 맞춤</span>
                 </div>
+                <div class="result-count" id="result-count"></div>
+                <div class="policy-list" id="policy-list"></div>
+            </div>
 
-                <div class="policy-list">
-                    <div class="policy-item selected">
-                        <div class="policy-top">
-                            <span class="policy-tag" style="color: #2563eb; background: #dbeafe;">주거금융</span>
-                            <span class="d-day-badge">D-3</span>
+            <!-- 오른쪽: 서류 준비 가이드 사이드바 -->
+            <div style="position:sticky;top:90px;">
+                <div style="background:#fff;border:1.5px solid #e0f2fe;border-radius:20px;padding:1.8rem 2rem;">
+
+                    <!-- 헤더 -->
+                    <div style="font-size:0.95rem;font-weight:800;color:#0369a1;margin-bottom:1rem;display:flex;align-items:center;gap:0.4rem;">
+                        📋 서류 준비 가이드
+                    </div>
+
+                    <!-- 캐러셀 네비게이션 -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                        <button onclick="guideNav(-1)" style="background:#f1f5f9;border:none;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;">‹</button>
+                        <span id="guide-title" style="font-size:1.1rem;font-weight:800;color:#0f172a;text-align:center;flex:1;margin:0 0.5rem;"></span>
+                        <button onclick="guideNav(1)" style="background:#f1f5f9;border:none;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;">›</button>
+                    </div>
+
+                    <!-- 페이지 인디케이터 -->
+                    <div id="guide-dots" style="display:flex;justify-content:center;gap:5px;margin-bottom:1rem;"></div>
+
+                    <!-- 진행도 바 -->
+                    <div style="margin-bottom:1rem;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#64748b;margin-bottom:4px;">
+                            <span>준비 현황</span><span id="guide-prog-label">0 / 0</span>
                         </div>
-                        <h3>서울시 청년월세 특별지원 사업</h3>
-                        <p class="policy-desc">서울에 거주하는 무주택 청년들의 주거비 부담을 덜어주기 위해 월 최대 20만 원씩 최대 12달 동안 월세를 지원하는 정책입니다.</p>
-                        <div class="policy-meta">
-                            <span>📍 서울특별시</span>
-                            <span>💰 월 최대 20만원</span>
-                            <span>⏱️ ~ 2026.05.23 마감</span>
+                        <div style="background:#e2e8f0;border-radius:10px;height:6px;overflow:hidden;">
+                            <div id="guide-prog-bar" style="height:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border-radius:10px;width:0%;transition:width 0.4s;"></div>
                         </div>
                     </div>
 
-                    <div class="policy-item">
-                        <div class="policy-top">
-                            <span class="policy-tag" style="color: #16a34a; background: #dcfce7;">자산형성</span>
-                            <span class="d-day-badge" style="color:#16a34a; background:#dcfce7;">상시모집</span>
-                        </div>
-                        <h3>정부 청년도약계좌 (연계 가입)</h3>
-                        <p class="policy-desc">청년의 중장기 자산형성을 지원하기 위해 매월 일정 금액을 저축하면 정부 기여금을 매칭하고 비과세 혜택을 주는 계좌입니다.</p>
-                        <div class="policy-meta">
-                            <span>📍 전국 공통</span>
-                            <span>💰 만기 시 최대 5천만원 안팎</span>
-                            <span>⏱️ 매월 초 접수</span>
-                        </div>
-                    </div>
+                    <!-- 서류 체크리스트 -->
+                    <div id="guide-checklist" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.2rem;min-height:120px;"></div>
 
-                    <div class="policy-item">
-                        <div class="policy-top">
-                            <span class="policy-tag" style="color: #ea580c; background: #ffedd5;">취업지원</span>
-                            <span class="d-day-badge">D-12</span>
-                        </div>
-                        <h3>청년 자격증 시험 응시료 지원</h3>
-                        <p class="policy-desc">구직 활동 중인 청년들의 경제적 부담을 완화하기 위해 토익, 컴활, 기사 자격증 등 시험 응시료의 80%를 지원합니다.</p>
-                        <div class="policy-meta">
-                            <span>📍 고용노동부</span>
-                            <span>💰 연 최대 10만원</span>
-                            <span>⏱️ 예산 소진 시 마감</span>
-                        </div>
-                    </div>
+                    <!-- 신청 링크 -->
+                    <a id="guide-apply-link" href="#" target="_blank" class="btn-doc-link" style="display:block;text-align:center;">신청 페이지 바로가기 ↗</a>
                 </div>
-            </section>
-
-            <section class="guide-sidebar">
-                <div class="section-title">
-                    <span>서류 준비 가이드</span>
-                </div>
-                <div class="guide-box">
-                    <div class="guide-target-title">📌 서울시 청년월세 특별지원</div>
-                    <ul class="document-checklist">
-                        <li class="doc-item">
-                            <input type="checkbox" id="doc1" checked>
-                            <div class="doc-info">
-                                <label for="doc1" class="doc-name" style="text-decoration: line-through; color: #94a3b8;">주민등록등본</label>
-                                <span class="doc-hint">정부24에서 온라인 무료 발급 가능</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="doc2">
-                            <div class="doc-info">
-                                <label for="doc2" class="doc-name">임대차계약서 사본</label>
-                                <span class="doc-hint">확정일자가 날인된 서류 필수</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="doc3">
-                            <div class="doc-info">
-                                <label for="doc3" class="doc-name">가족관계증명서(상세)</label>
-                                <span class="doc-hint">대법원 전자가족관계등록시스템 발급</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="doc4">
-                            <div class="doc-info">
-                                <label for="doc4" class="doc-name">최근 3개월간 월세 이체 내역서</label>
-                                <span class="doc-hint">은행 앱에서 이체확인증으로 발급</span>
-                            </div>
-                        </li>
-                    </ul>
-                    <a href="#" class="btn-doc-link">선택 정책 신청 페이지로 이동 ↗</a>
-                </div>
-            </section>
+            </div>
 
         </div>
 
-        <section id="guide-section">
-            <div class="guide-section-header">
-                <h2>📋 서류 발급 누락 방지 가이드</h2>
-                <span>체크리스트</span>
-            </div>
-
-            <div class="guide-cards-grid">
-
-                <div class="guide-card">
-                    <div class="guide-card-title">🏠 청년월세 특별지원</div>
-                    <div class="progress-wrap">
-                        <div class="progress-label">
-                            <span>준비 현황</span>
-                            <span id="prog1-label">0 / 4</span>
-                        </div>
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill" id="prog1-bar" style="width:0%"></div>
-                        </div>
-                    </div>
-                    <ul>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g1d1" onchange="updateProgress('g1',4)">
-                            <div class="doc-info">
-                                <label for="g1d1" class="doc-name">주민등록등본</label>
-                                <span class="doc-hint">정부24 무료 발급 (주민번호 뒷자리 포함)</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g1d2" onchange="updateProgress('g1',4)">
-                            <div class="doc-info">
-                                <label for="g1d2" class="doc-name">임대차계약서 사본</label>
-                                <span class="doc-hint">확정일자가 날인된 서류 필수</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g1d3" onchange="updateProgress('g1',4)">
-                            <div class="doc-info">
-                                <label for="g1d3" class="doc-name">가족관계증명서(상세)</label>
-                                <span class="doc-hint">대법원 전자가족관계등록시스템 발급</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g1d4" onchange="updateProgress('g1',4)">
-                            <div class="doc-info">
-                                <label for="g1d4" class="doc-name">최근 3개월 월세 이체 내역서</label>
-                                <span class="doc-hint">은행 앱에서 이체확인증으로 발급</span>
-                            </div>
-                        </li>
-                    </ul>
-                    <a href="https://www.bokjiro.go.kr" target="_blank" class="btn-doc-link">복지로 신청하기 ↗</a>
-                </div>
-
-                <div class="guide-card">
-                    <div class="guide-card-title">🤝 가족돌봄청년 지원사업</div>
-                    <div class="progress-wrap">
-                        <div class="progress-label">
-                            <span>준비 현황</span>
-                            <span id="prog2-label">0 / 3</span>
-                        </div>
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill" id="prog2-bar" style="width:0%"></div>
-                        </div>
-                    </div>
-                    <ul>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g2d1" onchange="updateProgress('g2',3)">
-                            <div class="doc-info">
-                                <label for="g2d1" class="doc-name">주민등록등본</label>
-                                <span class="doc-hint">정부24 무료 발급</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g2d2" onchange="updateProgress('g2',3)">
-                            <div class="doc-info">
-                                <label for="g2d2" class="doc-name">가족관계증명서</label>
-                                <span class="doc-hint">돌봄 대상자 관계 확인용</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g2d3" onchange="updateProgress('g2',3)">
-                            <div class="doc-info">
-                                <label for="g2d3" class="doc-name">돌봄 확인 서류</label>
-                                <span class="doc-hint">진단서 또는 장애인 등록증 등</span>
-                            </div>
-                        </li>
-                    </ul>
-                    <a href="https://www.mogef.go.kr" target="_blank" class="btn-doc-link">여성가족부 신청하기 ↗</a>
-                </div>
-
-                <div class="guide-card">
-                    <div class="guide-card-title">💰 청년도약계좌</div>
-                    <div class="progress-wrap">
-                        <div class="progress-label">
-                            <span>준비 현황</span>
-                            <span id="prog3-label">0 / 3</span>
-                        </div>
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill" id="prog3-bar" style="width:0%"></div>
-                        </div>
-                    </div>
-                    <ul>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g3d1" onchange="updateProgress('g3',3)">
-                            <div class="doc-info">
-                                <label for="g3d1" class="doc-name">신분증 (주민등록증/운전면허증)</label>
-                                <span class="doc-hint">본인 명의 신분증</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g3d2" onchange="updateProgress('g3',3)">
-                            <div class="doc-info">
-                                <label for="g3d2" class="doc-name">소득 확인 서류</label>
-                                <span class="doc-hint">건강보험료 납부확인서 또는 근로소득 원천징수영수증</span>
-                            </div>
-                        </li>
-                        <li class="doc-item">
-                            <input type="checkbox" id="g3d3" onchange="updateProgress('g3',3)">
-                            <div class="doc-info">
-                                <label for="g3d3" class="doc-name">본인 명의 통장</label>
-                                <span class="doc-hint">취급 은행 계좌 (은행 앱에서 신청 가능)</span>
-                            </div>
-                        </li>
-                    </ul>
-                    <a href="https://www.kinfa.or.kr" target="_blank" class="btn-doc-link">청년도약계좌 신청하기 ↗</a>
-                </div>
-
-            </div>
-        </section>
 
     </main>
 
     <script>
+        // ── 네비게이션 / 로그인 상태 ──
         const loggedInUser = localStorage.getItem('userid');
         const navRight = document.getElementById('nav-right');
 
@@ -411,17 +455,283 @@
             }
         } else {
             if (navRight) {
-                navRight.innerHTML = `
-                    <a href="index.html">로그인</a>
-                    <a href="#">회원가입</a>
-                `;
+                navRight.innerHTML = `<a href="index.html">로그인</a><a href="#">회원가입</a>`;
             }
         }
 
-        function updateProgress(groupId, total) {
+        // ── 찜하기 ──
+        let bookmarks = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
+
+        function toggleBookmark(id, btn) {
+            const idx = bookmarks.indexOf(id);
+            if (idx === -1) {
+                bookmarks.push(id);
+                btn.textContent = '⭐';
+                btn.title = '찜 취소';
+            } else {
+                bookmarks.splice(idx, 1);
+                btn.textContent = '☆';
+                btn.title = '찜하기';
+            }
+            localStorage.setItem('bookmarkedPolicies', JSON.stringify(bookmarks));
+            buildGuideData();
+        }
+
+        // ── 카테고리 색상 매핑 ──
+        const CAT_STYLE = {
+            '주거':    { color: '#2563eb', bg: '#dbeafe' },
+            '취업':    { color: '#ea580c', bg: '#ffedd5' },
+            '자산형성': { color: '#16a34a', bg: '#dcfce7' },
+            '돌봄':    { color: '#7c3aed', bg: '#ede9fe' },
+            '금융':    { color: '#0369a1', bg: '#e0f2fe' },
+        };
+
+        // ── 정책 데이터 로드 ──
+        let allPolicies = [];
+
+        async function loadPolicies() {
+            const res = await fetch('/data/policies.json');
+            allPolicies = await res.json();
+            renderPolicies();
+            return allPolicies;
+        }
+
+        // ── 현재 선택된 키워드 ──
+        let activeCategory = '전체';
+
+        // ── 키워드 칩 이벤트 ──
+        document.querySelectorAll('.k-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.k-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                activeCategory = chip.dataset.cat;
+                renderPolicies();
+            });
+        });
+
+        // ── 페르소나 필터 이벤트 ──
+        ['f-age', 'f-region', 'f-income'].forEach(id => {
+            document.getElementById(id).addEventListener('change', renderPolicies);
+        });
+
+        function resetFilters() {
+            document.getElementById('f-age').value = 29;
+            document.getElementById('f-region').value = '경기';
+            document.getElementById('f-income').value = '2순위';
+            document.querySelectorAll('.k-chip').forEach(c => c.classList.remove('active'));
+            document.querySelector('.k-chip[data-cat="전체"]').classList.add('active');
+            activeCategory = '전체';
+            renderPolicies();
+        }
+
+        // ── 필터링 + 렌더링 ──
+        function renderPolicies() {
+            const age    = parseInt(document.getElementById('f-age').value) || 25;
+            const region = document.getElementById('f-region').value;
+            const income = document.getElementById('f-income').value;
+
+            document.getElementById('condition-badge').textContent =
+                `👤 만 ${age}세 · ${region} 거주 · 소득 ${income} 조건 맞춤`;
+
+            const incomeMatch = (pIncome) => {
+                if (pIncome === '전체') return true;
+                if (pIncome === '2순위') return ['1순위', '2순위'].includes(income);
+                if (pIncome === '1순위') return income === '1순위';
+                return true;
+            };
+
+            const getExcludeReason = (p) => {
+                if (age < p.ageMin || age > p.ageMax) return `나이 기준 미해당 (${p.ageMin}~${p.ageMax}세)`;
+                if (p.region !== '전국' && p.region !== region) return `지역 기준 미해당 (${p.region} 한정)`;
+                if (!incomeMatch(p.income)) return `소득 기준 초과 (${p.income} 이하만 해당)`;
+                return null;
+            };
+
+            const matched  = [];
+            const excluded = [];
+            allPolicies.forEach(p => {
+                const catOk = activeCategory === '전체' || p.category === activeCategory;
+                if (!catOk) return;
+                const reason = getExcludeReason(p);
+                if (!reason) matched.push(p);
+                else excluded.push({ ...p, reason });
+            });
+
+            document.getElementById('result-count').innerHTML =
+                `조건에 맞는 정책 <b>${matched.length}</b>건 · 기준 미달 <b style="color:#ef4444">${excluded.length}</b>건`;
+
+            const policyCard = (p, isExcluded = false) => {
+                const cs = CAT_STYLE[p.category] || { color: '#475569', bg: '#f1f5f9' };
+                const ddayStyle = (p.dday === '상시' || p.dday === '상시모집')
+                    ? 'color:#16a34a;background:#dcfce7;border-color:#86efac;' : '';
+                const excludeTag = isExcluded
+                    ? `<span class="exclude-reason">❌ ${p.reason}</span>` : '';
+                const isBookmarked = bookmarks.includes(p.id);
+                const bookmarkBtn = !isExcluded ? `
+                    <button onclick="toggleBookmark(${p.id}, this)" data-id="${p.id}"
+                        style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:1.1rem;line-height:1;padding:0 0.2rem;"
+                        title="${isBookmarked ? '찜 취소' : '찜하기'}">
+                        ${isBookmarked ? '⭐' : '☆'}
+                    </button>` : '';
+                return `
+                <div class="policy-item ${isExcluded ? 'excluded' : ''}">
+                    <div class="policy-top">
+                        <span class="policy-tag" style="color:${cs.color};background:${cs.bg};">${p.category}</span>
+                        <span class="d-day-badge" style="${ddayStyle}">${p.dday}</span>
+                        ${excludeTag}
+                        ${bookmarkBtn}
+                    </div>
+                    <h3>${p.title}</h3>
+                    <p class="policy-desc">${p.description}</p>
+                    <div class="policy-meta">
+                        <span>📍 ${p.region === '전국' ? p.agency : p.region}</span>
+                        <span>💰 ${p.benefit}</span>
+                        <span>⏱️ ${p.deadline}</span>
+                    </div>
+                </div>`;
+            };
+
+            const list = document.getElementById('policy-list');
+            const matchedHtml = matched.length > 0
+                ? matched.map(p => policyCard(p)).join('')
+                : '<div class="no-result">😥 해당 조건에 맞는 정책이 없습니다.<br>조건을 변경해 보세요!</div>';
+
+            const excludedHtml = excluded.length > 0 ? `
+                <div class="excluded-section">
+                    <div class="excluded-header" onclick="toggleExcluded(this)">
+                        <span>⚠️ 소득·지역·나이 기준으로 제외된 정책 ${excluded.length}건 (펼쳐보기)</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="excluded-list">
+                        ${excluded.map(p => policyCard(p, true)).join('')}
+                    </div>
+                </div>` : '';
+
+            list.innerHTML = matchedHtml + excludedHtml;
+        }
+
+        function toggleExcluded(header) {
+            header.classList.toggle('open');
+            const list = header.nextElementSibling;
+            list.classList.toggle('open');
+            const span = header.querySelector('span');
+            span.textContent = list.classList.contains('open')
+                ? `⚠️ 소득·지역·나이 기준으로 제외된 정책 (접기)`
+                : `⚠️ 소득·지역·나이 기준으로 제외된 정책 ${list.children.length}건 (펼쳐보기)`;
+        }
+
+        // ── 서류 준비 가이드 캐러셀 (찜한 정책 기반) ──
+        let GUIDE_DATA = [];
+        let guideIdx = 0;
+
+        const CAT_EMOJI_MAP = { '주거':'🏠', '취업':'💼', '자산형성':'💰', '돌봄':'🤝', '금융':'💳' };
+
+        function buildGuideData() {
+            const bm = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
+            GUIDE_DATA = allPolicies
+                .filter(p => bm.includes(p.id) && p.requiredDocs)
+                .map(p => ({
+                    title: `${CAT_EMOJI_MAP[p.category] || '📋'} ${p.title}`,
+                    policyId: p.id,
+                    applyUrl: p.applyUrl,
+                    docs: p.requiredDocs.split(',').map(d => ({ name: d.trim(), hint: '' }))
+                }));
+            guideIdx = 0;
+            renderGuide();
+        }
+
+        function renderGuide() {
+            if (GUIDE_DATA.length === 0) {
+                document.getElementById('guide-title').textContent = '';
+                document.getElementById('guide-dots').innerHTML = '';
+                document.getElementById('guide-prog-label').textContent = '';
+                document.getElementById('guide-prog-bar').style.width = '0%';
+                document.getElementById('guide-apply-link').style.display = 'none';
+                document.getElementById('guide-checklist').innerHTML =
+                    '<p style="color:#94a3b8;font-size:0.85rem;text-align:center;padding:1rem 0;">⭐ 정책을 찜하면<br>서류 준비 가이드가 표시됩니다.</p>';
+                return;
+            }
+
+            document.getElementById('guide-apply-link').style.display = 'block';
+            const g = GUIDE_DATA[guideIdx];
+            const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
+
+            document.getElementById('guide-title').textContent = g.title;
+            document.getElementById('guide-apply-link').href = g.applyUrl;
+
+            // 인디케이터 dots
+            document.getElementById('guide-dots').innerHTML = GUIDE_DATA.map((_, i) =>
+                `<span style="width:7px;height:7px;border-radius:50%;background:${i === guideIdx ? '#0ea5e9' : '#e2e8f0'};display:inline-block;transition:background 0.2s;"></span>`
+            ).join('');
+
+            // 체크리스트
+            const checklist = document.getElementById('guide-checklist');
+            checklist.innerHTML = g.docs.map((doc, i) => {
+                const checked = !!docChecks[`${g.policyId}-${i}`];
+                return `
+                <div style="display:flex;align-items:flex-start;gap:0.6rem;">
+                    <input type="checkbox" id="sg-${g.policyId}-${i}" data-docname="${doc.name}"
+                        ${checked ? 'checked' : ''}
+                        onchange="guideCheck(${g.policyId}, ${i}, ${g.docs.length}, this)"
+                        style="width:15px;height:15px;accent-color:#0ea5e9;flex-shrink:0;margin-top:2px;cursor:pointer;">
+                    <div>
+                        <label for="sg-${g.policyId}-${i}" style="font-size:0.92rem;font-weight:600;color:${checked ? '#94a3b8' : '#1e293b'};cursor:pointer;${checked ? 'text-decoration:line-through;' : ''}">${doc.name}</label>
+                        <div style="font-size:0.8rem;color:#94a3b8;margin-top:2px;">${doc.hint}</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            updateGuideProgress(g);
+        }
+
+        function updateGuideProgress(g) {
+            const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
+            const done = g.docs.filter((_, i) => docChecks[`${g.policyId}-${i}`]).length;
+            const pct = Math.round((done / g.docs.length) * 100);
+            document.getElementById('guide-prog-label').textContent = `${done} / ${g.docs.length}`;
+            document.getElementById('guide-prog-bar').style.width = pct + '%';
+        }
+
+        function guideNav(dir) {
+            guideIdx = (guideIdx + dir + GUIDE_DATA.length) % GUIDE_DATA.length;
+            renderGuide();
+        }
+
+        function guideCheck(policyId, docIdx, total, cb) {
+            const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
+            docChecks[`${policyId}-${docIdx}`] = cb.checked;
+
+            // 같은 서류명 동기화
+            const docName = cb.dataset.docname;
+            GUIDE_DATA.forEach(g => {
+                g.docs.forEach((doc, i) => {
+                    if (doc.name === docName && !(g.policyId === policyId && i === docIdx)) {
+                        docChecks[`${g.policyId}-${i}`] = cb.checked;
+                    }
+                });
+            });
+
+            localStorage.setItem('docChecks', JSON.stringify(docChecks));
+
+            const label = document.querySelector(`label[for="sg-${policyId}-${docIdx}"]`);
+            if (label) {
+                label.style.textDecoration = cb.checked ? 'line-through' : '';
+                label.style.color = cb.checked ? '#94a3b8' : '#1e293b';
+            }
+            updateGuideProgress(GUIDE_DATA[guideIdx]);
+        }
+
+        // 가이드 그룹 → policy id 매핑
+        const GUIDE_POLICY_MAP = { g1: 1, g2: 4, g3: 2 };
+
+        // ── 서류 가이드 진행도 + localStorage 연동 ──
+        function updateProgress(groupId, total, changedCb) {
+            const policyId = GUIDE_POLICY_MAP[groupId];
+            const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
+
             const checkboxes = document.querySelectorAll(`[id^="${groupId}d"]`);
             let checked = 0;
-            checkboxes.forEach(cb => {
+            checkboxes.forEach((cb, i) => {
                 const label = document.querySelector(`label[for="${cb.id}"]`);
                 if (cb.checked) {
                     checked++;
@@ -429,13 +739,41 @@
                 } else {
                     if (label) label.classList.remove('checked');
                 }
+                // localStorage 저장
+                if (policyId !== undefined) docChecks[`${policyId}-${i}`] = cb.checked;
             });
+
+            localStorage.setItem('docChecks', JSON.stringify(docChecks));
             const pct = Math.round((checked / total) * 100);
             document.getElementById(`${groupId.replace('g','prog')}-label`).textContent = `${checked} / ${total}`;
             document.getElementById(`${groupId.replace('g','prog')}-bar`).style.width = pct + '%';
         }
 
+        // ── 페이지 로드 시 저장된 체크 상태 복원 ──
+        function restoreGuideChecks() {
+            const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
+            Object.entries(GUIDE_POLICY_MAP).forEach(([groupId, policyId]) => {
+                const checkboxes = document.querySelectorAll(`[id^="${groupId}d"]`);
+                let total = checkboxes.length;
+                checkboxes.forEach((cb, i) => {
+                    if (docChecks[`${policyId}-${i}`]) {
+                        cb.checked = true;
+                        const label = document.querySelector(`label[for="${cb.id}"]`);
+                        if (label) label.classList.add('checked');
+                    }
+                });
+                if (total > 0) updateProgress(groupId, total);
+            });
+        }
+
         window.addEventListener('load', () => {
+            // 마이페이지에서 저장한 프로필이 있으면 기본값으로 적용
+            const saved = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            if (saved.age)    document.getElementById('f-age').value    = saved.age;
+            if (saved.region) document.getElementById('f-region').value  = saved.region;
+            if (saved.income) document.getElementById('f-income').value  = saved.income;
+
+            loadPolicies().then(() => buildGuideData());
             if (window.location.hash === '#guide-section') {
                 setTimeout(() => {
                     document.getElementById('guide-section').scrollIntoView({ behavior: 'smooth' });

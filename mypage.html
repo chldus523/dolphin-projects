@@ -18,21 +18,22 @@
                 <a href="home.html" id="nav-home">홈</a>
                 <a href="explore.html" id="nav-explore">정보 탐색</a>
                 <a href="community.html" id="nav-community">커뮤니티</a>
-                <a href="mypage.html" id="nav-mypage">마이페이지</a>
+                <a href="mypage.html" id="nav-mypage" class="active">마이페이지</a>
             </div>
+            <div id="nav-right"></div>
         </div>
     </header>
 
     <main class="container">
         <aside class="profile-card">
             <div class="avatar-circle">🐬</div>
-            <h2 class="profile-name">홍길동 님</h2>
-            <p class="profile-status">서울 거주 · 만 25세</p>
+            <h2 class="profile-name" id="sidebar-name">— 님</h2>
+            <p class="profile-status" id="sidebar-status">정보를 저장해 주세요</p>
 
             <ul class="mypage-menu">
                 <li><a href="#info-section" class="active"><i class="fa-solid fa-user-gear"></i> 내 정보 관리</a></li>
-                <li><a href="#docs-section"><i class="fa-solid fa-folder-open"></i> 내 서류함</a></li>
-                <li><a href="#scrap-section"><i class="fa-solid fa-star"></i> 찜한 목록</a></li>
+                <li><a href="#docs-section"><i class="fa-solid fa-star"></i> 찜한 정책</a></li>
+                <li><a href="#scrap-section"><i class="fa-solid fa-bookmark"></i> 스크랩 목록</a></li>
             </ul>
         </aside>
 
@@ -46,110 +47,298 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                         <div class="input-group">
                             <label>나이 (만)</label>
-                            <input type="number" value="25">
+                            <input type="number" id="mp-age" value="25">
                         </div>
                         <div class="input-group">
                             <label>거주 지역</label>
-                            <select>
-                                <option selected>서울특별시</option>
-                                <option>경기도</option>
-                                <option>인천광역시</option>
-                                <option>기타 지역</option>
+                            <select id="mp-region">
+                                <option value="서울">서울특별시</option>
+                                <option value="경기">경기도</option>
+                                <option value="인천">인천광역시</option>
+                                <option value="부산">부산광역시</option>
+                                <option value="기타">기타 지역</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="input-group">
                         <label>소득 구간</label>
-                        <select>
-                            <option selected>기준 중위소득 60% 이하 (1순위)</option>
-                            <option>기준 중위소득 100% 이하 (2순위)</option>
-                            <option>기준 중위소득 150% 이하 (3순위)</option>
-                            <option>해당 없음</option>
+                        <select id="mp-income">
+                            <option value="1순위">기준 중위소득 120% 이하 (1순위)</option>
+                            <option value="2순위">기준 중위소득 150% 이하 (2순위)</option>
+                            <option value="전체">소득 제한 없음 / 해당 없음</option>
                         </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="input-group">
+                            <label>취업 상태</label>
+                            <select id="mp-employment">
+                                <option value="재직자">재직자 (직장인)</option>
+                                <option value="구직자">구직자 (취업 준비 중)</option>
+                                <option value="프리랜서">프리랜서 / 자영업</option>
+                                <option value="학생">학생</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>가구 형태</label>
+                            <select id="mp-household">
+                                <option value="1인가구">1인가구 (독립 거주)</option>
+                                <option value="부모별거">부모와 별거 (독립 거주)</option>
+                                <option value="부모동거">부모와 동거</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="input-group">
                         <label>돌봄 대상자 여부 (해당 시 체크)</label>
-                        <div class="input-group">
-                            <label>돌봄 대상자 여부 (해당 시 체크)</label>
-                            <div class="checkbox-group">
-                                <label class="checkbox-card">
-                                    <span class="checkbox-content">영유아</span>
-                                    <input type="checkbox">
-                                </label>
-                                <label class="checkbox-card">
-                                    <span class="checkbox-content">노인</span>
-                                    <input type="checkbox">
-                                </label>
-                                <label class="checkbox-card">
-                                    <span class="checkbox-content">장애인</span>
-                                    <input type="checkbox">
-                                </label>
-                            </div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-card">
+                                <span class="checkbox-content">영유아</span>
+                                <input type="checkbox" id="care-infant">
+                            </label>
+                            <label class="checkbox-card">
+                                <span class="checkbox-content">노인</span>
+                                <input type="checkbox" id="care-elderly">
+                            </label>
+                            <label class="checkbox-card">
+                                <span class="checkbox-content">장애인</span>
+                                <input type="checkbox" id="care-disabled">
+                            </label>
                         </div>
                     </div>
 
-                    <button type="button" class="btn-save">
+                    <button type="button" class="btn-save" onclick="saveProfile()">
                         <i class="fa-solid fa-calculator"></i> 정보 저장 및 맞춤 정책 재계산
                     </button>
                 </form>
             </section>
 
             <section id="docs-section" style="margin-top: 5rem;">
-                <h2 class="section-title"><i class="fa-solid fa-briefcase"></i> 최근 신청 정책 서류함</h2>
-                <p class="section-desc">📌 서울시 청년월세 특별지원 준비 서류</p>
-                <div class="doc-checklist">
-                    <div class="doc-card">
-                        <div class="doc-info">
-                            <input type="checkbox" class="doc-checkbox" checked>
-                            <div class="doc-text">
-                                <span class="name">주민등록등본</span>
-                                <span class="hint">정부24에서 무료 발급 가능 (주민번호 뒷자리 포함)</span>
-                            </div>
-                        </div>
-                        <a href="https://www.gov.kr" target="_blank" class="btn-link">정부24 바로가기</a>
-                    </div>
-                    <div class="doc-card">
-                        <div class="doc-info">
-                            <input type="checkbox" class="doc-checkbox">
-                            <div class="doc-text">
-                                <span class="name">가족관계증명서 (상세)</span>
-                                <span class="hint">대법원 전자가족관계등록시스템 발급</span>
-                            </div>
-                        </div>
-                        <a href="https://efamily.scourt.go.kr" target="_blank" class="btn-link">발급처 연결</a>
-                    </div>
+                <h2 class="section-title"><i class="fa-solid fa-star"></i> 찜한 정책</h2>
+                <p class="section-desc">정보 탐색에서 ⭐ 찜한 정책의 필요 서류가 자동으로 표시됩니다.</p>
+                <div id="docs-list" style="display:flex;flex-direction:column;gap:1.2rem;margin-top:1rem;">
+                    <p style="color:#94a3b8;font-size:0.88rem;">불러오는 중...</p>
                 </div>
             </section>
 
             <section id="scrap-section" style="margin-top: 5rem;">
-                <h2 class="section-title"><i class="fa-solid fa-star"></i> 나의 보관함</h2>
+                <h2 class="section-title"><i class="fa-solid fa-bookmark"></i> 스크랩 목록</h2>
 
-                <div class="tabs">
-                    <button class="tab-btn active">찜한 정책 (2)</button>
-                    <button class="tab-btn">스크랩한 커뮤니티 글 (12)</button>
-                </div>
-
-                <div class="scrapped-item">
-                    <div class="item-content">
-                        <h4>서울시 청년월세 특별지원 사업</h4>
-                        <span>D-12일 마감 · 서울특별시 · 주거금융</span>
-                    </div>
-                    <button class="btn-remove" title="삭제"><i class="fa-solid fa-circle-xmark"></i></button>
-                </div>
-
-                <div class="scrapped-item">
-                    <div class="item-content">
-                        <h4>청년 자격증 시험 응시료 지원</h4>
-                        <span>상시 모집 · 고용노동부 · 취업지원</span>
-                    </div>
-                    <button class="btn-remove" title="삭제"><i class="fa-solid fa-circle-xmark"></i></button>
+                <div id="scrap-list" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                    <p style="color:#94a3b8; font-size:0.88rem;">불러오는 중...</p>
                 </div>
             </section>
 
         </div>
     </main>
+    <script>
+        const REGION_LABEL = { '서울': '서울', '경기': '경기도', '인천': '인천', '부산': '부산', '기타': '기타 지역' };
+
+        // ── 네비게이션 로그인 표시 ──
+        const loggedInUser = localStorage.getItem('userid');
+        const navRight = document.getElementById('nav-right');
+        if (loggedInUser && navRight) {
+            navRight.innerHTML = `
+                <span style="margin-right:12px;color:#0f172a;font-size:0.9rem;">👤 <b>${loggedInUser}</b>님</span>
+                <button id="btn-logout" style="background:none;border:1px solid #e2e8f0;padding:0.3rem 0.8rem;border-radius:8px;font-weight:600;cursor:pointer;color:#475569;font-size:0.82rem;transition:all 0.2s;font-family:'Pretendard',sans-serif;">로그아웃</button>
+            `;
+            const lb = document.getElementById('btn-logout');
+            lb.addEventListener('mouseenter', () => { lb.style.borderColor='#0ea5e9'; lb.style.color='#0ea5e9'; });
+            lb.addEventListener('mouseleave', () => { lb.style.borderColor='#e2e8f0'; lb.style.color='#475569'; });
+            lb.addEventListener('click', () => {
+                localStorage.removeItem('userid');
+                alert('로그아웃 되었습니다.');
+                window.location.href = 'index.html';
+            });
+        }
+
+        // ── 사이드바 프로필 업데이트 ──
+        function updateSidebar() {
+            const userid = localStorage.getItem('userid') || '—';
+            const s = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            document.getElementById('sidebar-name').textContent = `${userid} 님`;
+            if (s.age && s.region) {
+                document.getElementById('sidebar-status').textContent =
+                    `${REGION_LABEL[s.region] || s.region} 거주 · 만 ${s.age}세`;
+            }
+        }
+
+        // ── 저장된 프로필 불러와서 폼에 반영 ──
+        const saved = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        if (saved.age)      document.getElementById('mp-age').value         = saved.age;
+        if (saved.region)   document.getElementById('mp-region').value      = saved.region;
+        if (saved.income)   document.getElementById('mp-income').value      = saved.income;
+        if (saved.careInfant)   document.getElementById('care-infant').checked   = saved.careInfant;
+        if (saved.careElderly)  document.getElementById('care-elderly').checked  = saved.careElderly;
+        if (saved.careDisabled)  document.getElementById('care-disabled').checked  = saved.careDisabled;
+        if (saved.employment)    document.getElementById('mp-employment').value    = saved.employment;
+        if (saved.household)     document.getElementById('mp-household').value     = saved.household;
+
+        updateSidebar();
+        loadBookmarkedDocs();
+        loadScrappedPosts();
+
+        function saveProfile() {
+            const profile = {
+                age:          document.getElementById('mp-age').value,
+                region:       document.getElementById('mp-region').value,
+                income:       document.getElementById('mp-income').value,
+                careInfant:   document.getElementById('care-infant').checked,
+                careElderly:  document.getElementById('care-elderly').checked,
+                careDisabled: document.getElementById('care-disabled').checked,
+                employment:   document.getElementById('mp-employment').value,
+                household:    document.getElementById('mp-household').value,
+            };
+            localStorage.setItem('userProfile', JSON.stringify(profile));
+            updateSidebar();
+            alert('✅ 저장되었습니다! 정보 탐색 페이지에 반영됩니다.');
+        }
+        async function loadBookmarkedDocs() {
+            const bookmarks = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
+            const container = document.getElementById('docs-list');
+
+            if (bookmarks.length === 0) {
+                container.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">찜한 정책이 없습니다. 정보 탐색에서 ⭐를 눌러 정책을 찜해보세요!</p>';
+                return;
+            }
+
+            const res = await fetch('/data/policies.json');
+            const allPolicies = await res.json();
+            const bookmarked = allPolicies.filter(p => bookmarks.includes(p.id));
+
+            const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
+
+            container.innerHTML = bookmarked.map(p => {
+                const docs = (p.requiredDocs || '').split(',').map(d => d.trim()).filter(Boolean);
+                const done = docs.filter((_, i) => docChecks[`${p.id}-${i}`]).length;
+                const pct = docs.length ? Math.round((done / docs.length) * 100) : 0;
+                return `
+                <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:1.4rem 1.6rem;">
+                    <div style="font-size:0.9rem;font-weight:700;color:#0369a1;margin-bottom:0.6rem;">📌 ${p.title}</div>
+                    <div style="margin-bottom:1rem;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:#64748b;margin-bottom:4px;">
+                            <span>준비 현황</span><span>${done} / ${docs.length}</span>
+                        </div>
+                        <div style="background:#e2e8f0;border-radius:10px;height:6px;overflow:hidden;">
+                            <div id="prog-${p.id}" style="height:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border-radius:10px;width:${pct}%;transition:width 0.4s;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:0.7rem;margin-bottom:1.2rem;">
+                        ${docs.map((doc, i) => `
+                        <div style="display:flex;align-items:center;gap:0.7rem;">
+                            <input type="checkbox" id="doc-${p.id}-${i}"
+                                data-docname="${doc}"
+                                ${docChecks[`${p.id}-${i}`] ? 'checked' : ''}
+                                onchange="saveDocCheck(${p.id}, ${i}, ${docs.length}, this)"
+                                style="width:16px;height:16px;accent-color:#0ea5e9;flex-shrink:0;cursor:pointer;">
+                            <label for="doc-${p.id}-${i}" style="font-size:0.85rem;font-weight:600;color:#1e293b;cursor:pointer;${docChecks[`${p.id}-${i}`] ? 'text-decoration:line-through;color:#94a3b8;' : ''}">${doc}</label>
+                        </div>`).join('')}
+                    </div>
+                    <a href="${p.applyUrl}" target="_blank" class="btn-link">신청 페이지 바로가기 ↗</a>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadScrappedPosts() {
+            const scrapped = JSON.parse(localStorage.getItem('scrappedPosts') || '[]');
+            const list = document.getElementById('scrap-list');
+
+            if (scrapped.length === 0) {
+                list.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">스크랩한 글이 없습니다.</p>';
+                return;
+            }
+
+            const res = await fetch('/posts');
+            const allPosts = await res.json();
+            const scrappedPosts = allPosts.filter(p => scrapped.includes(p.id));
+
+            if (scrappedPosts.length === 0) {
+                list.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">스크랩한 글이 없습니다.</p>';
+                return;
+            }
+
+            const CAT_STYLE = {
+                '정책 후기':      { color: '#0369a1', bg: '#e0f2fe' },
+                '고민 게시판':    { color: '#65a30d', bg: '#f7fee7' },
+                '합격/탈락 사례': { color: '#dc2626', bg: '#fef2f2' },
+                '정보 교류':      { color: '#ca8a04', bg: '#fef9c3' },
+            };
+
+            list.innerHTML = scrappedPosts.map(p => {
+                const cs = CAT_STYLE[p.category] || { color: '#475569', bg: '#f1f5f9' };
+                const preview = p.content.length > 80 ? p.content.slice(0, 80) + '…' : p.content;
+                return `
+                <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:1.2rem 1.4rem;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
+                        <span style="font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;color:${cs.color};background:${cs.bg};">${p.category}</span>
+                        <span style="font-size:0.75rem;color:#94a3b8;margin-left:auto;">${p.userid}</span>
+                    </div>
+                    <h4 style="font-size:0.92rem;font-weight:700;color:#0f172a;margin-bottom:0.4rem;">${p.title}</h4>
+                    <p style="font-size:0.82rem;color:#64748b;line-height:1.6;margin-bottom:0.9rem;">${preview}</p>
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <a href="community.html?post=${p.id}" style="font-size:0.8rem;font-weight:600;color:#0ea5e9;text-decoration:none;">커뮤니티에서 보기 →</a>
+                        <button class="btn-remove" title="스크랩 취소" onclick="removeScrap(${p.id}, this)">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function applyCheck(cb, checked) {
+            cb.checked = checked;
+            const label = document.querySelector(`label[for="${cb.id}"]`);
+            if (label) {
+                label.style.textDecoration = checked ? 'line-through' : '';
+                label.style.color = checked ? '#94a3b8' : '#1e293b';
+            }
+        }
+
+        function saveDocCheck(policyId, docIdx, total, cb) {
+            const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
+            const docName = cb.dataset.docname;
+            docChecks[`${policyId}-${docIdx}`] = cb.checked;
+
+            // 같은 서류명을 가진 다른 체크박스도 자동 동기화
+            document.querySelectorAll(`input[data-docname="${docName}"]`).forEach(other => {
+                if (other === cb) return;
+                const [, pid, idx] = other.id.match(/doc-(\d+)-(\d+)/);
+                docChecks[`${pid}-${idx}`] = cb.checked;
+                applyCheck(other, cb.checked);
+
+                // 해당 정책 진행도 바도 업데이트
+                const otherBoxes = document.querySelectorAll(`[id^="doc-${pid}-"]`);
+                const otherDone = [...otherBoxes].filter(c => c.checked).length;
+                const otherPct = Math.round((otherDone / otherBoxes.length) * 100);
+                const otherBar = document.getElementById(`prog-${pid}`);
+                if (otherBar) otherBar.style.width = otherPct + '%';
+            });
+
+            localStorage.setItem('docChecks', JSON.stringify(docChecks));
+
+            applyCheck(cb, cb.checked);
+
+            // 현재 정책 진행도 바 업데이트
+            const checkboxes = document.querySelectorAll(`[id^="doc-${policyId}-"]`);
+            const done = [...checkboxes].filter(c => c.checked).length;
+            const pct = Math.round((done / total) * 100);
+            const bar = document.getElementById(`prog-${policyId}`);
+            if (bar) bar.style.width = pct + '%';
+        }
+
+        function removeScrap(id, btn) {
+            let scrapped = JSON.parse(localStorage.getItem('scrappedPosts') || '[]');
+            scrapped = scrapped.filter(s => s !== id);
+            localStorage.setItem('scrappedPosts', JSON.stringify(scrapped));
+            btn.closest('.scrapped-item').remove();
+            document.getElementById('scrap-tab-count').textContent = scrapped.length;
+            if (scrapped.length === 0) {
+                document.getElementById('scrap-list').innerHTML =
+                    '<p style="color:#94a3b8;font-size:0.88rem;">스크랩한 글이 없습니다.</p>';
+            }
+        }
+    </script>
 </body>
 
 </html>
