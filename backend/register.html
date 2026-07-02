@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인 - 청년정책 돌고래</title>
+    <title>회원가입 - 청년정책 돌고래</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -27,51 +27,54 @@
 
         <div class="form-section">
             <div class="form-header">
-                <h2>반갑습니다!</h2>
-                <p>돌고래 플랫폼 계정으로 로그인하세요.</p>
+                <h2>회원가입</h2>
+                <p>돌고래 플랫폼 계정을 만들어보세요.</p>
             </div>
 
-            <form id="login-form">
+            <form id="register-form">
                 <div class="input-group">
                     <label>아이디</label>
-                    <input type="text" id="userid" placeholder="입력해주세요" required>
+                    <input type="text" id="userid" placeholder="4자 이상 입력해주세요" required>
                 </div>
                 <div class="input-group">
                     <label>비밀번호</label>
-                    <input type="password" id="password" placeholder="입력해주세요" required>
+                    <input type="password" id="password" placeholder="6자 이상 입력해주세요" required>
+                </div>
+                <div class="input-group">
+                    <label>비밀번호 확인</label>
+                    <input type="password" id="password-confirm" placeholder="비밀번호를 다시 입력해주세요" required>
                 </div>
 
-                <button type="submit" class="btn-login">로그인</button>
+                <p id="error-msg" style="color:#ef4444;font-size:0.83rem;margin-bottom:0.8rem;display:none;"></p>
+
+                <button type="submit" class="btn-login">회원가입</button>
             </form>
 
             <div class="login-links">
-                <a href="#">비밀번호를 잊으셨나요?</a>
-                <a href="register.html" style="font-weight: 700; color: var(--primary);">회원가입</a>
-            </div>
-
-            <div class="divider">
-                <span>또는 소셜 계정으로 로그인</span>
-            </div>
-
-            <div class="social-group">
-                <button type="button" class="btn-social" onclick="window.location.href='home.html'">
-                    <i class="fa-solid fa-comment" style="color: #FEE500;"></i> 카카오
-                </button>
-                <button type="button" class="btn-social" onclick="window.location.href='home.html'">
-                    <i class="fa-solid fa-n" style="color: #03C75A;"></i> 네이버
-                </button>
+                <a href="index.html" style="font-weight: 700; color: var(--primary);">이미 계정이 있으신가요? 로그인</a>
             </div>
         </div>
     </div>
+
     <script>
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const userid = document.getElementById('userid').value;
+            const userid = document.getElementById('userid').value.trim();
             const password = document.getElementById('password').value;
+            const confirm = document.getElementById('password-confirm').value;
+            const errorMsg = document.getElementById('error-msg');
+
+            if (password !== confirm) {
+                errorMsg.textContent = '비밀번호가 일치하지 않습니다.';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            errorMsg.style.display = 'none';
 
             try {
-                const response = await fetch('http://localhost:3000/login', {
+                const response = await fetch('/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userid, password })
@@ -80,14 +83,15 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert(result.message);
                     localStorage.setItem('userid', userid);
-                    window.location.href = 'home.html';
+                    window.location.href = 'onboarding.html';
                 } else {
-                    alert(result.message);
+                    errorMsg.textContent = result.message;
+                    errorMsg.style.display = 'block';
                 }
             } catch (error) {
-                alert('서버와 연결할 수 없습니다. 서버가 켜져 있는지 확인해주세요!');
+                errorMsg.textContent = '서버와 연결할 수 없습니다. 서버가 켜져 있는지 확인해주세요.';
+                errorMsg.style.display = 'block';
             }
         });
     </script>

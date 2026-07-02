@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시작하기 - 청년정책 돌고래</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .onboarding-wrap {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 8px 40px rgba(14, 165, 233, 0.12);
+            width: 100%;
+            max-width: 520px;
+            padding: 2.5rem 2.5rem 2rem;
+        }
+
+        .ob-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .ob-header .dolphin {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .ob-header h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.3rem;
+        }
+
+        .ob-header p {
+            font-size: 0.88rem;
+            color: #64748b;
+        }
+
+        /* 진행 바 */
+        .progress-bar-wrap {
+            margin-bottom: 2rem;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.6rem;
+        }
+
+        .progress-step {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            transition: color 0.3s;
+        }
+
+        .progress-step.active {
+            color: #0ea5e9;
+        }
+
+        .progress-step.done {
+            color: #22c55e;
+        }
+
+        .progress-track {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
+        /* 단계 콘텐츠 */
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0369a1;
+            margin-bottom: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid #e0f2fe;
+        }
+
+        .ob-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+        }
+
+        /* 버튼 영역 */
+        .ob-actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 2rem;
+        }
+
+        .btn-prev {
+            flex: 1;
+            padding: 0.85rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        .btn-prev:hover {
+            border-color: #0ea5e9;
+            color: #0369a1;
+        }
+
+        .btn-next {
+            flex: 2;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        .btn-next:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .skip-link {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .skip-link a {
+            color: #94a3b8;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .skip-link a:hover {
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="onboarding-wrap">
+
+        <div class="ob-header">
+            <div class="dolphin">🐬</div>
+            <h2>맞춤 정책 설정</h2>
+            <p>몇 가지 정보를 입력하면 나에게 딱 맞는 정책을 찾아드려요!</p>
+        </div>
+
+        <!-- 진행 바 -->
+        <div class="progress-bar-wrap">
+            <div class="progress-steps">
+                <span class="progress-step active" id="step-label-1">① 기본 인적 사항</span>
+                <span class="progress-step" id="step-label-2">② 경제적 여건</span>
+                <span class="progress-step" id="step-label-3">③ 가구·돌봄 현황</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill" style="width: 33%;"></div>
+            </div>
+        </div>
+
+        <!-- 1단계: 기본 인적 사항 -->
+        <div class="step active" id="step-1">
+            <div class="step-title">
+                <i class="fa-solid fa-id-card"></i> 기본 인적 사항
+            </div>
+            <div class="ob-grid">
+                <div class="input-group">
+                    <label>나이 (만)</label>
+                    <input type="number" id="ob-age" placeholder="예: 25" min="13" max="39">
+                </div>
+                <div class="input-group">
+                    <label>거주 지역</label>
+                    <select id="ob-region">
+                        <option value="">선택해주세요</option>
+                        <option value="서울">서울특별시</option>
+                        <option value="경기">경기도</option>
+                        <option value="인천">인천광역시</option>
+                        <option value="부산">부산광역시</option>
+                        <option value="기타">기타 지역</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2단계: 경제적 여건 -->
+        <div class="step" id="step-2">
+            <div class="step-title">
+                <i class="fa-solid fa-won-sign"></i> 경제적 여건
+            </div>
+            <div class="input-group">
+                <label>소득 구간</label>
+                <select id="ob-income">
+                    <option value="">선택해주세요</option>
+                    <option value="1순위">기준 중위소득 120% 이하</option>
+                    <option value="2순위">기준 중위소득 150% 이하</option>
+                    <option value="전체">소득 제한 없음 / 해당 없음</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>취업 상태</label>
+                <select id="ob-employment">
+                    <option value="">선택해주세요</option>
+                    <option value="재직자">재직자 (직장인)</option>
+                    <option value="구직자">구직자 (취업 준비 중)</option>
+                    <option value="프리랜서">프리랜서 / 자영업</option>
+                    <option value="학생">학생</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 3단계: 가구·돌봄 현황 -->
+        <div class="step" id="step-3">
+            <div class="step-title">
+                <i class="fa-solid fa-house-chimney-user"></i> 가구·돌봄 현황
+            </div>
+            <div class="input-group">
+                <label>가구 형태</label>
+                <select id="ob-household">
+                    <option value="">선택해주세요</option>
+                    <option value="1인가구">1인가구 (독립 거주)</option>
+                    <option value="부모별거">부모와 별거 (독립 거주)</option>
+                    <option value="부모동거">부모와 동거</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>돌봄 대상자 여부 (해당 시 체크)</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-card">
+                        <span class="checkbox-content">영유아</span>
+                        <input type="checkbox" id="ob-care-infant">
+                    </label>
+                    <label class="checkbox-card">
+                        <span class="checkbox-content">노인</span>
+                        <input type="checkbox" id="ob-care-elderly">
+                    </label>
+                    <label class="checkbox-card">
+                        <span class="checkbox-content">장애인</span>
+                        <input type="checkbox" id="ob-care-disabled">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 버튼 -->
+        <div class="ob-actions">
+            <button class="btn-prev" id="btn-prev" onclick="prevStep()" style="display:none;">
+                <i class="fa-solid fa-arrow-left"></i> 이전
+            </button>
+            <button class="btn-next" id="btn-next" onclick="nextStep()">
+                다음 <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <div class="skip-link">
+            <a onclick="skipOnboarding()">나중에 입력할게요</a>
+        </div>
+
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        // 로그인 안 된 상태면 로그인 페이지로
+        if (!localStorage.getItem('userid')) {
+            window.location.href = 'index.html';
+        }
+
+        function updateProgress() {
+            const pct = (currentStep / totalSteps) * 100;
+            document.getElementById('progress-fill').style.width = pct + '%';
+
+            for (let i = 1; i <= totalSteps; i++) {
+                const label = document.getElementById(`step-label-${i}`);
+                label.classList.remove('active', 'done');
+                if (i < currentStep) label.classList.add('done');
+                else if (i === currentStep) label.classList.add('active');
+            }
+
+            document.getElementById('btn-prev').style.display = currentStep > 1 ? 'block' : 'none';
+            document.getElementById('btn-next').innerHTML =
+                currentStep === totalSteps
+                    ? '<i class="fa-solid fa-check"></i> 완료'
+                    : '다음 <i class="fa-solid fa-arrow-right"></i>';
+        }
+
+        function nextStep() {
+            if (!validateStep()) return;
+
+            if (currentStep === totalSteps) {
+                saveAndFinish();
+                return;
+            }
+
+            document.getElementById(`step-${currentStep}`).classList.remove('active');
+            currentStep++;
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            updateProgress();
+        }
+
+        function prevStep() {
+            document.getElementById(`step-${currentStep}`).classList.remove('active');
+            currentStep--;
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            updateProgress();
+        }
+
+        function validateStep() {
+            if (currentStep === 1) {
+                const age = document.getElementById('ob-age').value;
+                const region = document.getElementById('ob-region').value;
+                if (!age || !region) {
+                    alert('나이와 거주 지역을 모두 입력해 주세요.');
+                    return false;
+                }
+            }
+            if (currentStep === 2) {
+                const income = document.getElementById('ob-income').value;
+                const employment = document.getElementById('ob-employment').value;
+                if (!income || !employment) {
+                    alert('소득 구간과 취업 상태를 모두 선택해 주세요.');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function saveAndFinish() {
+            const profile = {
+                age:          document.getElementById('ob-age').value,
+                region:       document.getElementById('ob-region').value,
+                income:       document.getElementById('ob-income').value,
+                employment:   document.getElementById('ob-employment').value,
+                household:    document.getElementById('ob-household').value,
+                careInfant:   document.getElementById('ob-care-infant').checked,
+                careElderly:  document.getElementById('ob-care-elderly').checked,
+                careDisabled: document.getElementById('ob-care-disabled').checked,
+            };
+            localStorage.setItem('userProfile', JSON.stringify(profile));
+            window.location.href = 'home.html';
+        }
+
+        function skipOnboarding() {
+            // 빈 프로필로 저장해서 온보딩 반복 진입 방지
+            localStorage.setItem('userProfile', JSON.stringify({ skipped: true }));
+            window.location.href = 'home.html';
+        }
+    </script>
+</body>
+
+</html>

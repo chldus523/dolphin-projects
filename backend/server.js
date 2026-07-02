@@ -2,6 +2,7 @@ const express = require('express');
 const mysql   = require('mysql2');
 const cors    = require('cors');
 const Groq    = require('groq-sdk');
+const bcrypt  = require('bcrypt');
 
 require('dotenv').config();
 
@@ -166,15 +167,56 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-app.post('/login', (req, res) => {
+app.post('/register', async (req, res) => {
+    const { userid, password } = req.body;
+    if (!userid || !password) {
+        return res.status(400).json({ success: false, message: '아이디와 비밀번호를 입력해 주세요.' });
+    }
+    if (userid.length < 4) {
+        return res.status(400).json({ success: false, message: '아이디는 4자 이상이어야 합니다.' });
+    }
+    if (password.length < 6) {
+        return res.status(400).json({ success: false, message: '비밀번호는 6자 이상이어야 합니다.' });
+    }
+
+    try {
+        const hashed = await bcrypt.hash(password, 10);
+        db.query('INSERT INTO users (userid, password) VALUES (?, ?)', [userid, hashed], (err) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(409).json({ success: false, message: '이미 사용 중인 아이디입니다.' });
+                }
+                return res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
+            }
+            res.json({ success: true, message: '회원가입이 완료되었습니다!' });
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
+    }
+});
+
+app.post('/login', async (req, res) => {
     const { userid, password } = req.body;
 
-    const query = 'SELECT * FROM users WHERE userid = ? AND password = ?';
-    db.query(query, [userid, password], (err, results) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
+    db.query('SELECT * FROM users WHERE userid = ?', [userid], async (err, results) => {
+        if (err) return res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
+        if (results.length === 0) return res.json({ success: false, message: '아이디 또는 비밀번호가 틀렸습니다.' });
+
+        const user = results[0];
+        // bcrypt 해시인지 확인 후 비교 (기존 평문 계정 호환)
+        let match = false;
+        if (user.password.startsWith('$2b$')) {
+            match = await bcrypt.compare(password, user.password);
+        } else {
+            match = (password === user.password);
+            // 평문 계정이면 이번 기회에 해시로 업데이트
+            if (match) {
+                const hashed = await bcrypt.hash(password, 10);
+                db.query('UPDATE users SET password = ? WHERE userid = ?', [hashed, userid]);
+            }
         }
-        if (results.length > 0) {
+
+        if (match) {
             res.json({ success: true, message: '로그인 성공!' });
         } else {
             res.json({ success: false, message: '아이디 또는 비밀번호가 틀렸습니다.' });
