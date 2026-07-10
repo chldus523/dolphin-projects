@@ -226,7 +226,6 @@
             CAT_GROUPS.forEach(g => counts[g.key] = 0);
             allPolicies.forEach(p => { counts[groupOf(p['카테고리'])]++; });
 
-            const max = Math.max(...Object.values(counts), 1);
             const cloud = document.getElementById('wordCloud');
 
             // 전체 태그
@@ -238,11 +237,10 @@
             // 그룹 태그 (개수 많을수록 크게)
             CAT_GROUPS.forEach(g => {
                 const c = counts[g.key];
-                const size = (0.82 + (c / max) * 0.5).toFixed(2);   // 0.82rem ~ 1.32rem
                 const on = activeGroups.has(g.key);
                 html += `<span class="wc-tag ${on ? 'active' : ''}"
                     data-group="${g.key}"
-                    style="font-size:${size}rem;${on ? `background:${g.color};` : ''}">
+                    style="font-size:0.95rem;${on ? `background:${g.color};` : ''}">
                     ${g.emoji} ${g.key} <span class="wc-count">${c}</span></span>`;
             });
 
