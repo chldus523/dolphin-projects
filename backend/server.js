@@ -210,6 +210,49 @@ app.get('/api/policies', (req, res) => {
 });
 
 // ==========================================
+// 커뮤니티 API (posts 테이블)
+// ==========================================
+// 글 목록 조회 (카테고리 필터 + 검색)
+app.get('/posts', (req, res) => {
+    const { category, search } = req.query;
+    let query = 'SELECT * FROM posts';
+    const params = [];
+    const conditions = [];
+    if (category && category !== '전체') { conditions.push('category = ?'); params.push(category); }
+    if (search) { conditions.push('(title LIKE ? OR content LIKE ?)'); params.push(`%${search}%`, `%${search}%`); }
+    if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
+    query += ' ORDER BY created_at DESC';
+    db.query(query, params, (err, results) => {
+        if (err) return res.status(500).json({ error: '조회 실패' });
+        res.json(results);
+    });
+});
+
+// 글 작성
+app.post('/posts', (req, res) => {
+    const { userid, category, title, content } = req.body;
+    if (!userid || !category || !title || !content) {
+        return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
+    }
+    db.query(
+        'INSERT INTO posts (userid, category, title, content) VALUES (?, ?, ?, ?)',
+        [userid, category, title, content],
+        (err, result) => {
+            if (err) return res.status(500).json({ error: '작성 실패' });
+            res.json({ success: true, id: result.insertId });
+        }
+    );
+});
+
+// 좋아요
+app.post('/posts/:id/like', (req, res) => {
+    db.query('UPDATE posts SET likes = likes + 1 WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: '좋아요 실패' });
+        res.json({ success: true });
+    });
+});
+
+// ==========================================
 // 8. 챗봇 API
 // ==========================================
 app.post('/chat', async (req, res) => {
