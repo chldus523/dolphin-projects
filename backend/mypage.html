@@ -214,39 +214,49 @@
                 return;
             }
 
-            const res = await fetch('/data/policies.json');
+            const res = await fetch('/api/policies');
             const allPolicies = await res.json();
-            const bookmarked = allPolicies.filter(p => bookmarks.includes(p.id));
+
+            const hasDocs = d => { const t = (d || '').trim(); return t && t !== '-' && t !== '없음'; };
+            const isUrl = s => typeof s === 'string' && /^https?:\/\//.test(s);
+            const bookmarked = allPolicies.filter(p => bookmarks.includes(p['정책_ID']) && hasDocs(p['제출_서류']));
+
+            if (bookmarked.length === 0) {
+                container.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">찜한 정책 중 제출 서류 정보가 있는 정책이 없습니다.</p>';
+                return;
+            }
 
             const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
 
             container.innerHTML = bookmarked.map(p => {
-                const docs = (p.requiredDocs || '').split(',').map(d => d.trim()).filter(Boolean);
-                const done = docs.filter((_, i) => docChecks[`${p.id}-${i}`]).length;
+                const pid = p['정책_ID'];
+                const docs = p['제출_서류'].split(',').map(d => d.trim()).filter(Boolean);
+                const done = docs.filter((_, i) => docChecks[`${pid}-${i}`]).length;
                 const pct = docs.length ? Math.round((done / docs.length) * 100) : 0;
+                const link = isUrl(p['참조_링크']) ? p['참조_링크'] : '#';
                 return `
                 <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:1.4rem 1.6rem;">
-                    <div style="font-size:0.9rem;font-weight:700;color:#0369a1;margin-bottom:0.6rem;">📌 ${p.title}</div>
+                    <div style="font-size:0.9rem;font-weight:700;color:#0369a1;margin-bottom:0.6rem;">📌 ${p['정책명']}</div>
                     <div style="margin-bottom:1rem;">
                         <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:#64748b;margin-bottom:4px;">
                             <span>준비 현황</span><span>${done} / ${docs.length}</span>
                         </div>
                         <div style="background:#e2e8f0;border-radius:10px;height:6px;overflow:hidden;">
-                            <div id="prog-${p.id}" style="height:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border-radius:10px;width:${pct}%;transition:width 0.4s;"></div>
+                            <div id="prog-${pid}" style="height:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border-radius:10px;width:${pct}%;transition:width 0.4s;"></div>
                         </div>
                     </div>
                     <div style="display:flex;flex-direction:column;gap:0.7rem;margin-bottom:1.2rem;">
                         ${docs.map((doc, i) => `
                         <div style="display:flex;align-items:center;gap:0.7rem;">
-                            <input type="checkbox" id="doc-${p.id}-${i}"
+                            <input type="checkbox" id="doc-${pid}-${i}"
                                 data-docname="${doc}"
-                                ${docChecks[`${p.id}-${i}`] ? 'checked' : ''}
-                                onchange="saveDocCheck(${p.id}, ${i}, ${docs.length}, this)"
+                                ${docChecks[`${pid}-${i}`] ? 'checked' : ''}
+                                onchange="saveDocCheck('${pid}', ${i}, ${docs.length}, this)"
                                 style="width:16px;height:16px;accent-color:#0ea5e9;flex-shrink:0;cursor:pointer;">
-                            <label for="doc-${p.id}-${i}" style="font-size:0.85rem;font-weight:600;color:#1e293b;cursor:pointer;${docChecks[`${p.id}-${i}`] ? 'text-decoration:line-through;color:#94a3b8;' : ''}">${doc}</label>
+                            <label for="doc-${pid}-${i}" style="font-size:0.85rem;font-weight:600;color:#1e293b;cursor:pointer;${docChecks[`${pid}-${i}`] ? 'text-decoration:line-through;color:#94a3b8;' : ''}">${doc}</label>
                         </div>`).join('')}
                     </div>
-                    <a href="${p.applyUrl}" target="_blank" class="btn-link">신청 페이지 바로가기 ↗</a>
+                    ${link !== '#' ? `<a href="${link}" target="_blank" class="btn-link">신청 페이지 바로가기 ↗</a>` : ''}
                 </div>`;
             }).join('');
         }
@@ -314,7 +324,7 @@
             // 같은 서류명을 가진 다른 체크박스도 자동 동기화
             document.querySelectorAll(`input[data-docname="${docName}"]`).forEach(other => {
                 if (other === cb) return;
-                const [, pid, idx] = other.id.match(/doc-(\d+)-(\d+)/);
+                const [, pid, idx] = other.id.match(/doc-(.+)-(\d+)$/);
                 docChecks[`${pid}-${idx}`] = cb.checked;
                 applyCheck(other, cb.checked);
 
