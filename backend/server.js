@@ -37,7 +37,7 @@ db.connect((err) => {
 // 3. Groq AI 클라이언트 초기화
 // ==========================================
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-const CHAT_MODEL = 'qwen/qwen3-32b';
+const CHAT_MODEL = 'llama-3.3-70b-versatile';
 
 // ==========================================
 // 4. 정책 데이터 로드 (policies.json)
