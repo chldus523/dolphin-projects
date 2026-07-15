@@ -179,7 +179,7 @@
 
                 <div class="menu-title">개인 보관함</div>
                 <ul class="category-list">
-                    <li class="category-item">
+                    <li class="category-item" onclick="showScrapped(this)">
                         <a href="#" style="color: var(--scrap-color);">⭐ 내가 스크랩한 글 <span class="post-count" id="scrap-count" style="background:#fef3c7; color:var(--scrap-color);">0</span></a>
                     </li>
                 </ul>
@@ -350,6 +350,23 @@
             currentCategory = cat;
             document.getElementById('search-input').value = '';
             loadPosts();
+        }
+
+        // ── 스크랩한 글만 보기 ──
+        async function showScrapped(el) {
+            document.querySelectorAll('.category-item').forEach(li => li.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('search-input').value = '';
+
+            const feed = document.getElementById('feed-container');
+            if (scrapped.length === 0) {
+                feed.innerHTML = '<div class="no-posts">⭐ 스크랩한 글이 없습니다.<br>글 하단의 스크랩 버튼을 눌러 보관해 보세요!</div>';
+                return;
+            }
+
+            const res = await fetch('/posts');
+            const all = await res.json();
+            renderPosts(all.filter(p => scrapped.includes(p.id)));
         }
 
         // ── 검색 엔터키 ──
