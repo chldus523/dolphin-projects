@@ -252,6 +252,34 @@ app.post('/posts/:id/like', (req, res) => {
     });
 });
 
+// 댓글 목록 조회
+app.get('/posts/:id/comments', (req, res) => {
+    db.query(
+        'SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC',
+        [req.params.id],
+        (err, results) => {
+            if (err) return res.status(500).json({ error: '댓글 조회 실패' });
+            res.json(results);
+        }
+    );
+});
+
+// 댓글 작성
+app.post('/posts/:id/comments', (req, res) => {
+    const { userid, content } = req.body;
+    if (!userid || !content) {
+        return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
+    }
+    db.query(
+        'INSERT INTO comments (post_id, userid, content) VALUES (?, ?, ?)',
+        [req.params.id, userid, content],
+        (err, result) => {
+            if (err) return res.status(500).json({ error: '댓글 작성 실패' });
+            res.json({ success: true, id: result.insertId });
+        }
+    );
+});
+
 // ==========================================
 // 8. 챗봇 API
 // ==========================================

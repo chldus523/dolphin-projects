@@ -280,6 +280,51 @@
             btn.textContent = `👍 ${count}`;
         }
 
+        // ── 댓글 ──
+        function toggleComments(postId, btn) {
+            const section = document.getElementById(`comments-${postId}`);
+            const willOpen = section.style.display === 'none';
+            section.style.display = willOpen ? 'block' : 'none';
+            if (willOpen) loadComments(postId);
+        }
+
+        async function loadComments(postId) {
+            const res = await fetch(`/posts/${postId}/comments`);
+            const comments = await res.json();
+            const list = document.getElementById(`comment-list-${postId}`);
+            if (comments.length === 0) {
+                list.innerHTML = '<p style="color:#94a3b8;font-size:0.82rem;padding:0.3rem 0;">아직 댓글이 없어요. 첫 댓글을 남겨보세요!</p>';
+                return;
+            }
+            list.innerHTML = comments.map(c => `
+                <div style="padding:0.5rem 0;border-bottom:1px solid #f1f5f9;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:2px;">
+                        <span style="font-size:0.82rem;font-weight:700;color:#0f172a;">${c.userid}</span>
+                        <span style="font-size:0.72rem;color:#94a3b8;">${timeAgo(c.created_at)}</span>
+                    </div>
+                    <p style="font-size:0.85rem;color:#334155;line-height:1.5;">${c.content}</p>
+                </div>`).join('');
+        }
+
+        async function submitComment(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            const content = input.value.trim();
+            if (!content) return;
+
+            const res = await fetch(`/posts/${postId}/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userid: loggedInUser, content })
+            });
+            const data = await res.json();
+            if (data.success) {
+                input.value = '';
+                loadComments(postId);
+            } else {
+                alert(data.error || '댓글 작성에 실패했습니다.');
+            }
+        }
+
         // ── 시간 표시 ──
         function timeAgo(dateStr) {
             const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -319,11 +364,27 @@
                                     👍 ${p.likes}
                                 </button>
                             </span>
+                            <span class="stat-item">
+                                <button onclick="toggleComments(${p.id}, this)"
+                                    style="background:none;border:none;cursor:pointer;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;">
+                                    💬 댓글
+                                </button>
+                            </span>
                         </div>
                         <button class="btn-scrap ${isScrapped ? 'scrapped' : ''}"
                             onclick="toggleScrap(${p.id}, this)">
                             ${isScrapped ? '⭐ 스크랩 취소' : '⭐ 스크랩'}
                         </button>
+                    </div>
+                    <div class="comment-section" id="comments-${p.id}" style="display:none;border-top:1px solid #e2e8f0;margin-top:0.8rem;padding-top:0.9rem;">
+                        <div class="comment-list" id="comment-list-${p.id}"></div>
+                        <div style="display:flex;gap:0.5rem;margin-top:0.7rem;">
+                            <input type="text" id="comment-input-${p.id}" placeholder="따뜻한 댓글을 남겨주세요"
+                                onkeydown="if(event.key==='Enter')submitComment(${p.id})"
+                                style="flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:0.5rem 0.9rem;font-size:0.85rem;font-family:'Pretendard',sans-serif;outline:none;">
+                            <button onclick="submitComment(${p.id})"
+                                style="background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:0.5rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:'Pretendard',sans-serif;">등록</button>
+                        </div>
                     </div>
                 </div>`;
             }).join('');
