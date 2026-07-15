@@ -265,6 +265,26 @@
         //  정책 카드 렌더
         // ══════════════════════════════════════
         function isUrl(s) { return typeof s === 'string' && /^https?:\/\//.test(s); }
+
+        // 사이트 이름 → 실제 URL 매핑 (공백 제거 후 조회)
+        const SITE_URL = {
+            '서울복지포털': 'https://wis.seoul.go.kr/',
+            '서울주거포털': 'https://housing.seoul.go.kr/',
+            '서울특별시':   'https://www.seoul.go.kr/',
+            '서울특볏시':   'https://www.seoul.go.kr/',   // 오타 대응
+            '교육부':       'https://www.moe.go.kr/',
+            '복지로':       'https://www.bokjiro.go.kr/',
+            '정부24':       'https://www.gov.kr/',
+            '에너지바우처': 'https://www.energyv.or.kr/',
+        };
+        // 참조_링크 → 실제 URL (없으면 null)
+        function resolveLink(raw) {
+            const s = (raw || '').trim();
+            if (!s) return null;
+            if (isUrl(s)) return s;
+            return SITE_URL[s.replace(/\s/g, '')] || null;
+        }
+
         function ageText(p) {
             const lo = p['최소_연령'], hi = p['최대_연령'];
             if (lo === '-' || lo === undefined || lo === null) return '연령 무관';
@@ -290,10 +310,10 @@
                 const id = p['정책_ID'];
                 const isBm = bookmarks.includes(id);
                 const benefit = (p['지원_금액(혜택)'] || '').replace(/\s+/g, ' ').trim();
-                const link = p['참조_링크'];
-                const linkHtml = isUrl(link)
-                    ? `<span>🔗 <a href="${link}" target="_blank" style="color:#0ea5e9;text-decoration:none;">신청/안내 페이지</a></span>`
-                    : `<span>🔗 ${link || '기관 문의'}</span>`;
+                const url = resolveLink(p['참조_링크']);
+                const linkHtml = url
+                    ? `<span>🔗 <a href="${url}" target="_blank" style="color:#0ea5e9;text-decoration:underline;">신청/안내 페이지로 바로가기</a></span>`
+                    : `<span>🔗 기관 문의</span>`;
 
                 return `
                 <div class="policy-item">
@@ -337,21 +357,23 @@
         let GUIDE_DATA = [];
         let guideIdx = 0;
 
-        function hasDocs(p) {
-            const d = (p['제출_서류'] || '').trim();
+        function hasDocs(docStr) {
+            const d = (docStr || '').trim();
             return d && d !== '-' && d !== '없음';
         }
 
         function buildGuideData() {
             GUIDE_DATA = allPolicies
-                .filter(p => bookmarks.includes(p['정책_ID']) && hasDocs(p))
+                .filter(p => bookmarks.includes(p['정책_ID']))
                 .map(p => {
                     const g = groupMeta(groupOf(p['카테고리']));
                     return {
                         title: `${g.emoji} ${p['정책명']}`,
                         policyId: p['정책_ID'],
-                        applyUrl: isUrl(p['참조_링크']) ? p['참조_링크'] : '#',
-                        docs: p['제출_서류'].split(',').map(d => d.trim()).filter(Boolean),
+                        applyUrl: resolveLink(p['참조_링크']) || '#',
+                        docs: hasDocs(p['제출_서류'])
+                            ? p['제출_서류'].split(',').map(d => d.trim()).filter(Boolean)
+                            : [],
                     };
                 });
             guideIdx = 0;
@@ -377,10 +399,20 @@
 
             $('guide-title').textContent = g.title;
             $('guide-apply-link').href = g.applyUrl;
+            if (g.applyUrl === '#') $('guide-apply-link').removeAttribute('href');
 
             $('guide-dots').innerHTML = GUIDE_DATA.map((_, i) =>
                 `<span style="width:7px;height:7px;border-radius:50%;background:${i === guideIdx ? '#0ea5e9' : '#e2e8f0'};display:inline-block;"></span>`
             ).join('');
+
+            // 제출 서류 정보가 없는 정책 처리
+            if (g.docs.length === 0) {
+                $('guide-prog-label').textContent = '-';
+                $('guide-prog-bar').style.width = '0%';
+                $('guide-checklist').innerHTML =
+                    '<p style="color:#94a3b8;font-size:0.85rem;text-align:center;padding:1rem 0;line-height:1.6;">이 정책은 제출 서류 정보가<br>따로 안내되어 있지 않아요.<br>신청 페이지에서 확인해 주세요.</p>';
+                return;
+            }
 
             $('guide-checklist').innerHTML = g.docs.map((doc, i) => {
                 const checked = !!docChecks[`${g.policyId}-${i}`];
