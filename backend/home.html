@@ -593,7 +593,7 @@
             }
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble';
-            bubble.innerHTML = text
+            bubble.innerHTML = escapeHtml(text)
                 .replace(/^#{1,6}\s*/gm, '')
                 .replace(/^[-*_]{3,}$/gm, '')
                 .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
