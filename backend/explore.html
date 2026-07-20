@@ -161,23 +161,27 @@
 
     <main class="container">
 
-        <!-- ── 키워드 워드클라우드 필터 ── -->
+        <!-- 페이지 제목 (고정 바 위 → 스크롤하면 자연스럽게 사라짐) -->
+        <div class="section-title" style="margin-bottom:0.9rem;">
+            <span>서울시 청년·가족돌봄 정책</span>
+        </div>
+
+        <!-- ── 키워드 워드클라우드 필터 (스크롤 시 상단 고정) ── -->
         <div class="filter-wrapper">
             <div class="filter-section-title">🏷️ 관심 키워드로 정책 찾기 <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">(여러 개 선택 가능)</span></div>
             <div class="word-cloud" id="wordCloud"></div>
 
             <!-- 내 조건 맞춤 필터 -->
-            <div id="profile-filter-bar" style="margin-top:1.4rem;padding-top:1.2rem;border-top:1.5px dashed #e0f2fe;"></div>
+            <div id="profile-filter-bar" style="margin-top:1.1rem;padding-top:1rem;border-top:1.5px dashed #e0f2fe;"></div>
+
+            <!-- 결과 건수 (고정되어 항상 보임) -->
+            <div class="result-count" id="result-count" style="margin:0.9rem 0 0;"></div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start;">
 
             <!-- 왼쪽: 정책 결과 -->
             <div>
-                <div class="section-title">
-                    <span>서울시 청년·가족돌봄 정책</span>
-                </div>
-                <div class="result-count" id="result-count"></div>
                 <div class="policy-list" id="policy-list"></div>
             </div>
 
