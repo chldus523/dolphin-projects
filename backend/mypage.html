@@ -145,6 +145,16 @@
     <script>
         const REGION_LABEL = { '서울': '서울', '경기': '경기도', '인천': '인천', '부산': '부산', '기타': '기타 지역' };
 
+        // ── XSS 방어: 사용자 입력을 HTML로 해석되지 않게 이스케이프 ──
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
 
         // ── 네비게이션 로그인 표시 ──
         const loggedInUser = localStorage.getItem('userid');
@@ -292,11 +302,11 @@
                 return `
                 <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:1.2rem 1.4rem;">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
-                        <span style="font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;color:${cs.color};background:${cs.bg};">${p.category}</span>
-                        <span style="font-size:0.75rem;color:#94a3b8;margin-left:auto;">${p.userid}</span>
+                        <span style="font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;color:${cs.color};background:${cs.bg};">${escapeHtml(p.category)}</span>
+                        <span style="font-size:0.75rem;color:#94a3b8;margin-left:auto;">${escapeHtml(p.userid)}</span>
                     </div>
-                    <h4 style="font-size:0.92rem;font-weight:700;color:#0f172a;margin-bottom:0.4rem;">${p.title}</h4>
-                    <p style="font-size:0.82rem;color:#64748b;line-height:1.6;margin-bottom:0.9rem;">${preview}</p>
+                    <h4 style="font-size:0.92rem;font-weight:700;color:#0f172a;margin-bottom:0.4rem;">${escapeHtml(p.title)}</h4>
+                    <p style="font-size:0.82rem;color:#64748b;line-height:1.6;margin-bottom:0.9rem;">${escapeHtml(preview)}</p>
                     <div style="display:flex;align-items:center;justify-content:space-between;">
                         <a href="community.html?post=${p.id}" style="font-size:0.8rem;font-weight:600;color:#0ea5e9;text-decoration:none;">커뮤니티에서 보기 →</a>
                         <button class="btn-remove" title="스크랩 취소" onclick="removeScrap(${p.id}, this)">
