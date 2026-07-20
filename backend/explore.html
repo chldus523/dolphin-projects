@@ -114,6 +114,9 @@
         <div class="filter-wrapper">
             <div class="filter-section-title">🏷️ 관심 키워드로 정책 찾기 <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">(여러 개 선택 가능)</span></div>
             <div class="word-cloud" id="wordCloud"></div>
+
+            <!-- 내 조건 맞춤 필터 -->
+            <div id="profile-filter-bar" style="margin-top:1.4rem;padding-top:1.2rem;border-top:1.5px dashed #e0f2fe;"></div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start;">
@@ -213,6 +216,7 @@
             const res = await fetch('/api/policies');
             allPolicies = await res.json();
             renderWordCloud();
+            renderProfileFilter();
             renderPolicies();
             return allPolicies;
         }
@@ -285,6 +289,81 @@
             return SITE_URL[s.replace(/\s/g, '')] || null;
         }
 
+        // ══════════════════════════════════════
+        //  내 조건 맞춤 필터
+        // ══════════════════════════════════════
+        const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        let onlyMine = localStorage.getItem('exploreOnlyMine') === 'true';
+
+        // 프로필이 실제로 채워져 있는지 (온보딩 건너뛴 경우 제외)
+        function hasProfile() {
+            return !!(userProfile.age && userProfile.income);
+        }
+
+        // 소득 구간 → 사용자의 최소 중위소득 %(하한선)
+        // 하한선보다 낮은 기준을 요구하는 정책은 '확실히' 자격 미달
+        const INCOME_FLOOR = { '1순위': 0, '2순위': 120, '전체': 150 };
+
+        // 정책의 소득 기준에서 '중위소득 N%'를 추출 (없으면 null)
+        function policyIncomeCeil(text) {
+            const s = (text || '').replace(/\s/g, '');
+            if (!s || s === '-' || s.includes('제한없음')) return null;
+            const m = s.match(/중위소득(\d+)%/);
+            return m ? parseInt(m[1], 10) : null;
+        }
+
+        // 자격 미달 사유 (없으면 null = 통과)
+        function excludeReason(p) {
+            // 1) 나이 — 숫자로 명시된 경우만 판단
+            const lo = p['최소_연령'], hi = p['최대_연령'];
+            const age = parseInt(userProfile.age, 10);
+            if (Number.isFinite(age) && typeof lo === 'number' && typeof hi === 'number') {
+                if (age < lo || age > hi) {
+                    const range = hi >= 999 ? `${lo}세 이상` : `${lo}~${hi}세`;
+                    return `연령 조건 (${range})`;
+                }
+            }
+            // 2) 소득 — 확실히 초과할 때만 제외
+            const ceil = policyIncomeCeil(p['소득_기준']);
+            const floor = INCOME_FLOOR[userProfile.income];
+            if (ceil !== null && floor !== undefined && floor > ceil) {
+                return `소득 조건 (중위소득 ${ceil}% 이하)`;
+            }
+            return null;
+        }
+
+        // 필터 바 렌더
+        function renderProfileFilter() {
+            const bar = document.getElementById('profile-filter-bar');
+            if (!hasProfile()) {
+                bar.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;font-size:0.82rem;color:#64748b;">
+                        <span>🎯 <b style="color:#0369a1;">내 조건 맞춤 필터</b></span>
+                        <span>마이페이지에서 나이·소득을 입력하면 나에게 맞는 정책만 볼 수 있어요.</span>
+                        <a href="mypage.html" style="color:#0ea5e9;font-weight:700;text-decoration:underline;">정보 입력하러 가기 →</a>
+                    </div>`;
+                return;
+            }
+            const INCOME_LABEL = { '1순위': '중위소득 120% 이하', '2순위': '중위소득 120~150%', '전체': '중위소득 150% 초과' };
+            bar.innerHTML = `
+                <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:0.45rem;cursor:pointer;font-size:0.85rem;font-weight:700;color:#0369a1;">
+                        <input type="checkbox" id="chk-only-mine" ${onlyMine ? 'checked' : ''}
+                            style="width:16px;height:16px;accent-color:#0ea5e9;cursor:pointer;">
+                        🎯 내 조건에 맞는 정책만 보기
+                    </label>
+                    <span style="font-size:0.78rem;color:#64748b;background:#f1f5f9;border-radius:20px;padding:3px 12px;">
+                        만 ${userProfile.age}세 · ${INCOME_LABEL[userProfile.income] || userProfile.income}
+                    </span>
+                    <a href="mypage.html" style="font-size:0.78rem;color:#94a3b8;text-decoration:underline;">조건 수정</a>
+                </div>`;
+            document.getElementById('chk-only-mine').addEventListener('change', e => {
+                onlyMine = e.target.checked;
+                localStorage.setItem('exploreOnlyMine', onlyMine);
+                renderPolicies();
+            });
+        }
+
         function ageText(p) {
             const lo = p['최소_연령'], hi = p['최대_연령'];
             if (lo === '-' || lo === undefined || lo === null) return '연령 무관';
@@ -293,15 +372,28 @@
         }
 
         function renderPolicies() {
-            const filtered = allPolicies.filter(p =>
+            // 1) 키워드(카테고리) 필터
+            const byCategory = allPolicies.filter(p =>
                 activeGroups.size === 0 || activeGroups.has(groupOf(p['카테고리'])));
 
+            // 2) 내 조건 필터 (켜져 있고 프로필이 있을 때만)
+            const useProfile = onlyMine && hasProfile();
+            const filtered = useProfile
+                ? byCategory.filter(p => !excludeReason(p))
+                : byCategory;
+            const excludedCount = byCategory.length - filtered.length;
+
             document.getElementById('result-count').innerHTML =
-                `총 <b>${filtered.length}</b>건의 정책`;
+                `총 <b>${filtered.length}</b>건의 정책` +
+                (useProfile && excludedCount > 0
+                    ? ` <span style="color:#94a3b8;">· 내 조건에 맞지 않는 <b style="color:#ef4444;">${excludedCount}</b>건 숨김</span>`
+                    : '');
 
             const list = document.getElementById('policy-list');
             if (filtered.length === 0) {
-                list.innerHTML = '<div class="no-result">😥 선택한 키워드에 맞는 정책이 없습니다.</div>';
+                list.innerHTML = useProfile
+                    ? '<div class="no-result">😥 내 조건에 맞는 정책이 없습니다.<br>필터를 해제하거나 다른 키워드를 선택해 보세요.</div>'
+                    : '<div class="no-result">😥 선택한 키워드에 맞는 정책이 없습니다.</div>';
                 return;
             }
 
