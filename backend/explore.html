@@ -71,6 +71,52 @@
             color: #94a3b8;
             font-size: 0.9rem;
         }
+        /* ── 조건 미달 정책 섹션 ── */
+        .excluded-section { margin-top: 1.8rem; }
+        .excluded-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #64748b;
+            background: #e2e8f0;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 0.7rem 1.1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.18s;
+        }
+        .excluded-header:hover { background: #cbd5e1; }
+        .excluded-header .toggle-icon {
+            margin-left: auto;
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+        }
+        .excluded-header.open .toggle-icon { transform: rotate(180deg); }
+        .excluded-list { display: none; flex-direction: column; gap: 0.6rem; }
+        .excluded-list.open { display: flex; }
+        .policy-item.excluded {
+            opacity: 0.65;
+            border-style: dashed;
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+        .exclude-reason {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #ef4444;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            padding: 0.2rem 0.6rem;
+        }
+
         .policy-benefit {
             font-size: 0.86rem;
             color: #334155;
@@ -378,53 +424,81 @@
 
             // 2) 내 조건 필터 (켜져 있고 프로필이 있을 때만)
             const useProfile = onlyMine && hasProfile();
-            const filtered = useProfile
-                ? byCategory.filter(p => !excludeReason(p))
-                : byCategory;
-            const excludedCount = byCategory.length - filtered.length;
+            const filtered = [];
+            const excluded = [];
+            byCategory.forEach(p => {
+                (useProfile && excludeReason(p) ? excluded : filtered).push(p);
+            });
 
-            document.getElementById('result-count').innerHTML =
-                `총 <b>${filtered.length}</b>건의 정책` +
-                (useProfile && excludedCount > 0
-                    ? ` <span style="color:#94a3b8;">· 내 조건에 맞지 않는 <b style="color:#ef4444;">${excludedCount}</b>건 숨김</span>`
-                    : '');
+            document.getElementById('result-count').innerHTML = useProfile
+                ? `내 조건에 맞는 정책 <b>${filtered.length}</b>건` +
+                  (excluded.length > 0 ? ` · 조건 미달 <b style="color:#ef4444;">${excluded.length}</b>건` : '')
+                : `총 <b>${filtered.length}</b>건의 정책`;
 
-            const list = document.getElementById('policy-list');
-            if (filtered.length === 0) {
-                list.innerHTML = useProfile
-                    ? '<div class="no-result">😥 내 조건에 맞는 정책이 없습니다.<br>필터를 해제하거나 다른 키워드를 선택해 보세요.</div>'
-                    : '<div class="no-result">😥 선택한 키워드에 맞는 정책이 없습니다.</div>';
-                return;
-            }
+            const matchedHtml = filtered.length > 0
+                ? filtered.map(p => policyCard(p)).join('')
+                : (useProfile
+                    ? '<div class="no-result">😥 내 조건에 맞는 정책이 없습니다.<br>아래에서 조건 미달 정책을 확인하거나, 필터를 해제해 보세요.</div>'
+                    : '<div class="no-result">😥 선택한 키워드에 맞는 정책이 없습니다.</div>');
 
-            list.innerHTML = filtered.map(p => {
-                const g = groupMeta(groupOf(p['카테고리']));
-                const id = p['정책_ID'];
-                const isBm = bookmarks.includes(id);
-                const benefit = (p['지원_금액(혜택)'] || '').replace(/\s+/g, ' ').trim();
-                const url = resolveLink(p['참조_링크']);
-                const linkHtml = url
-                    ? `<span>🔗 <a href="${url}" target="_blank" style="color:#0ea5e9;text-decoration:underline;">신청/안내 페이지로 바로가기</a></span>`
-                    : `<span>🔗 기관 문의</span>`;
-
-                return `
-                <div class="policy-item">
-                    <div class="policy-top">
-                        <span class="policy-tag" style="color:${g.color};background:${g.bg};">${g.emoji} ${p['카테고리']}</span>
-                        <span class="d-day-badge" style="color:#16a34a;background:#dcfce7;border-color:#86efac;">${p['신청_기간'] || '상시'}</span>
-                        <button onclick="toggleBookmark('${id}', this)" data-id="${id}"
-                            style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:1.15rem;line-height:1;padding:0 0.2rem;"
-                            title="${isBm ? '찜 취소' : '찜하기'}">${isBm ? '⭐' : '☆'}</button>
+            // 조건 미달 정책 → 하단에 접이식으로 표시
+            const excludedHtml = (useProfile && excluded.length > 0) ? `
+                <div class="excluded-section">
+                    <div class="excluded-header" onclick="toggleExcluded(this)">
+                        <span class="excluded-label">⚠️ 내 조건에 맞지 않는 정책 ${excluded.length}건 (펼쳐보기)</span>
+                        <span class="toggle-icon">▼</span>
                     </div>
-                    <h3>${p['정책명']}</h3>
-                    <p class="policy-benefit">💰 ${benefit}</p>
-                    <div class="policy-meta">
-                        <span>👤 ${ageText(p)}</span>
-                        <span>📊 ${p['소득_기준'] || '제한 없음'}</span>
-                        ${linkHtml}
+                    <div class="excluded-list">
+                        ${excluded.map(p => policyCard(p, excludeReason(p))).join('')}
                     </div>
-                </div>`;
-            }).join('');
+                </div>` : '';
+
+            document.getElementById('policy-list').innerHTML = matchedHtml + excludedHtml;
+        }
+
+        // 정책 카드 (reason이 있으면 '조건 미달' 스타일로 렌더)
+        function policyCard(p, reason = null) {
+            const g = groupMeta(groupOf(p['카테고리']));
+            const id = p['정책_ID'];
+            const isBm = bookmarks.includes(id);
+            const benefit = (p['지원_금액(혜택)'] || '').replace(/\s+/g, ' ').trim();
+            const url = resolveLink(p['참조_링크']);
+            const linkHtml = url
+                ? `<span>🔗 <a href="${url}" target="_blank" style="color:#0ea5e9;text-decoration:underline;">신청/안내 페이지로 바로가기</a></span>`
+                : `<span>🔗 기관 문의</span>`;
+
+            // 조건 미달 정책은 찜하기 대신 사유 뱃지 표시
+            const rightSlot = reason
+                ? `<span class="exclude-reason" style="margin-left:auto;">❌ ${reason}</span>`
+                : `<button onclick="toggleBookmark('${id}', this)" data-id="${id}"
+                        style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:1.15rem;line-height:1;padding:0 0.2rem;"
+                        title="${isBm ? '찜 취소' : '찜하기'}">${isBm ? '⭐' : '☆'}</button>`;
+
+            return `
+            <div class="policy-item ${reason ? 'excluded' : ''}">
+                <div class="policy-top">
+                    <span class="policy-tag" style="color:${g.color};background:${g.bg};">${g.emoji} ${p['카테고리']}</span>
+                    <span class="d-day-badge" style="color:#16a34a;background:#dcfce7;border-color:#86efac;">${p['신청_기간'] || '상시'}</span>
+                    ${rightSlot}
+                </div>
+                <h3>${p['정책명']}</h3>
+                <p class="policy-benefit">💰 ${benefit}</p>
+                <div class="policy-meta">
+                    <span>👤 ${ageText(p)}</span>
+                    <span>📊 ${p['소득_기준'] || '제한 없음'}</span>
+                    ${linkHtml}
+                </div>
+            </div>`;
+        }
+
+        // 조건 미달 섹션 펼치기/접기
+        function toggleExcluded(header) {
+            header.classList.toggle('open');
+            const listEl = header.nextElementSibling;
+            listEl.classList.toggle('open');
+            const isOpen = listEl.classList.contains('open');
+            header.querySelector('.excluded-label').textContent =
+                `⚠️ 내 조건에 맞지 않는 정책 ${listEl.children.length}건 (${isOpen ? '접기' : '펼쳐보기'})`;
         }
 
         // ══════════════════════════════════════
