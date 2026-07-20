@@ -298,6 +298,24 @@
             btn.textContent = `👍 ${count}`;
         }
 
+        // ── 댓글 버튼 표시 (개수 + 색상 강조) ──
+        function commentBtnLabel(count) {
+            return Number(count) > 0 ? `💬 ${count}` : '💬 댓글';
+        }
+        function commentBtnStyle(count) {
+            return Number(count) > 0
+                ? 'color:#0ea5e9;font-weight:700;'   // 댓글 있음 — 파란색 강조
+                : 'color:#94a3b8;font-weight:500;';  // 댓글 없음 — 연한 회색
+        }
+        // 댓글 작성/삭제 후 버튼을 최신 개수로 갱신
+        function refreshCommentBtn(postId, count) {
+            const btn = document.getElementById(`cbtn-${postId}`);
+            if (!btn) return;
+            btn.dataset.count = count;
+            btn.textContent = commentBtnLabel(count);
+            btn.style.cssText = `background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(count)}`;
+        }
+
         // ── 댓글 ──
         function toggleComments(postId, btn) {
             const section = document.getElementById(`comments-${postId}`);
@@ -309,6 +327,7 @@
         async function loadComments(postId) {
             const res = await fetch(`/posts/${postId}/comments`);
             const comments = await res.json();
+            refreshCommentBtn(postId, comments.length);   // 실제 개수로 동기화
             const list = document.getElementById(`comment-list-${postId}`);
             if (comments.length === 0) {
                 list.innerHTML = '<p style="color:#94a3b8;font-size:0.82rem;padding:0.3rem 0;">아직 댓글이 없어요. 첫 댓글을 남겨보세요!</p>';
@@ -383,9 +402,10 @@
                                 </button>
                             </span>
                             <span class="stat-item">
-                                <button onclick="toggleComments(${p.id}, this)"
-                                    style="background:none;border:none;cursor:pointer;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;">
-                                    💬 댓글
+                                <button id="cbtn-${p.id}" onclick="toggleComments(${p.id}, this)"
+                                    data-count="${p.comment_count || 0}"
+                                    style="background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(p.comment_count)}">
+                                    ${commentBtnLabel(p.comment_count)}
                                 </button>
                             </span>
                         </div>

@@ -341,13 +341,16 @@ app.get('/api/policies', (req, res) => {
 // ==========================================
 app.get('/posts', (req, res) => {
     const { category, search } = req.query;
-    let query = 'SELECT * FROM posts';
+    // 댓글 수를 LEFT JOIN 으로 함께 조회 (글마다 따로 조회하는 N+1 방지)
+    let query = `SELECT p.*, COUNT(c.id) AS comment_count
+                 FROM posts p
+                 LEFT JOIN comments c ON c.post_id = p.id`;
     const params = [];
     const conditions = [];
-    if (category && category !== '전체') { conditions.push('category = ?'); params.push(category); }
-    if (search) { conditions.push('(title LIKE ? OR content LIKE ?)'); params.push(`%${search}%`, `%${search}%`); }
+    if (category && category !== '전체') { conditions.push('p.category = ?'); params.push(category); }
+    if (search) { conditions.push('(p.title LIKE ? OR p.content LIKE ?)'); params.push(`%${search}%`, `%${search}%`); }
     if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
-    query += ' ORDER BY created_at DESC';
+    query += ' GROUP BY p.id ORDER BY p.created_at DESC';
     db.query(query, params, (err, results) => {
         if (err) return res.status(500).json({ error: '조회 실패' });
         res.json(results);
