@@ -56,13 +56,34 @@
                             <input type="number" id="mp-age" value="25">
                         </div>
                         <div class="input-group">
-                            <label>거주 지역</label>
+                            <label>거주 자치구 <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">(서울시 정책 안내)</span></label>
                             <select id="mp-region">
-                                <option value="서울">서울특별시</option>
-                                <option value="경기">경기도</option>
-                                <option value="인천">인천광역시</option>
-                                <option value="부산">부산광역시</option>
-                                <option value="기타">기타 지역</option>
+                                <option value="">선택해주세요</option>
+                                <option value="종로구">종로구</option>
+                                <option value="중구">중구</option>
+                                <option value="용산구">용산구</option>
+                                <option value="성동구">성동구</option>
+                                <option value="광진구">광진구</option>
+                                <option value="동대문구">동대문구</option>
+                                <option value="중랑구">중랑구</option>
+                                <option value="성북구">성북구</option>
+                                <option value="강북구">강북구</option>
+                                <option value="도봉구">도봉구</option>
+                                <option value="노원구">노원구</option>
+                                <option value="은평구">은평구</option>
+                                <option value="서대문구">서대문구</option>
+                                <option value="마포구">마포구</option>
+                                <option value="양천구">양천구</option>
+                                <option value="강서구">강서구</option>
+                                <option value="구로구">구로구</option>
+                                <option value="금천구">금천구</option>
+                                <option value="영등포구">영등포구</option>
+                                <option value="동작구">동작구</option>
+                                <option value="관악구">관악구</option>
+                                <option value="서초구">서초구</option>
+                                <option value="강남구">강남구</option>
+                                <option value="송파구">송파구</option>
+                                <option value="강동구">강동구</option>
                             </select>
                         </div>
                     </div>
@@ -156,7 +177,6 @@
         </div>
     </main>
     <script>
-        const REGION_LABEL = { '서울': '서울', '경기': '경기도', '인천': '인천', '부산': '부산', '기타': '기타 지역' };
 
         // ── XSS 방어: 사용자 입력을 HTML로 해석되지 않게 이스케이프 ──
         function escapeHtml(str) {
@@ -194,7 +214,7 @@
             document.getElementById('sidebar-name').textContent = `${userid} 님`;
             if (s.age && s.region) {
                 document.getElementById('sidebar-status').textContent =
-                    `${REGION_LABEL[s.region] || s.region} 거주 · 만 ${s.age}세`;
+                    `${s.region} 거주 · 만 ${s.age}세`;
             }
         }
 
