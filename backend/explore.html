@@ -346,9 +346,15 @@
             return !!(userProfile.age && userProfile.income);
         }
 
-        // 소득 구간 → 사용자의 최소 중위소득 %(하한선)
-        // 하한선보다 낮은 기준을 요구하는 정책은 '확실히' 자격 미달
+        // (구버전 프로필 호환) 소득 등급 → 최소 중위소득 %
         const INCOME_FLOOR = { '1순위': 0, '2순위': 120, '전체': 150 };
+
+        // 사용자의 중위소득 % — 신버전은 정확한 값, 구버전은 등급의 하한선
+        function userIncomePct() {
+            if (Number.isFinite(userProfile.incomePct)) return userProfile.incomePct;
+            const floor = INCOME_FLOOR[userProfile.income];
+            return floor === undefined ? null : floor;
+        }
 
         // 정책의 소득 기준에서 '중위소득 N%'를 추출 (없으면 null)
         function policyIncomeCeil(text) {
@@ -369,10 +375,10 @@
                     return `연령 조건 (${range})`;
                 }
             }
-            // 2) 소득 — 확실히 초과할 때만 제외
+            // 2) 소득 — 사용자의 중위소득 %가 정책 기준을 넘으면 제외
             const ceil = policyIncomeCeil(p['소득_기준']);
-            const floor = INCOME_FLOOR[userProfile.income];
-            if (ceil !== null && floor !== undefined && floor > ceil) {
+            const myPct = userIncomePct();
+            if (ceil !== null && myPct !== null && myPct > ceil) {
                 return `소득 조건 (중위소득 ${ceil}% 이하)`;
             }
             return null;
@@ -391,6 +397,10 @@
                 return;
             }
             const INCOME_LABEL = { '1순위': '중위소득 120% 이하', '2순위': '중위소득 120~150%', '전체': '중위소득 150% 초과' };
+            const pct = userIncomePct();
+            const incomeText = Number.isFinite(userProfile.incomePct)
+                ? `중위소득 ${userProfile.incomePct}%`
+                : (INCOME_LABEL[userProfile.income] || userProfile.income);
             bar.innerHTML = `
                 <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
                     <label style="display:flex;align-items:center;gap:0.45rem;cursor:pointer;font-size:0.85rem;font-weight:700;color:#0369a1;">
@@ -399,7 +409,7 @@
                         🎯 내 조건에 맞는 정책만 보기
                     </label>
                     <span style="font-size:0.78rem;color:#64748b;background:#f1f5f9;border-radius:20px;padding:3px 12px;">
-                        만 ${userProfile.age}세 · ${INCOME_LABEL[userProfile.income] || userProfile.income}
+                        만 ${userProfile.age}세 · ${incomeText}
                     </span>
                     <a href="mypage.html" style="font-size:0.78rem;color:#94a3b8;text-decoration:underline;">조건 수정</a>
                 </div>`;

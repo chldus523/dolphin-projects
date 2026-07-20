@@ -97,12 +97,12 @@ function filterPolicies(userMessage, profile = null) {
         if (ageFiltered.length > 0) filtered = ageFiltered;
     }
 
-    // [개선 7] 소득 조건 필터 (프로필이 있을 때만, 확실히 미달인 경우만 제외)
-    if (profile && INCOME_FLOOR[profile.income] !== undefined) {
-        const floor = INCOME_FLOOR[profile.income];
+    // [개선 7] 소득 조건 필터 (프로필이 있을 때만)
+    const myPct = userIncomePct(profile);
+    if (myPct !== null) {
         const incFiltered = filtered.filter(p => {
             const ceil = policyIncomeCeil(p['소득_기준']);
-            return ceil === null || floor <= ceil;   // 비교 불가하면 유지
+            return ceil === null || myPct <= ceil;   // 비교 불가하면 유지
         });
         if (incFiltered.length > 0) filtered = incFiltered;
     }
@@ -119,8 +119,16 @@ function filterPolicies(userMessage, profile = null) {
     return filtered.slice(0, 15);
 }
 
-// 소득 구간 → 사용자의 최소 중위소득 %(하한선). 하한선보다 낮은 기준을 요구하면 자격 미달
+// (구버전 프로필 호환) 소득 등급 → 최소 중위소득 %
 const INCOME_FLOOR = { '1순위': 0, '2순위': 120, '전체': 150 };
+
+// 사용자의 중위소득 % — 신버전은 정확한 값, 구버전은 등급의 하한선
+function userIncomePct(profile) {
+    if (!profile) return null;
+    if (Number.isFinite(profile.incomePct)) return profile.incomePct;
+    const floor = INCOME_FLOOR[profile.income];
+    return floor === undefined ? null : floor;
+}
 
 // 정책의 소득 기준에서 '중위소득 N%' 추출 (제한없음/비교 불가 → null)
 function policyIncomeCeil(text) {
@@ -147,7 +155,9 @@ function buildProfileText(profile) {
         '[사용자 프로필 - 마이페이지에 저장된 정보]',
         `나이: 만 ${profile.age}세`,
         `거주 지역: ${profile.region || '미입력'}`,
-        `소득 수준: ${INCOME_TEXT[profile.income] || profile.income || '미입력'}`,
+        `소득 수준: ${Number.isFinite(profile.incomePct)
+            ? `기준 중위소득의 약 ${profile.incomePct}% (${profile.familySize || '?'}인 가구)`
+            : (INCOME_TEXT[profile.income] || profile.income || '미입력')}`,
         `취업 상태: ${profile.employment || '미입력'}`,
         `가구 형태: ${profile.household || '미입력'}`,
         `돌봄 대상: ${care.length ? care.join(', ') : '없음'}`,

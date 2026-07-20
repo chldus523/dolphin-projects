@@ -7,6 +7,7 @@
     <title>돌고래 - 마이페이지</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="median-income.js"></script>
 </head>
 
 <body>
@@ -70,14 +71,26 @@
                     <div class="form-section-title" style="margin-top: 1.8rem;">
                         <i class="fa-solid fa-won-sign"></i> 경제적 여건
                     </div>
-                    <div class="input-group">
-                        <label>소득 구간</label>
-                        <select id="mp-income">
-                            <option value="1순위">기준 중위소득 120% 이하</option>
-                            <option value="2순위">기준 중위소득 120% ~ 150%</option>
-                            <option value="전체">기준 중위소득 150% 초과</option>
-                        </select>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="input-group">
+                            <label>가구원 수 (본인 포함)</label>
+                            <select id="mp-family-size" onchange="updateIncomeHint()">
+                                <option value="1">1인</option>
+                                <option value="2">2인</option>
+                                <option value="3">3인</option>
+                                <option value="4">4인</option>
+                                <option value="5">5인</option>
+                                <option value="6">6인 이상</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>월 소득 (세전, 만원)</label>
+                            <input type="number" id="mp-income-man" placeholder="예: 250" min="0" oninput="updateIncomeHint()">
+                        </div>
                     </div>
+                    <p id="income-hint" style="font-size:0.82rem;color:#64748b;background:#f0f9ff;border:1px solid #e0f2fe;border-radius:10px;padding:0.7rem 1rem;margin-bottom:1.5rem;">
+                        가구원 수와 월 소득을 입력하면 기준 중위소득 대비 비율을 자동으로 계산해 드려요.
+                    </p>
                     <div class="input-group">
                         <label>취업 상태</label>
                         <select id="mp-employment">
@@ -189,7 +202,8 @@
         const saved = JSON.parse(localStorage.getItem('userProfile') || '{}');
         if (saved.age)      document.getElementById('mp-age').value         = saved.age;
         if (saved.region)   document.getElementById('mp-region').value      = saved.region;
-        if (saved.income)   document.getElementById('mp-income').value      = saved.income;
+        if (saved.familySize)   document.getElementById('mp-family-size').value = saved.familySize;
+        if (saved.incomeMan)    document.getElementById('mp-income-man').value  = saved.incomeMan;
         if (saved.careInfant)   document.getElementById('care-infant').checked   = saved.careInfant;
         if (saved.careElderly)  document.getElementById('care-elderly').checked  = saved.careElderly;
         if (saved.careDisabled)  document.getElementById('care-disabled').checked  = saved.careDisabled;
@@ -197,14 +211,51 @@
         if (saved.household)     document.getElementById('mp-household').value     = saved.household;
 
         updateSidebar();
+        updateIncomeHint();
         loadBookmarkedDocs();
         loadScrappedPosts();
 
+        // 입력값으로 중위소득 % 계산 (없으면 null)
+        function currentIncomePct() {
+            const size = document.getElementById('mp-family-size').value;
+            const man  = document.getElementById('mp-income-man').value;
+            if (man === '') return null;
+            return calcIncomePercent(Number(man) * 10000, size);   // 만원 → 원
+        }
+
+        // 입력할 때마다 계산 결과 안내
+        function updateIncomeHint() {
+            const hint = document.getElementById('income-hint');
+            const pct = currentIncomePct();
+            if (pct === null) {
+                hint.textContent = '가구원 수와 월 소득을 입력하면 기준 중위소득 대비 비율을 자동으로 계산해 드려요.';
+                hint.style.color = '#64748b';
+                return;
+            }
+            const size = document.getElementById('mp-family-size').value;
+            const base = Math.round(medianIncomeOf(size) / 10000);
+            hint.innerHTML = `📊 <b>${incomePercentLabel(pct)}</b>에 해당해요. ` +
+                `<span style="color:#94a3b8;">(${MEDIAN_INCOME_YEAR}년 ${size}인 가구 기준 중위소득 ${base.toLocaleString()}만원)</span>`;
+            hint.style.color = '#0369a1';
+        }
+
+        // 하위 호환: 기존 코드가 쓰던 income 등급도 함께 저장
+        function incomeTierOf(pct) {
+            if (pct === null) return '';
+            if (pct <= 120) return '1순위';
+            if (pct <= 150) return '2순위';
+            return '전체';
+        }
+
         function saveProfile() {
+            const pct = currentIncomePct();
             const profile = {
                 age:          document.getElementById('mp-age').value,
                 region:       document.getElementById('mp-region').value,
-                income:       document.getElementById('mp-income').value,
+                familySize:   document.getElementById('mp-family-size').value,
+                incomeMan:    document.getElementById('mp-income-man').value,
+                incomePct:    pct,                    // 기준 중위소득 대비 %
+                income:       incomeTierOf(pct),      // 하위 호환용 등급
                 careInfant:   document.getElementById('care-infant').checked,
                 careElderly:  document.getElementById('care-elderly').checked,
                 careDisabled: document.getElementById('care-disabled').checked,
@@ -213,7 +264,7 @@
             };
             localStorage.setItem('userProfile', JSON.stringify(profile));
             updateSidebar();
-            alert('✅ 저장되었습니다! 정보 탐색 페이지에 반영됩니다.');
+            alert('✅ 저장되었습니다! 정보 탐색 페이지와 챗봇에 반영됩니다.');
         }
         async function loadBookmarkedDocs() {
             const bookmarks = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
