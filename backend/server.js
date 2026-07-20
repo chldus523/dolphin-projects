@@ -372,6 +372,30 @@ app.post('/posts', (req, res) => {
     );
 });
  
+// 글 삭제 (작성자 본인만)
+// 주의: 현재는 클라이언트가 보낸 userid를 신뢰한다. express-session 도입 시
+//       req.session.userid 로 교체해야 위조를 완전히 막을 수 있다.
+app.delete('/posts/:id', (req, res) => {
+    const { userid } = req.body;
+    if (!userid) return res.status(400).json({ error: '로그인이 필요합니다.' });
+
+    db.query('SELECT userid FROM posts WHERE id = ?', [req.params.id], (err, rows) => {
+        if (err) return res.status(500).json({ error: '삭제 실패' });
+        if (rows.length === 0) return res.status(404).json({ error: '글을 찾을 수 없습니다.' });
+
+        // 작성자 본인인지 서버에서 확인 (화면에서 버튼을 숨기는 것만으로는 부족)
+        if (rows[0].userid !== userid) {
+            return res.status(403).json({ error: '본인이 작성한 글만 삭제할 수 있습니다.' });
+        }
+
+        // comments 테이블은 ON DELETE CASCADE 로 함께 삭제됨
+        db.query('DELETE FROM posts WHERE id = ?', [req.params.id], (err2) => {
+            if (err2) return res.status(500).json({ error: '삭제 실패' });
+            res.json({ success: true });
+        });
+    });
+});
+
 app.post('/posts/:id/like', (req, res) => {
     db.query('UPDATE posts SET likes = likes + 1 WHERE id = ?', [req.params.id], (err) => {
         if (err) return res.status(500).json({ error: '좋아요 실패' });

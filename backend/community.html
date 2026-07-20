@@ -298,6 +298,28 @@
             btn.textContent = `👍 ${count}`;
         }
 
+        // ── 글 삭제 (작성자 본인만) ──
+        async function deletePost(postId) {
+            if (!confirm('이 글을 삭제할까요?\n달린 댓글도 함께 삭제되며 되돌릴 수 없습니다.')) return;
+
+            const res = await fetch(`/posts/${postId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userid: loggedInUser })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                // 스크랩 목록에 남아있던 경우 함께 정리
+                scrapped = scrapped.filter(id => id !== postId);
+                localStorage.setItem('scrappedPosts', JSON.stringify(scrapped));
+                updateScrapCount();
+                document.getElementById(`post-${postId}`)?.remove();
+            } else {
+                alert(data.error || '삭제에 실패했습니다.');
+            }
+        }
+
         // ── 댓글 버튼 표시 (개수 + 색상 강조) ──
         function commentBtnLabel(count) {
             return Number(count) > 0 ? `💬 ${count}` : '💬 댓글';
@@ -409,10 +431,17 @@
                                 </button>
                             </span>
                         </div>
-                        <button class="btn-scrap ${isScrapped ? 'scrapped' : ''}"
-                            onclick="toggleScrap(${p.id}, this)">
-                            ${isScrapped ? '⭐ 스크랩 취소' : '⭐ 스크랩'}
-                        </button>
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            ${p.userid === loggedInUser ? `
+                            <button onclick="deletePost(${p.id})" title="삭제"
+                                style="background:none;border:1px solid #fecaca;color:#ef4444;border-radius:8px;padding:0.35rem 0.7rem;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'Pretendard',sans-serif;">
+                                🗑️ 삭제
+                            </button>` : ''}
+                            <button class="btn-scrap ${isScrapped ? 'scrapped' : ''}"
+                                onclick="toggleScrap(${p.id}, this)">
+                                ${isScrapped ? '⭐ 스크랩 취소' : '⭐ 스크랩'}
+                            </button>
+                        </div>
                     </div>
                     <div class="comment-section" id="comments-${p.id}" style="display:none;border-top:1px solid #e2e8f0;margin-top:0.8rem;padding-top:0.9rem;">
                         <div class="comment-list" id="comment-list-${p.id}"></div>
