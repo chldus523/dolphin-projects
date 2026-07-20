@@ -10,14 +10,26 @@
         .filter-wrapper {
             background: #fff;
             border: 1.5px solid #e0f2fe;
-            border-radius: 20px;
+            border-top: none;                 /* 헤더 테두리와 겹치지 않게 */
+            border-radius: 0 0 20px 20px;     /* 헤더와 만나는 위쪽은 각지게 */
             padding: 1.3rem 2rem;
-            margin-bottom: 1.5rem;
-            /* 스크롤해도 키워드 필터가 상단에 고정 (헤더 아래) */
+            margin-bottom: 2.4rem;
+            /* 스크롤해도 키워드 필터가 상단에 고정 (헤더 바로 아래) */
             position: sticky;
-            top: 76px;
-            z-index: 500;          /* 헤더(1000)보다 낮게 */
+            top: var(--header-h, 76px);   /* JS가 실제 헤더 높이로 설정 */
+            z-index: 500;                 /* 헤더(1000)보다 낮게 */
             box-shadow: 0 4px 16px rgba(14, 165, 233, 0.06);
+        }
+        /* 헤더와 필터 사이 틈을 배경색으로 막아 내용이 비쳐 지나가지 않게 함 */
+        .filter-wrapper::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100vw;
+            bottom: 100%;
+            height: 40px;                 /* container 상단 여백만큼 */
+            background: var(--bg, #f8fafc);
         }
         .filter-section-title {
             font-size: 0.82rem;
@@ -161,12 +173,7 @@
 
     <main class="container">
 
-        <!-- 페이지 제목 (고정 바 위 → 스크롤하면 자연스럽게 사라짐) -->
-        <div class="section-title" style="margin-bottom:0.9rem;">
-            <span>서울시 청년·가족돌봄 정책</span>
-        </div>
-
-        <!-- ── 키워드 워드클라우드 필터 (스크롤 시 상단 고정) ── -->
+        <!-- ── 키워드 워드클라우드 필터 (처음부터 상단 고정) ── -->
         <div class="filter-wrapper">
             <div class="filter-section-title">🏷️ 관심 키워드로 정책 찾기 <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">(여러 개 선택 가능)</span></div>
             <div class="word-cloud" id="wordCloud"></div>
@@ -655,12 +662,24 @@
         //  고정된 필터 높이에 맞춰 사이드바 위치 조정
         //  (필터가 sticky라 사이드바가 그 아래로 파고들어 가려지는 것 방지)
         // ══════════════════════════════════════
-        const FILTER_TOP = 76;   // .filter-wrapper 의 sticky top 값과 일치
         function syncSidebarTop() {
+            const header  = document.querySelector('header');
             const filter  = document.querySelector('.filter-wrapper');
             const sidebar = document.getElementById('guide-sidebar');
-            if (!filter || !sidebar) return;
-            sidebar.style.top = (FILTER_TOP + filter.offsetHeight + 16) + 'px';
+            if (!header || !filter || !sidebar) return;
+
+            // 헤더 높이는 화면 폭에 따라 달라지므로 실제 값을 측정해서 반영
+            const headerH = header.offsetHeight;
+            document.documentElement.style.setProperty('--header-h', headerH + 'px');
+
+            // 컨테이너 상단 여백이 헤더보다 작으면 sticky 필터가 아래로 밀려
+            // 아래쪽 여백을 잠식한다. 부족한 만큼 위 여백을 채워 밀림을 없앰
+            const cont = document.querySelector('main.container');
+            const padTop = parseFloat(getComputedStyle(cont).paddingTop) || 0;
+            filter.style.marginTop = Math.max(0, headerH - padTop) + 'px';
+
+            // 사이드바는 고정된 필터 아래에서 시작
+            sidebar.style.top = (headerH + filter.offsetHeight + 24) + 'px';
         }
 
         // ══════════════════════════════════════
