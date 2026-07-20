@@ -573,6 +573,15 @@
             el.style.height = Math.min(el.scrollHeight, 80) + 'px';
         }
 
+        // HTML 특수문자 이스케이프 (XSS 방지)
+    function escapeHtml(str) {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
         function addMsg(role, text) {
             const wrap = document.createElement('div');
             wrap.className = `msg ${role}`;
@@ -584,7 +593,7 @@
             }
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble';
-            bubble.innerHTML = text
+            bubble.innerHTML = escapeHtml(text)
                 .replace(/^#{1,6}\s*/gm, '')
                 .replace(/^[-*_]{3,}$/gm, '')
                 .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
