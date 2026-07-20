@@ -6,6 +6,14 @@
     <title>돌고래 - 커뮤니티</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* ── 왼쪽 사이드바 상단 고정 ── */
+        .container.community-grid { align-items: start; }
+        .sidebar {
+            position: sticky;
+            top: var(--header-h, 76px);   /* JS가 실제 헤더 높이로 설정 */
+            align-self: start;
+        }
+
         /* ── 글쓰기 모달 ── */
         .modal-overlay {
             display: none;
@@ -498,6 +506,15 @@
                 }, 300);
             }
         });
+
+        // ── 사이드바 고정 위치 (헤더 높이는 창 폭에 따라 달라지므로 실측) ──
+        function syncSidebarTop() {
+            const header = document.querySelector('header');
+            if (!header) return;
+            document.documentElement.style.setProperty('--header-h', (header.offsetHeight + 24) + 'px');
+        }
+        syncSidebarTop();
+        window.addEventListener('resize', syncSidebarTop);
     </script>
 
 </body>
