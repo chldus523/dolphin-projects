@@ -534,6 +534,53 @@
         let initialized = false;
         let isOpen = false;
 
+        // ── 마이페이지 프로필 연동 ──
+        const INCOME_TEXT = {
+            '1순위': '기준 중위소득 120% 이하',
+            '2순위': '기준 중위소득 120~150%',
+            '전체':  '기준 중위소득 150% 초과',
+        };
+
+        function getProfile() {
+            const p = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            return (p.age && p.income) ? p : null;   // 온보딩 건너뛴 경우 제외
+        }
+
+        // 화면 인사말용 짧은 요약
+        function profileSummary() {
+            const p = getProfile();
+            if (!p) return '';
+            const parts = [`만 ${p.age}세`];
+            if (p.region)    parts.push(p.region);
+            if (p.household) parts.push(p.household);
+            return parts.join(' · ');
+        }
+
+        // LLM에 넘길 사용자 맥락 (화면에는 표시하지 않음)
+        function buildProfileContext() {
+            const p = getProfile();
+            if (!p) return null;
+
+            const care = [];
+            if (p.careInfant)   care.push('영유아');
+            if (p.careElderly)  care.push('노인');
+            if (p.careDisabled) care.push('장애인');
+
+            const lines = [
+                '[사용자 프로필 - 마이페이지에 저장된 정보]',
+                `나이: 만 ${p.age}세`,
+                `거주 지역: ${p.region || '미입력'}`,
+                `소득 수준: ${INCOME_TEXT[p.income] || p.income}`,
+                `취업 상태: ${p.employment || '미입력'}`,
+                `가구 형태: ${p.household || '미입력'}`,
+                `돌봄 대상: ${care.length ? care.join(', ') : '없음'}`,
+                '',
+                '위 정보는 이미 확인된 것이므로 나이·소득·가구 형태를 다시 묻지 말고, 바로 이 조건에 맞는 정책을 안내한다.',
+                '이 조건에 자격이 맞지 않는 정책은 추천하지 않는다.',
+            ];
+            return lines.join('\n');
+        }
+
         // 3초 후 툴팁 숨기기
         setTimeout(() => fabTooltip.classList.add('hidden'), 3000);
 
@@ -544,10 +591,20 @@
             fabTooltip.classList.add('hidden');
 
             if (!initialized) {
-                addMsg('bot',
-                    '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n' +
-                    '나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊'
-                );
+                const ctx = buildProfileContext();
+                if (ctx) {
+                    // 마이페이지 프로필을 대화 맥락으로 미리 전달 (화면에는 표시하지 않음)
+                    chatHistory.push({ role: 'system', content: ctx });
+                    addMsg('bot',
+                        '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n' +
+                        `마이페이지에 저장하신 정보(${profileSummary()})를 참고해서 안내해 드릴게요. 궁금한 점을 편하게 물어봐 주세요 😊`
+                    );
+                } else {
+                    addMsg('bot',
+                        '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n' +
+                        '나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊'
+                    );
+                }
                 initialized = true;
             }
             setTimeout(() => widgetInput.focus(), 200);
