@@ -60,10 +60,14 @@ try {
 // [개선 2] 사용자 조건으로 1차 필터링 후 AI에 넘기기
 // 이유: 43개를 전부 넘기면 토큰 낭비 + 조건 안 맞는 정책까지 AI가 읽어서 환각 위험
 // 나이, 소득, 카테고리 키워드로 미리 걸러내고 맞는 것만 프롬프트에 포함
-function filterPolicies(userMessage) {
-    // 나이 추출 (예: "25살", "25세")
+// [개선 7] 마이페이지 프로필을 받아 나이·소득으로 정밀 필터링
+// profile 예: { age:'26', income:'2순위', region:'서울', household:'1인가구', careElderly:true }
+function filterPolicies(userMessage, profile = null) {
+    // 나이: 프로필이 있으면 우선 사용, 없으면 메시지에서 추출 (예: "25살", "25세")
     const ageMatch = userMessage.match(/(\d+)\s*(?:살|세)/);
-    const age = ageMatch ? parseInt(ageMatch[1]) : null;
+    const profileAge = profile && parseInt(profile.age, 10);
+    const age = Number.isFinite(profileAge) ? profileAge
+              : (ageMatch ? parseInt(ageMatch[1]) : null);
 
     // 소득 키워드 추출
     const highIncome = /150%|고소득|중위소득\s*15|소득\s*높|소득\s*제한\s*없/.test(userMessage);
@@ -93,6 +97,16 @@ function filterPolicies(userMessage) {
         if (ageFiltered.length > 0) filtered = ageFiltered;
     }
 
+    // [개선 7] 소득 조건 필터 (프로필이 있을 때만, 확실히 미달인 경우만 제외)
+    if (profile && INCOME_FLOOR[profile.income] !== undefined) {
+        const floor = INCOME_FLOOR[profile.income];
+        const incFiltered = filtered.filter(p => {
+            const ceil = policyIncomeCeil(p['소득_기준']);
+            return ceil === null || floor <= ceil;   // 비교 불가하면 유지
+        });
+        if (incFiltered.length > 0) filtered = incFiltered;
+    }
+
     // 카테고리 필터 (키워드가 있을 때만)
     if (activeCategories.length > 0) {
         const catFiltered = filtered.filter(p =>
@@ -103,6 +117,42 @@ function filterPolicies(userMessage) {
 
     // 최대 15개로 제한 (토큰 절약)
     return filtered.slice(0, 15);
+}
+
+// 소득 구간 → 사용자의 최소 중위소득 %(하한선). 하한선보다 낮은 기준을 요구하면 자격 미달
+const INCOME_FLOOR = { '1순위': 0, '2순위': 120, '전체': 150 };
+
+// 정책의 소득 기준에서 '중위소득 N%' 추출 (제한없음/비교 불가 → null)
+function policyIncomeCeil(text) {
+    const s = (text || '').replace(/\s/g, '');
+    if (!s || s === '-' || s.includes('제한없음')) return null;
+    const m = s.match(/중위소득(\d+)%/);
+    return m ? parseInt(m[1], 10) : null;
+}
+
+// 프로필을 프롬프트용 텍스트로 변환
+function buildProfileText(profile) {
+    if (!profile || !profile.age) return '';
+    const INCOME_TEXT = {
+        '1순위': '기준 중위소득 120% 이하',
+        '2순위': '기준 중위소득 120~150%',
+        '전체':  '기준 중위소득 150% 초과',
+    };
+    const care = [];
+    if (profile.careInfant)   care.push('영유아');
+    if (profile.careElderly)  care.push('노인');
+    if (profile.careDisabled) care.push('장애인');
+
+    return [
+        '[사용자 프로필 - 마이페이지에 저장된 정보]',
+        `나이: 만 ${profile.age}세`,
+        `거주 지역: ${profile.region || '미입력'}`,
+        `소득 수준: ${INCOME_TEXT[profile.income] || profile.income || '미입력'}`,
+        `취업 상태: ${profile.employment || '미입력'}`,
+        `가구 형태: ${profile.household || '미입력'}`,
+        `돌봄 대상: ${care.length ? care.join(', ') : '없음'}`,
+        '이 정보는 이미 확인되었으므로 나이·소득·가구 형태를 다시 묻지 말고 바로 맞춤 정책을 안내한다.',
+    ].join('\n');
 }
 
 // 정책 데이터를 프롬프트용 텍스트로 변환
@@ -154,8 +204,9 @@ function checkInputGuardrail(messages) {
 // ==========================================
 // 6. [3단계] 시스템 프롬프트
 // ==========================================
-function buildSystemPrompt(filteredPolicies) {
+function buildSystemPrompt(filteredPolicies, profile = null) {
     const policyText = buildPolicyText(filteredPolicies);
+    const profileText = buildProfileText(profile);
 
     return `
 [가장 중요한 출력 형식 규칙 - 반드시 지킬 것]
@@ -191,6 +242,8 @@ URL이 불명확하면 "해당 기관에 직접 문의하거나 복지로(www.bo
 조건에 맞지 않는 정책을 추천하는 것은 사용자에게 큰 혼란을 주므로 반드시 지켜야 한다.
 
 3. 서류 안내: 사용자가 특정 정책의 서류나 신청 방법을 물으면, 아래 데이터의 서류 항목을 번호 목록으로 직접 안내한다. 절대 "어떤 어려움을 겪고 계신지 알려주세요"처럼 회피하지 않는다.
+
+${profileText}
 
 [정책 데이터베이스 - ${filteredPolicies.length}개 조건 매칭]
 ${policyText}
@@ -343,7 +396,7 @@ app.post('/posts/:id/comments', (req, res) => {
 // 8. 챗봇 API
 // ==========================================
 app.post('/chat', async (req, res) => {
-    const { messages } = req.body;
+    const { messages, profile } = req.body;   // [개선 7] 마이페이지 프로필 수신
  
     if (!messages || !Array.isArray(messages)) {
         return res.status(400).json({ error: 'messages 배열이 필요합니다.' });
@@ -358,14 +411,15 @@ app.post('/chat', async (req, res) => {
  
     // [개선 2] 마지막 사용자 메시지 기준으로 정책 1차 필터링
     const lastUserMessage = messages.filter(m => m.role === 'user').map(m => m.content).join(' ');
-    const filteredPolicies = filterPolicies(lastUserMessage);
-    console.log(`[정책 필터링] ${POLICIES.length}개 → ${filteredPolicies.length}개`);
+    const filteredPolicies = filterPolicies(lastUserMessage, profile);
+    console.log(`[정책 필터링] ${POLICIES.length}개 → ${filteredPolicies.length}개` +
+        (profile?.age ? ` (프로필 적용: 만 ${profile.age}세 / ${profile.income})` : ''));
  
     try {
         const completion = await groq.chat.completions.create({
             model: CHAT_MODEL,
             messages: [
-                { role: 'system', content: buildSystemPrompt(filteredPolicies) },
+                { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) },
                 ...messages
             ],
             temperature: 0.6,
