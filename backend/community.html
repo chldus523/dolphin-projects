@@ -6,6 +6,48 @@
     <title>돌고래 - 커뮤니티</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* 글쓰기 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            width: 92%;
+            max-width: 560px;
+            box-shadow: 0 20px 60px rgba(15,23,42,0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-box h3 { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+        .modal-box select, .modal-box input[type="text"], .modal-box textarea {
+            width: 100%; border: 1.5px solid #e2e8f0; border-radius: 10px;
+            padding: 0.6rem 0.9rem; font-size: 0.88rem;
+            font-family: 'Pretendard', sans-serif; color: #0f172a;
+            outline: none; transition: border-color 0.2s; background: #f8fafc;
+        }
+        .modal-box select:focus, .modal-box input[type="text"]:focus, .modal-box textarea:focus { border-color: #0ea5e9; }
+        .modal-box textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+        .modal-btns { display: flex; gap: 0.7rem; justify-content: flex-end; }
+        .btn-cancel { background: none; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 600; color: #64748b; cursor: pointer; font-family: 'Pretendard', sans-serif; }
+        .btn-submit { background: #0ea5e9; border: none; border-radius: 10px; padding: 0.5rem 1.4rem; font-size: 0.85rem; font-weight: 700; color: #fff; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: background 0.2s; }
+        .btn-submit:hover { background: #0284c7; }
+        /* 검색바 */
+        .search-row { display: flex; gap: 0.6rem; margin-bottom: 1.2rem; }
+        .search-row input { flex: 1; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 0.55rem 1rem; font-size: 0.85rem; font-family: 'Pretendard', sans-serif; color: #0f172a; outline: none; transition: border-color 0.2s; }
+        .search-row input:focus { border-color: #0ea5e9; }
+        .search-row button { background: #0ea5e9; border: none; border-radius: 12px; padding: 0.55rem 1.2rem; color: #fff; font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: background 0.2s; }
+        .search-row button:hover { background: #0284c7; }
         /* 플로팅 챗봇 위젯 CSS */
         .chat-fab {
             position: fixed; bottom: 28px; right: 28px;
@@ -26,10 +68,7 @@
             z-index: 8999; pointer-events: none; opacity: 1; transition: opacity 0.3s;
             font-family: 'Pretendard', sans-serif;
         }
-        .chat-fab-tooltip::after {
-            content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%);
-            border: 6px solid transparent; border-left-color: #0f172a; border-right: none;
-        }
+        .chat-fab-tooltip::after { content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); border: 6px solid transparent; border-left-color: #0f172a; border-right: none; }
         .chat-fab-tooltip.hidden { opacity: 0; }
         .chatbot-widget {
             position: fixed; bottom: 100px; right: 28px; width: 360px; height: 520px;
@@ -239,7 +278,7 @@
             btn.textContent = commentBtnLabel(count);
             btn.style.cssText = `background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(count)}`;
         }
-        function toggleComments(postId, btn) {
+        function toggleComments(postId) {
             const section = document.getElementById(`comments-${postId}`);
             const willOpen = section.style.display === 'none';
             section.style.display = willOpen ? 'block' : 'none';
@@ -250,7 +289,7 @@
             const comments = await res.json();
             refreshCommentBtn(postId, comments.length);
             const list = document.getElementById(`comment-list-${postId}`);
-            if (comments.length === 0) { list.innerHTML = '<p style="color:#94a3b8;font-size:0.82rem;padding:0.3rem 0;">아직 댓글이 없어요. 첫 댓글을 남겨보세요!</p>'; return; }
+            if (comments.length === 0) { list.innerHTML = '<p style="color:#94a3b8;font-size:0.82rem;padding:0.3rem 0;">아직 댓글이 없어요.</p>'; return; }
             list.innerHTML = comments.map(c => `
                 <div style="padding:0.5rem 0;border-bottom:1px solid #f1f5f9;">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:2px;">
@@ -300,7 +339,7 @@
                                 <button onclick="likePost(${p.id}, this)" data-count="${p.likes}" style="background:none;border:none;cursor:pointer;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;">👍 ${p.likes}</button>
                             </span>
                             <span class="stat-item">
-                                <button id="cbtn-${p.id}" onclick="toggleComments(${p.id}, this)" data-count="${p.comment_count || 0}" style="background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(p.comment_count)}">${commentBtnLabel(p.comment_count)}</button>
+                                <button id="cbtn-${p.id}" onclick="toggleComments(${p.id})" data-count="${p.comment_count || 0}" style="background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(p.comment_count)}">${commentBtnLabel(p.comment_count)}</button>
                             </span>
                         </div>
                         <div style="display:flex;align-items:center;gap:0.5rem;">
@@ -373,9 +412,7 @@
         syncSidebarTop();
         window.addEventListener('resize', syncSidebarTop);
 
-        // =============================================
-        //  플로팅 챗봇 위젯 로직
-        // =============================================
+        // 플로팅 챗봇 위젯 로직
         const widget     = document.getElementById('chatbotWidget');
         const widgetChat  = document.getElementById('widgetChat');
         const widgetInput = document.getElementById('widgetInput');
