@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', loadChatHistory);
 
         function escapeHtml(str) { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-        function addMsg(role, text) {
+        function renderMsg(role, text) {
             const wrap = document.createElement('div');
             wrap.className = `msg ${role}`;
             if (role === 'bot') { const av = document.createElement('div'); av.className = 'msg-av'; av.textContent = '🐬'; wrap.appendChild(av); }
@@ -606,6 +606,11 @@ document.addEventListener('DOMContentLoaded', loadChatHistory);
             wrap.appendChild(bubble);
             widgetChat.appendChild(wrap);
             widgetChat.scrollTop = widgetChat.scrollHeight;
+        }
+        function addMsg(role, text) {
+            renderMsg(role, text);
+            chatHistory.push({ role: role === 'bot' ? 'assistant' : 'user', content: text });
+            saveChatHistory();
         }
 
         function showTyping() {
@@ -622,7 +627,6 @@ document.addEventListener('DOMContentLoaded', loadChatHistory);
             const text = widgetInput.value.trim();
             if (!text) return;
             addMsg('user', text);
-            chatHistory.push({ role: 'user', content: text });
             widgetInput.value = ''; widgetInput.style.height = 'auto';
             widgetSend.disabled = true;
             document.getElementById('widgetChips').style.display = 'none';
@@ -633,8 +637,6 @@ document.addEventListener('DOMContentLoaded', loadChatHistory);
                 removeTyping();
                 const reply = data.reply || '죄송해요, 잠시 오류가 발생했어요. 다시 시도해 주세요.';
                 addMsg('bot', reply);
-                chatHistory.push({ role: role === 'bot' ? 'assistant' : 'user', content: text });
-    saveChatHistory();
                 if (!isOpen) fabBadge.style.display = 'flex';
             } catch (err) {
                 removeTyping();
