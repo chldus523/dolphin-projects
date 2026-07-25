@@ -540,7 +540,7 @@
         const widgetSend  = document.getElementById('widgetSend');
         const fabTooltip  = document.getElementById('fabTooltip');
         const fabBadge    = document.getElementById('fabBadge');
-        const chatHistory = [];
+        let chatHistory = JSON.parse(sessionStorage.getItem('dolgorae_chatHistory') || '[]');
         let initialized = false, isOpen = false;
 
         setTimeout(() => fabTooltip.classList.add('hidden'), 3000);
@@ -548,6 +548,26 @@
         function getProfile() { const p = JSON.parse(localStorage.getItem('userProfile') || '{}'); return (p.age && p.income) ? p : null; }
         function profileSummary() { const p = getProfile(); if (!p) return ''; const parts = [`만 ${p.age}세`]; if (p.region) parts.push(p.region); if (p.household) parts.push(p.household); return parts.join(' · '); }
 
+        // 대화 저장 함수
+function saveChatHistory() {
+    sessionStorage.setItem('dolgorae_chatHistory', JSON.stringify(chatHistory));
+}
+
+// 대화 불러오기 함수
+function loadChatHistory() {
+    if (chatHistory.length > 0) {
+        chatHistory.forEach(m => {
+            const role = m.role === 'assistant' ? 'bot' : 'user';
+            renderMsg(role, m.content); // 또는 addMsg
+        });
+        const chips = document.getElementById('widgetChips');
+        if (chips) chips.style.display = 'none';
+        initialized = true;
+    }
+}
+
+// 페이지 로드 시 복원 실행
+document.addEventListener('DOMContentLoaded', loadChatHistory);
         function openWidget() {
             widget.classList.add('open'); isOpen = true;
             fabBadge.style.display = 'none'; fabTooltip.classList.add('hidden');
@@ -613,7 +633,8 @@
                 removeTyping();
                 const reply = data.reply || '죄송해요, 잠시 오류가 발생했어요. 다시 시도해 주세요.';
                 addMsg('bot', reply);
-                chatHistory.push({ role: 'assistant', content: reply });
+                chatHistory.push({ role: role === 'bot' ? 'assistant' : 'user', content: text });
+    saveChatHistory();
                 if (!isOpen) fabBadge.style.display = 'flex';
             } catch (err) {
                 removeTyping();
