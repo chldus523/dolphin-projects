@@ -297,8 +297,7 @@
             transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        #widgetInput:focus {
-            border-color: #0ea5e9;
+        #widgetInput:focus {border-color: #0ea5e9;
             box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
         }
 
@@ -456,6 +455,7 @@
                 <h2>돌고래 AI 챗봇</h2>
                 <p>가족돌봄청년 맞춤 복지 안내</p>
             </div>
+            <button onclick="resetChat()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.7rem;font-weight:600;cursor:pointer;font-family:Pretendard,sans-serif;margin-right:6px;">🔄 새 대화</button>
             <button class="widget-close" onclick="closeWidget()">✕</button>
         </div>
 
@@ -514,6 +514,7 @@
                 lb.addEventListener('mouseleave', () => { lb.style.borderColor='#e2e8f0'; lb.style.color='#475569'; });
                 lb.addEventListener('click', () => {
                     localStorage.removeItem('userid');
+                    sessionStorage.removeItem('dolphin_chatHistory'); // 로그아웃 시 챗봇 내역도 초기화
                     alert('로그아웃 되었습니다.');
                     window.location.href = 'index.html';
                 });
@@ -521,7 +522,7 @@
         }
 
         // =============================================
-        //  플로팅 챗봇 위젯 로직
+        //  플로팅 챗봇 위젯 로직 (sessionStorage 적용)
         // =============================================
         const widget    = document.getElementById('chatbotWidget');
         const widgetChat = document.getElementById('widgetChat');
@@ -530,36 +531,33 @@
         const fabTooltip  = document.getElementById('fabTooltip');
         const fabBadge    = document.getElementById('fabBadge');
 
-        const chatHistory = [];
+        // sessionStorage에서 기존 대화 내역 불러오기
+        let chatHistory = JSON.parse(sessionStorage.getItem('dolphin_chatHistory')) || [];
         let initialized = false;
         let isOpen = false;
 
-        // ── 마이페이지 프로필 연동 ──
-        const INCOME_TEXT = {
-            '1순위': '기준 중위소득 120% 이하',
-            '2순위': '기준 중위소득 120~150%',
-            '전체':  '기준 중위소득 150% 초과',
-        };
-
-        function getProfile() {
-            const p = JSON.parse(localStorage.getItem('userProfile') || '{}');
-            return (p.age && p.income) ? p : null;   // 온보딩 건너뛴 경우 제외
-        }
-
-        // 화면 인사말용 짧은 요약
-        function profileSummary() {
-            const p = getProfile();
-            if (!p) return '';
-            const parts = [`만 ${p.age}세`];
-            if (p.region)    parts.push(p.region);
-            if (p.household) parts.push(p.household);
-            return parts.join(' · ');
-        }
-
-        // 프로필 원문은 서버(buildProfileText)가 프롬프트에 넣으므로 프론트에서는 전송만 담당
-
         // 3초 후 툴팁 숨기기
         setTimeout(() => fabTooltip.classList.add('hidden'), 3000);
+
+        // 페이지 로드 시 기존 세션 대화내역을 UI에 자동으로 표시
+        document.addEventListener('DOMContentLoaded', () => {
+            initChatSession();
+        });
+
+        function initChatSession() {
+            if (chatHistory.length > 0) {
+                document.getElementById('widgetChips').style.display = 'none'; // 대화 기록이 있으면 칩 숨김
+                chatHistory.forEach(item => {
+                    const role = item.role === 'assistant' ? 'bot' : 'user';
+                    addMsgUI(role, item.content);
+                });
+                initialized = true;
+            }
+        }
+
+        function saveSessionHistory() {
+            sessionStorage.setItem('dolphin_chatHistory', JSON.stringify(chatHistory));
+        }
 
         function openWidget() {
             widget.classList.add('open');
@@ -567,19 +565,12 @@
             fabBadge.style.display = 'none';
             fabTooltip.classList.add('hidden');
 
-            if (!initialized) {
-                // 프로필은 sendMessage()에서 body로 전송하므로 chatHistory에는 넣지 않음 (토큰 중복 방지)
-                if (getProfile()) {
-                    addMsg('bot',
-                        '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n' +
-                        `마이페이지에 저장하신 정보(${profileSummary()})를 참고해서 안내해 드릴게요. 궁금한 점을 편하게 물어봐 주세요 😊`
-                    );
-                } else {
-                    addMsg('bot',
-                        '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n' +
-                        '나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊'
-                    );
-                }
+            if (!initialized && chatHistory.length === 0) {
+                const welcomeText = '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n' +
+                                    '나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊';
+                addMsg('bot', welcomeText);
+                chatHistory.push({ role: 'assistant', content: welcomeText });
+                saveSessionHistory();
                 initialized = true;
             }
             setTimeout(() => widgetInput.focus(), 200);
@@ -588,6 +579,19 @@
         function closeWidget() {
             widget.classList.remove('open');
             isOpen = false;
+        }
+
+        function resetChat() {
+            chatHistory = [];
+            sessionStorage.removeItem('dolphin_chatHistory');
+            widgetChat.innerHTML = '';
+            initialized = false;
+            document.getElementById('widgetChips').style.display = 'flex';
+            const welcomeText = '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊';
+            addMsg('bot', welcomeText);
+            chatHistory.push({ role: 'assistant', content: welcomeText });
+            saveSessionHistory();
+            initialized = true;
         }
 
         function toggleWidget() {
@@ -606,15 +610,16 @@
         }
 
         // HTML 특수문자 이스케이프 (XSS 방지)
-    function escapeHtml(str) {
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
 
-        function addMsg(role, text) {
+        // UI에만 메시지 버블을 그리는 전용 함수
+        function addMsgUI(role, text) {
             const wrap = document.createElement('div');
             wrap.className = `msg ${role}`;
             if (role === 'bot') {
@@ -634,6 +639,10 @@
             wrap.appendChild(bubble);
             widgetChat.appendChild(wrap);
             widgetChat.scrollTop = widgetChat.scrollHeight;
+        }
+
+        function addMsg(role, text) {
+            addMsgUI(role, text);
         }
 
         function showTyping() {
@@ -675,6 +684,7 @@
 
             addMsg('user', text);
             chatHistory.push({ role: 'user', content: text });
+            saveSessionHistory(); // 사용자 메시지 저장
 
             widgetInput.value = '';
             widgetInput.style.height = 'auto';
@@ -686,14 +696,16 @@
                 const res = await fetch('http://localhost:3000/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // 마이페이지 프로필을 함께 전송 → 서버가 정책 필터링·프롬프트에 활용
-                    body: JSON.stringify({ messages: chatHistory, profile: getProfile() })
+                    credentials: 'include', // [보안 수정] express-session 인증 전송
+                    body: JSON.stringify({ messages: chatHistory })
                 });
                 const data = await res.json();
                 removeTyping();
                 const reply = data.reply || '죄송해요, 잠시 오류가 발생했어요. 다시 시도해 주세요.';
                 addMsg('bot', reply);
+                
                 chatHistory.push({ role: 'assistant', content: reply });
+                saveSessionHistory(); // 챗봇 응답 저장
 
                 // 위젯이 닫혀있으면 뱃지 표시
                 if (!isOpen) {
