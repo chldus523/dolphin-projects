@@ -6,7 +6,44 @@
     <title>돌고래 - 마이페이지</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="median-income.js"></script>
+    <script src="median-income.js">
+        // 페이지 로드 시 세션 스토리지에서 이전 대화 불러오기
+document.addEventListener('DOMContentLoaded', () => {
+    loadChatHistory();
+});
+
+// 대화 내역 저장 (메시지 보낼 때/받을 때 호출)
+function saveChatHistory() {
+    const chatContainer = document.getElementById('widgetChat');
+    if (chatContainer) {
+        sessionStorage.setItem('dolgorae_chat_html', chatContainer.innerHTML);
+    }
+}
+
+// 대화 내역 불러오기
+function loadChatHistory() {
+    const savedHtml = sessionStorage.getItem('dolgorae_chat_html');
+    const chatContainer = document.getElementById('widgetChat');
+    
+    // 저장된 대화가 있으면 화면에 복원
+    if (chatContainer && savedHtml) {
+        chatContainer.innerHTML = savedHtml;
+    }
+}
+
+// 새 대화 시작 (초기화)
+function resetChat() {
+    sessionStorage.removeItem('dolgorae_chat_html');
+    const chatContainer = document.getElementById('widgetChat');
+    if (chatContainer) {
+        chatContainer.innerHTML = `
+            <div class="chat-message bot">
+                <div class="msg-bubble">안녕하세요! 🐬 돌고래 AI입니다. 무엇을 도와드릴까요?</div>
+            </div>
+        `;
+    }
+}
+    </script>
     <style>
         /* 플로팅 챗봇 위젯 CSS */
         .chat-fab {
@@ -608,6 +645,24 @@
             setTimeout(() => widgetInput.focus(), 200);
         }
         function closeWidget() { widget.classList.remove('open'); isOpen = false; }
+        function saveChatHistory() {
+    sessionStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    sessionStorage.setItem('chatHTML', widgetChat.innerHTML);
+}
+
+function loadChatHistory() {
+    const saved = sessionStorage.getItem('chatHistory');
+    const savedHTML = sessionStorage.getItem('chatHTML');
+    if (saved && savedHTML) {
+        const parsed = JSON.parse(saved);
+        parsed.forEach(m => chatHistory.push(m));
+        widgetChat.innerHTML = savedHTML;
+        widgetChat.scrollTop = widgetChat.scrollHeight;
+        saveChatHistory();
+        initialized = true;
+        document.getElementById('widgetChips').style.display = 'none';
+    }
+}
         function resetChat() {
     chatHistory.length = 0;
     widgetChat.innerHTML = '';
@@ -689,6 +744,10 @@
                 widgetInput.focus();
             }
         }
+        document.addEventListener('DOMContentLoaded', () => {
+    loadChatHistory();
+});
     </script>
+  <script src="script.js"></script>
 </body>
 </html>

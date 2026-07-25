@@ -194,7 +194,7 @@
                 <h2>돌고래 AI 챗봇</h2>
                 <p>가족돌봄청년 맞춤 복지 안내</p>
             </div>
-            <button onclick="resetChat()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.7rem;font-weight:600;cursor:pointer;font-family:Pretendard,sans-serif;margin-right:6px;">🔄 새 대화</button><button class="widget-close" onclick="closeWidget()">✕</button>
+            <button class="widget-close" onclick="closeWidget()">✕</button>
         </div>
         <div class="widget-chat" id="widgetChat"></div>
         <div class="widget-chips" id="widgetChips">
@@ -413,15 +413,26 @@
         window.addEventListener('resize', syncSidebarTop);
 
         // 플로팅 챗봇 위젯 로직
-        const widget     = document.getElementById('chatbotWidget');
-        const widgetChat  = document.getElementById('widgetChat');
-        const widgetInput = document.getElementById('widgetInput');
-        const widgetSend  = document.getElementById('widgetSend');
-        const fabTooltip  = document.getElementById('fabTooltip');
-        const fabBadge    = document.getElementById('fabBadge');
-        const chatHistory = [];
-        let initialized = false;
-        let isOpen = false;
+
+        // =============================================
+        //  플로팅 챗봇 위젯 (sessionStorage 대화 유지)
+        // =============================================
+        let chatHistory = JSON.parse(sessionStorage.getItem('dolgorae_chatHistory') || '[]');
+        let initialized = false, isOpen = false;
+
+        function saveChatHistory() {
+            sessionStorage.setItem('dolgorae_chatHistory', JSON.stringify(chatHistory));
+        }
+        function loadChatHistory() {
+            if (chatHistory.length > 0) {
+                chatHistory.forEach(m => {
+                    renderMsg(m.role === 'assistant' ? 'bot' : 'user', m.content);
+                });
+                document.getElementById('widgetChips').style.display = 'none';
+                initialized = true;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadChatHistory);
 
         setTimeout(() => fabTooltip.classList.add('hidden'), 3000);
 
@@ -432,29 +443,29 @@
             widget.classList.add('open'); isOpen = true;
             fabBadge.style.display = 'none'; fabTooltip.classList.add('hidden');
             if (!initialized) {
-                if (getProfile()) {
-                    addMsg('bot', '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n' + `마이페이지에 저장하신 정보(${profileSummary()})를 참고해서 안내해 드릴게요. 궁금한 점을 편하게 물어봐 주세요 😊`);
-                } else {
-                    addMsg('bot', '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊');
-                }
+                const welcome = getProfile()
+                    ? `안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n마이페이지에 저장하신 정보(${profileSummary()})를 참고해서 안내해 드릴게요. 궁금한 점을 편하게 물어봐 주세요 😊`
+                    : '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊';
+                addMsg('bot', welcome);
                 initialized = true;
             }
             setTimeout(() => widgetInput.focus(), 200);
         }
         function closeWidget() { widget.classList.remove('open'); isOpen = false; }
         function resetChat() {
-    chatHistory.length = 0;
-    widgetChat.innerHTML = '';
-    initialized = false;
-    document.getElementById('widgetChips').style.display = 'flex';
-    addMsg('bot', '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊');
-    initialized = true;
-}
+            chatHistory = []; saveChatHistory();
+            widgetChat.innerHTML = ''; initialized = false;
+            document.getElementById('widgetChips').style.display = 'flex';
+            addMsg('bot', '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊');
+            initialized = true;
+        }
         function toggleWidget() { if (isOpen) closeWidget(); else openWidget(); }
         document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) closeWidget(); });
         function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px'; }
 
-        function addMsg(role, text) {
+        function escapeHtml(str) { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        function renderMsg(role, text) {
             const wrap = document.createElement('div');
             wrap.className = `msg ${role}`;
             if (role === 'bot') { const av = document.createElement('div'); av.className = 'msg-av'; av.textContent = '🐬'; wrap.appendChild(av); }
@@ -464,6 +475,11 @@
             wrap.appendChild(bubble);
             widgetChat.appendChild(wrap);
             widgetChat.scrollTop = widgetChat.scrollHeight;
+        }
+        function addMsg(role, text) {
+            renderMsg(role, text);
+            chatHistory.push({ role: role === 'bot' ? 'assistant' : 'user', content: text });
+            saveChatHistory();
         }
         function showTyping() {
             const wrap = document.createElement('div'); wrap.className = 'typing-wrap'; wrap.id = 'typingEl';
@@ -479,18 +495,16 @@
             const text = widgetInput.value.trim();
             if (!text) return;
             addMsg('user', text);
-            chatHistory.push({ role: 'user', content: text });
             widgetInput.value = ''; widgetInput.style.height = 'auto';
             widgetSend.disabled = true;
             document.getElementById('widgetChips').style.display = 'none';
             showTyping();
             try {
-                const res = await fetch('http://localhost:3000/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory, profile: getProfile() }) });
+                const res = await fetch('http://localhost:3000/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ messages: chatHistory, profile: getProfile() }) });
                 const data = await res.json();
                 removeTyping();
                 const reply = data.reply || '죄송해요, 잠시 오류가 발생했어요. 다시 시도해 주세요.';
                 addMsg('bot', reply);
-                chatHistory.push({ role: 'assistant', content: reply });
                 if (!isOpen) fabBadge.style.display = 'flex';
             } catch (err) {
                 removeTyping();
