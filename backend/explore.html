@@ -642,7 +642,7 @@ document.addEventListener('DOMContentLoaded', loadChatHistory);
             document.getElementById('widgetChips').style.display = 'none';
             showTyping();
             try {
-                const res = await fetch('http://localhost:3000/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory, profile: getProfile() }) });
+                const res = await fetch('https://dolphin-projects-production.up.railway.app/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory, profile: getProfile() }) });
                 const data = await res.json();
                 removeTyping();
                 const reply = data.reply || '죄송해요, 잠시 오류가 발생했어요. 다시 시도해 주세요.';
