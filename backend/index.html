@@ -71,8 +71,10 @@
 
                 if (result.success) {
                     alert(result.message);
-                    // [보안 수정] localStorage.setItem('userid', userid); 제거!
-                    // 이제 서버가 세션 쿠키를 보관하므로 브라우저 localstorage에 id를 남기지 않습니다.
+                    // 보안 경계는 서버의 httpOnly 세션 쿠키(req.session.userid)입니다.
+                    // 아래 localStorage 값은 화면 표시·본인 글 판별용 UI 미러일 뿐이며,
+                    // 서버는 이 값을 신뢰하지 않습니다. (community/mypage/explore 등이 이 값을 읽음)
+                    localStorage.setItem('userid', userid);
                     window.location.href = 'home.html';
                 } else {
                     alert(result.message);
