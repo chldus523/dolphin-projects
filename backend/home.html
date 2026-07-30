@@ -204,10 +204,11 @@
                 const lb = document.getElementById('btn-logout');
                 lb.addEventListener('mouseenter', () => { lb.style.borderColor='#0ea5e9'; lb.style.color='#0ea5e9'; });
                 lb.addEventListener('mouseleave', () => { lb.style.borderColor='#e2e8f0'; lb.style.color='#475569'; });
-                lb.addEventListener('click', () => {
-                    localStorage.removeItem('userid');
-                    sessionStorage.removeItem('dolgorae_chatHistory');
-                    alert('로그아웃 되었습니다.');
+                lb.addEventListener('click', async () => {
+                    try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
+                    ['userid','userProfile','bookmarkedPolicies','scrappedPosts','docChecks','exploreOnlyMine']
+                        .forEach(k => localStorage.removeItem(k));
+                    sessionStorage.clear();
                     window.location.href = 'index.html';
                 });
             }

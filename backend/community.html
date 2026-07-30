@@ -172,8 +172,8 @@
                 <option value="합격/탈락 사례">✅ 합격/탈락 사례</option>
                 <option value="정보 교류">💡 정보 교류</option>
             </select>
-            <input type="text" id="write-title" placeholder="제목을 입력하세요">
-            <textarea id="write-content" placeholder="내용을 입력하세요"></textarea>
+            <input type="text" id="write-title" placeholder="제목을 입력하세요 (100자 이내)" maxlength="100">
+            <textarea id="write-content" placeholder="내용을 입력하세요 (2000자 이내)" maxlength="2000"></textarea>
             <div class="modal-btns">
                 <button class="btn-cancel" onclick="closeModal()">취소</button>
                 <button class="btn-submit" onclick="submitPost()">게시하기</button>
@@ -228,6 +228,17 @@
         };
         const CAT_EMOJI = { '정책 후기': '📝', '고민 게시판': '🤫', '합격/탈락 사례': '✅', '정보 교류': '💡' };
 
+        function clearUserData() {
+            ['userid','userProfile','bookmarkedPolicies','scrappedPosts','docChecks','exploreOnlyMine']
+                .forEach(k => localStorage.removeItem(k));
+            sessionStorage.clear();
+        }
+        async function doLogout() {
+            try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
+            clearUserData();
+            window.location.href = 'index.html';
+        }
+
         const loggedInUser = localStorage.getItem('userid');
         const navRight = document.getElementById('nav-right');
         if (!loggedInUser) {
@@ -241,7 +252,7 @@
             const lb = document.getElementById('btn-logout');
             lb.addEventListener('mouseenter', () => { lb.style.borderColor='#0ea5e9'; lb.style.color='#0ea5e9'; });
             lb.addEventListener('mouseleave', () => { lb.style.borderColor='#e2e8f0'; lb.style.color='#475569'; });
-            lb.addEventListener('click', () => { localStorage.removeItem('userid'); window.location.href = 'index.html'; });
+            lb.addEventListener('click', doLogout);
         }
 
         function escapeHtml(str) {
@@ -266,7 +277,7 @@
         }
         async function deletePost(postId) {
             if (!confirm('이 글을 삭제할까요?')) return;
-            const res = await fetch(`/posts/${postId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userid: loggedInUser }) });
+            const res = await fetch(`/posts/${postId}`, { method: 'DELETE', credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 scrapped = scrapped.filter(id => id !== postId);
@@ -309,7 +320,7 @@
             const input = document.getElementById(`comment-input-${postId}`);
             const content = input.value.trim();
             if (!content) return;
-            const res = await fetch(`/posts/${postId}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userid: loggedInUser, content }) });
+            const res = await fetch(`/posts/${postId}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ content }) });
             const data = await res.json();
             if (data.success) { input.value = ''; loadComments(postId); }
             else { alert(data.error || '댓글 작성에 실패했습니다.'); }
@@ -356,7 +367,7 @@
                     <div class="comment-section" id="comments-${p.id}" style="display:none;border-top:1px solid #e2e8f0;margin-top:0.8rem;padding-top:0.9rem;">
                         <div class="comment-list" id="comment-list-${p.id}"></div>
                         <div style="display:flex;gap:0.5rem;margin-top:0.7rem;">
-                            <input type="text" id="comment-input-${p.id}" placeholder="따뜻한 댓글을 남겨주세요" onkeydown="if(event.key==='Enter')submitComment(${p.id})" style="flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:0.5rem 0.9rem;font-size:0.85rem;font-family:'Pretendard',sans-serif;outline:none;">
+                            <input type="text" id="comment-input-${p.id}" placeholder="따뜻한 댓글을 남겨주세요" maxlength="500" onkeydown="if(event.key==='Enter')submitComment(${p.id})" style="flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:0.5rem 0.9rem;font-size:0.85rem;font-family:'Pretendard',sans-serif;outline:none;">
                             <button onclick="submitComment(${p.id})" style="background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:0.5rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:'Pretendard',sans-serif;">등록</button>
                         </div>
                     </div>
@@ -399,10 +410,10 @@
             const title = document.getElementById('write-title').value.trim();
             const content = document.getElementById('write-content').value.trim();
             if (!title || !content) { alert('제목과 내용을 모두 입력해 주세요.'); return; }
-            const res = await fetch('/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userid: loggedInUser, category, title, content }) });
+            const res = await fetch('/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ category, title, content }) });
             const data = await res.json();
             if (data.success) { closeModal(); loadPosts(); }
-            else { alert('게시글 저장에 실패했습니다.'); }
+            else { alert(data.error || '게시글 저장에 실패했습니다.'); }
         }
         updateScrapCount();
         loadPosts().then(() => {

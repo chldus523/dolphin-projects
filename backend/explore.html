@@ -278,18 +278,24 @@
         // ══════════════════════════════════════
         //  네비게이션 / 로그인 상태
         // ══════════════════════════════════════
+        function clearUserData() {
+            ['userid','userProfile','bookmarkedPolicies','scrappedPosts','docChecks','exploreOnlyMine']
+                .forEach(k => localStorage.removeItem(k));
+            sessionStorage.clear();
+        }
+        async function doLogout() {
+            try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
+            clearUserData();
+            window.location.href = 'index.html';
+        }
+
         const loggedInUser = localStorage.getItem('userid');
         const navRight = document.getElementById('nav-right');
         if (loggedInUser && navRight) {
             navRight.innerHTML = `
                 <span style="color: var(--text-main); margin-left: 2rem;">👤 <b>${loggedInUser}</b>님</span>
                 <button id="btn-logout" style="background:none;border:1px solid var(--border);padding:0.3rem 0.7rem;border-radius:6px;font-weight:600;cursor:pointer;margin-left:1rem;color:var(--text-sub);font-size:0.85rem;transition:all 0.2s;">로그아웃</button>`;
-            const logoutBtn = document.getElementById('btn-logout');
-            logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('userid');
-                alert('로그아웃 되었습니다.');
-                window.location.reload();
-            });
+            document.getElementById('btn-logout').addEventListener('click', doLogout);
         } else if (navRight) {
             navRight.innerHTML = `<a href="index.html">로그인</a>`;
         }

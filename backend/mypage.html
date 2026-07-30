@@ -363,8 +363,35 @@
                 .replace(/'/g, '&#39;');
         }
 
+        // 로그아웃 시 브라우저에 남는 개인정보를 모두 정리 (공용 PC 대비)
+        function clearUserData() {
+            ['userid','userProfile','bookmarkedPolicies','scrappedPosts','docChecks','exploreOnlyMine']
+                .forEach(k => localStorage.removeItem(k));
+            sessionStorage.clear();   // 챗봇 대화 이력 등
+        }
+        async function doLogout() {
+            try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
+            clearUserData();
+            alert('로그아웃 되었습니다.');
+            window.location.href = 'index.html';
+        }
+
         const loggedInUser = localStorage.getItem('userid');
         const navRight = document.getElementById('nav-right');
+
+        // 세션 기반 로그인 확인 (비로그인 시 로그인 페이지로)
+        fetch('/me', { credentials: 'include' })
+            .then(r => r.json())
+            .then(({ userid }) => {
+                if (!userid) {
+                    alert('로그인이 필요한 페이지입니다!');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                localStorage.setItem('userid', userid);   // 표시용 미러 갱신
+            })
+            .catch(() => {});
+
         if (loggedInUser && navRight) {
             navRight.innerHTML = `
                 <span style="margin-right:12px;color:#0f172a;font-size:0.9rem;">👤 <b>${loggedInUser}</b>님</span>
@@ -373,11 +400,7 @@
             const lb = document.getElementById('btn-logout');
             lb.addEventListener('mouseenter', () => { lb.style.borderColor='#0ea5e9'; lb.style.color='#0ea5e9'; });
             lb.addEventListener('mouseleave', () => { lb.style.borderColor='#e2e8f0'; lb.style.color='#475569'; });
-            lb.addEventListener('click', () => {
-                localStorage.removeItem('userid');
-                alert('로그아웃 되었습니다.');
-                window.location.href = 'index.html';
-            });
+            lb.addEventListener('click', doLogout);
         }
 
         function updateSidebar() {
@@ -434,12 +457,29 @@
         }
 
         function saveProfile() {
+            const age    = document.getElementById('mp-age').value;
+            const region = document.getElementById('mp-region').value;
+            const size   = document.getElementById('mp-family-size').value;
+            const man    = document.getElementById('mp-income-man').value;
+
+            // 필수 항목·범위 검증 (챗봇·정보탐색에 직접 쓰이는 데이터라 저장 전 확인)
+            if (age === '' || !region || !size || man === '') {
+                alert('나이, 거주 자치구, 가구원 수, 월 소득을 모두 입력해 주세요.');
+                return;
+            }
+            const ageNum = Number(age);
+            if (!Number.isInteger(ageNum) || ageNum < 13 || ageNum > 39) {
+                alert('나이는 만 13세부터 39세까지 입력할 수 있어요.');
+                return;
+            }
+            if (Number(man) < 0) {
+                alert('월 소득을 올바르게 입력해 주세요.');
+                return;
+            }
+
             const pct = currentIncomePct();
             const profile = {
-                age:          document.getElementById('mp-age').value,
-                region:       document.getElementById('mp-region').value,
-                familySize:   document.getElementById('mp-family-size').value,
-                incomeMan:    document.getElementById('mp-income-man').value,
+                age, region, familySize: size, incomeMan: man,
                 incomePct:    pct,
                 income:       incomeTierOf(pct),
                 careInfant:   document.getElementById('care-infant').checked,

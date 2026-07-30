@@ -301,6 +301,8 @@ app.post('/register', async (req, res) => {
                 }
                 return res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
             }
+            // 가입 즉시 로그인 상태로 (온보딩으로 이어짐)
+            req.session.userid = userid;
             res.json({ success: true, message: '회원가입이 완료되었습니다!' });
         });
     } catch (err) {
@@ -340,6 +342,19 @@ app.post('/login', (req, res) => {
     });
 });
  
+// 현재 로그인한 사용자 조회 (세션 기반) — 프론트가 이 값으로 사용자를 식별
+app.get('/me', (req, res) => {
+    res.json({ userid: req.session.userid || null });
+});
+
+// 로그아웃 — 서버 세션 파기
+app.post('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.clearCookie('connect.sid');
+        res.json({ success: true });
+    });
+});
+
 // 정책 데이터 API
 app.get('/api/policies', (req, res) => {
     res.json(POLICIES);
@@ -366,10 +381,18 @@ app.get('/posts', (req, res) => {
 });
  
 app.post('/posts', (req, res) => {
-    const { userid, category, title, content } = req.body;
-    if (!userid || !category || !title || !content) {
+    const userid = req.session.userid;              // 세션에서만 작성자 확인 (위조 불가)
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
+
+    const category = (req.body.category || '').trim();
+    const title    = (req.body.title || '').trim();
+    const content  = (req.body.content || '').trim();
+    if (!category || !title || !content) {
         return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
     }
+    if (title.length > 100)   return res.status(400).json({ error: '제목은 100자 이내로 입력해 주세요.' });
+    if (content.length > 2000) return res.status(400).json({ error: '내용은 2000자 이내로 입력해 주세요.' });
+
     db.query(
         'INSERT INTO posts (userid, category, title, content) VALUES (?, ?, ?, ?)',
         [userid, category, title, content],
@@ -382,9 +405,8 @@ app.post('/posts', (req, res) => {
  
 // 글 삭제 (작성자 본인만)
 app.delete('/posts/:id', (req, res) => {
-    // 세션 정보 또는 요청 바디에서 유저 ID를 가져옴
-    const userid = req.session.userid || req.body.userid;
-    if (!userid) return res.status(400).json({ error: '로그인이 필요합니다.' });
+    const userid = req.session.userid;              // 세션에서만 (body 위조 차단)
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
 
     db.query('SELECT userid FROM posts WHERE id = ?', [req.params.id], (err, rows) => {
         if (err) return res.status(500).json({ error: '삭제 실패' });
@@ -420,10 +442,13 @@ app.get('/posts/:id/comments', (req, res) => {
 });
  
 app.post('/posts/:id/comments', (req, res) => {
-    const { userid, content } = req.body;
-    if (!userid || !content) {
-        return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
-    }
+    const userid = req.session.userid;              // 세션에서만 작성자 확인
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
+
+    const content = (req.body.content || '').trim();
+    if (!content) return res.status(400).json({ error: '댓글 내용을 입력해 주세요.' });
+    if (content.length > 500) return res.status(400).json({ error: '댓글은 500자 이내로 입력해 주세요.' });
+
     db.query(
         'INSERT INTO comments (post_id, userid, content) VALUES (?, ?, ?)',
         [req.params.id, userid, content],
