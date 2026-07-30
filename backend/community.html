@@ -229,8 +229,7 @@
         const CAT_EMOJI = { '정책 후기': '📝', '고민 게시판': '🤫', '합격/탈락 사례': '✅', '정보 교류': '💡' };
 
         function clearUserData() {
-            ['userid','userProfile','bookmarkedPolicies','scrappedPosts','docChecks','exploreOnlyMine']
-                .forEach(k => localStorage.removeItem(k));
+            localStorage.clear();
             sessionStorage.clear();
         }
         async function doLogout() {
@@ -410,6 +409,8 @@
             const title = document.getElementById('write-title').value.trim();
             const content = document.getElementById('write-content').value.trim();
             if (!title || !content) { alert('제목과 내용을 모두 입력해 주세요.'); return; }
+if (title.length < 2 || title.length > 100) { alert('제목은 2자 이상 100자 이하로 입력해 주세요.'); return; }
+if (content.length < 10 || content.length > 2000) { alert('본문은 10자 이상 2000자 이하로 입력해 주세요.'); return; }
             const res = await fetch('/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ category, title, content }) });
             const data = await res.json();
             if (data.success) { closeModal(); loadPosts(); }

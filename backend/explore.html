@@ -279,8 +279,7 @@
         //  네비게이션 / 로그인 상태
         // ══════════════════════════════════════
         function clearUserData() {
-            ['userid','userProfile','bookmarkedPolicies','scrappedPosts','docChecks','exploreOnlyMine']
-                .forEach(k => localStorage.removeItem(k));
+            localStorage.clear();
             sessionStorage.clear();
         }
         async function doLogout() {

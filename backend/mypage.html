@@ -365,8 +365,7 @@
 
         // 로그아웃 시 브라우저에 남는 개인정보를 모두 정리 (공용 PC 대비)
         function clearUserData() {
-            ['userid','userProfile','bookmarkedPolicies','scrappedPosts','docChecks','exploreOnlyMine']
-                .forEach(k => localStorage.removeItem(k));
+            localStorage.clear();
             sessionStorage.clear();   // 챗봇 대화 이력 등
         }
         async function doLogout() {

@@ -206,8 +206,7 @@
                 lb.addEventListener('mouseleave', () => { lb.style.borderColor='#e2e8f0'; lb.style.color='#475569'; });
                 lb.addEventListener('click', async () => {
                     try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
-                    ['userid','userProfile','bookmarkedPolicies','scrappedPosts','docChecks','exploreOnlyMine']
-                        .forEach(k => localStorage.removeItem(k));
+                    localStorage.clear();
                     sessionStorage.clear();
                     window.location.href = 'index.html';
                 });

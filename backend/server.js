@@ -43,19 +43,20 @@ app.use(express.static(__dirname));
 // ==========================================
 // 2. MySQL 데이터베이스 연결
 // ==========================================
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: process.env.DB_PASSWORD || '',
     database: 'dolgorae_db'
 });
 
-db.connect((err) => {
+db.getConnection((err, connection) => {
     if (err) {
         console.error('❌ MySQL 연결 실패 ㅠㅠ:', err);
         return;
     }
     console.log('🐬 MySQL 데이터베이스에 성공적으로 연결되었습니다!');
+    connection.release();
 });
 
 // ==========================================
@@ -485,7 +486,7 @@ app.post('/chat', async (req, res) => {
             model: CHAT_MODEL,
             messages: [
                 { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) },
-                ...messages
+            ...messages.slice(-20)
             ],
             temperature: 0.6,
             max_tokens: 1024,
