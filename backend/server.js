@@ -44,10 +44,11 @@ app.use(express.static(__dirname));
 // 2. MySQL 데이터베이스 연결
 // ==========================================
 const db = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 3306,
+    user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: 'dolgorae_db'
+    database: process.env.DB_NAME || 'dolgorae_db'
 });
 
 db.getConnection((err, connection) => {
