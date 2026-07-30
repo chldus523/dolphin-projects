@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +7,198 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="median-income.js"></script>
+    <style>
+        /* 플로팅 챗봇 위젯 CSS */
+        .chat-fab {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0369a1, #0ea5e9);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 6px 24px rgba(14,165,233,0.45);
+            z-index: 9000;
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: bob 3s ease-in-out infinite;
+        }
+        @keyframes bob {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-4px); }
+        }
+        .chat-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(14,165,233,0.55);
+            animation: none;
+        }
+        .chat-fab-tooltip {
+            position: fixed;
+            bottom: 38px;
+            right: 96px;
+            background: #0f172a;
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 7px 13px;
+            border-radius: 20px;
+            white-space: nowrap;
+            z-index: 8999;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.3s;
+            font-family: 'Pretendard', sans-serif;
+        }
+        .chat-fab-tooltip::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-left-color: #0f172a;
+            border-right: none;
+        }
+        .chat-fab-tooltip.hidden { opacity: 0; }
+        .chatbot-widget {
+            position: fixed;
+            bottom: 100px;
+            right: 28px;
+            width: 360px;
+            height: 520px;
+            background: #f8fafc;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(15,23,42,0.22);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 9001;
+            transform: scale(0.85) translateY(20px);
+            transform-origin: bottom right;
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease;
+        }
+        .chatbot-widget.open {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+        .widget-header {
+            background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .widget-avatar {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .widget-title h2 { font-size: 0.88rem; font-weight: 800; color: #fff; }
+        .widget-title p { font-size: 0.67rem; color: rgba(255,255,255,0.68); margin-top: 1px; }
+        .widget-close {
+            margin-left: auto;
+            background: rgba(255,255,255,0.18);
+            border: none; color: #fff;
+            width: 28px; height: 28px;
+            border-radius: 8px; cursor: pointer;
+            font-size: 0.85rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s; flex-shrink: 0;
+        }
+        .widget-close:hover { background: rgba(255,255,255,0.3); }
+        .widget-chat {
+            flex: 1; overflow-y: auto;
+            padding: 14px 12px;
+            display: flex; flex-direction: column; gap: 10px;
+            scroll-behavior: smooth;
+        }
+        .widget-chat::-webkit-scrollbar { width: 3px; }
+        .widget-chat::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .msg { display: flex; align-items: flex-end; gap: 6px; max-width: 88%; animation: msgIn 0.25s ease forwards; }
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .msg.bot  { align-self: flex-start; }
+        .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-av {
+            width: 26px; height: 26px;
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; flex-shrink: 0;
+        }
+        .msg-bubble { padding: 9px 12px; border-radius: 14px; font-size: 0.82rem; line-height: 1.6; word-break: keep-all; }
+        .msg.bot .msg-bubble { background: #fff; color: #0f172a; border-bottom-left-radius: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
+        .msg.user .msg-bubble { background: #0ea5e9; color: #fff; border-bottom-right-radius: 3px; }
+        .typing-wrap { display: flex; align-items: flex-end; gap: 6px; align-self: flex-start; animation: msgIn 0.25s ease forwards; }
+        .typing-dots { display: flex; gap: 4px; padding: 10px 13px; background: #fff; border-radius: 14px; border-bottom-left-radius: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
+        .typing-dots span { width: 5px; height: 5px; background: #7dd3fc; border-radius: 50%; animation: dot 1.4s ease-in-out infinite; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dot {
+            0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+            40%            { transform: scale(1.1); opacity: 1; }
+        }
+        .widget-chips { padding: 2px 12px 8px; display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 0; }
+        .p-chip {
+            background: #fff; border: 1.5px solid #bae6fd;
+            color: #0369a1; font-size: 0.68rem; font-weight: 600;
+            padding: 4px 10px; border-radius: 20px; cursor: pointer;
+            font-family: 'Pretendard', sans-serif; transition: all 0.18s;
+        }
+        .p-chip:hover { background: #0ea5e9; border-color: #0ea5e9; color: #fff; }
+        .widget-input-area {
+            padding: 8px 10px 10px; background: #fff;
+            border-top: 1px solid #e2e8f0;
+            display: flex; gap: 7px; align-items: flex-end; flex-shrink: 0;
+        }
+        #widgetInput {
+            flex: 1; background: #f1f5f9;
+            border: 1.5px solid #e2e8f0; border-radius: 11px;
+            padding: 8px 11px; font-size: 0.81rem;
+            font-family: 'Pretendard', sans-serif; color: #0f172a;
+            resize: none; outline: none; max-height: 80px; line-height: 1.5;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #widgetInput:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+        #widgetInput::placeholder { color: #94a3b8; }
+        #widgetSend {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            border: none; border-radius: 9px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; box-shadow: 0 3px 8px rgba(14,165,233,0.4); transition: all 0.18s;
+        }
+        #widgetSend:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.5); }
+        #widgetSend:disabled { opacity: 0.4; cursor: not-allowed; }
+        #widgetSend svg { width: 15px; height: 15px; fill: #fff; }
+        .fab-badge {
+            position: absolute; top: -2px; right: -2px;
+            width: 18px; height: 18px; background: #ef4444;
+            border-radius: 50%; font-size: 0.65rem; font-weight: 800;
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            border: 2px solid #fff;
+        }
+        @media (max-width: 420px) {
+            .chatbot-widget { right: 12px; bottom: 90px; width: calc(100vw - 24px); height: 70vh; }
+            .chat-fab { bottom: 16px; right: 16px; }
+        }
+    </style>
 </head>
-
 <body>
-
     <header>
         <div class="nav-inner">
             <a href="home.html" class="logo">🐬 청년정책 돌고래</a>
@@ -24,32 +211,23 @@
             <div id="nav-right"></div>
         </div>
     </header>
-
     <main class="container">
         <aside class="profile-card">
             <div class="avatar-circle">🐬</div>
             <h2 class="profile-name" id="sidebar-name">— 님</h2>
             <p class="profile-status" id="sidebar-status">정보를 저장해 주세요</p>
-
             <ul class="mypage-menu">
                 <li><a href="#info-section" class="active"><i class="fa-solid fa-user-gear"></i> 내 정보 관리</a></li>
                 <li><a href="#docs-section"><i class="fa-solid fa-star"></i> 찜한 정책</a></li>
                 <li><a href="#scrap-section"><i class="fa-solid fa-bookmark"></i> 스크랩 목록</a></li>
             </ul>
         </aside>
-
         <div class="content-box">
-
             <section id="info-section">
-                <h2 class="section-title"><i class="fa-solid fa-sliders"></i> 개인 맞춤 정보 설정</h2>
+                <h2 class="section-title"><i class="fa-solid fa-sliders"></i> 개인 맞춤 정보설정</h2>
                 <p class="section-desc">정보를 수정하면 돌고래가 실시간으로 가장 적합한 정책을 다시 계산해 드립니다.</p>
-
                 <form class="info-form">
-
-                    <!-- 기본 인적 사항 -->
-                    <div class="form-section-title">
-                        <i class="fa-solid fa-id-card"></i> 기본 인적 사항
-                    </div>
+                    <div class="form-section-title"><i class="fa-solid fa-id-card"></i> 기본 인적 사항</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                         <div class="input-group">
                             <label>나이 (만)</label>
@@ -59,49 +237,30 @@
                             <label>거주 자치구 <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">(서울시 정책 안내)</span></label>
                             <select id="mp-region">
                                 <option value="">선택해주세요</option>
-                                <option value="종로구">종로구</option>
-                                <option value="중구">중구</option>
-                                <option value="용산구">용산구</option>
-                                <option value="성동구">성동구</option>
-                                <option value="광진구">광진구</option>
-                                <option value="동대문구">동대문구</option>
-                                <option value="중랑구">중랑구</option>
-                                <option value="성북구">성북구</option>
-                                <option value="강북구">강북구</option>
-                                <option value="도봉구">도봉구</option>
-                                <option value="노원구">노원구</option>
-                                <option value="은평구">은평구</option>
-                                <option value="서대문구">서대문구</option>
-                                <option value="마포구">마포구</option>
-                                <option value="양천구">양천구</option>
-                                <option value="강서구">강서구</option>
-                                <option value="구로구">구로구</option>
-                                <option value="금천구">금천구</option>
-                                <option value="영등포구">영등포구</option>
-                                <option value="동작구">동작구</option>
-                                <option value="관악구">관악구</option>
-                                <option value="서초구">서초구</option>
-                                <option value="강남구">강남구</option>
-                                <option value="송파구">송파구</option>
+                                <option value="종로구">종로구</option><option value="중구">중구</option>
+                                <option value="용산구">용산구</option><option value="성동구">성동구</option>
+                                <option value="광진구">광진구</option><option value="동대문구">동대문구</option>
+                                <option value="중랑구">중랑구</option><option value="성북구">성북구</option>
+                                <option value="강북구">강북구</option><option value="도봉구">도봉구</option>
+                                <option value="노원구">노원구</option><option value="은평구">은평구</option>
+                                <option value="서대문구">서대문구</option><option value="마포구">마포구</option>
+                                <option value="양천구">양천구</option><option value="강서구">강서구</option>
+                                <option value="구로구">구로구</option><option value="금천구">금천구</option>
+                                <option value="영등포구">영등포구</option><option value="동작구">동작구</option>
+                                <option value="관악구">관악구</option><option value="서초구">서초구</option>
+                                <option value="강남구">강남구</option><option value="송파구">송파구</option>
                                 <option value="강동구">강동구</option>
                             </select>
                         </div>
                     </div>
-
-                    <!-- 경제적 여건 -->
-                    <div class="form-section-title" style="margin-top: 1.8rem;">
-                        <i class="fa-solid fa-won-sign"></i> 경제적 여건
-                    </div>
+                    <div class="form-section-title" style="margin-top: 1.8rem;"><i class="fa-solid fa-won-sign"></i> 경제적 여건</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                         <div class="input-group">
                             <label>가구원 수 (본인 포함)</label>
                             <select id="mp-family-size" onchange="updateIncomeHint()">
-                                <option value="1">1인</option>
-                                <option value="2">2인</option>
-                                <option value="3">3인</option>
-                                <option value="4">4인</option>
-                                <option value="5">5인</option>
-                                <option value="6">6인 이상</option>
+                                <option value="1">1인</option><option value="2">2인</option>
+                                <option value="3">3인</option><option value="4">4인</option>
+                                <option value="5">5인</option><option value="6">6인 이상</option>
                             </select>
                         </div>
                         <div class="input-group">
@@ -121,11 +280,7 @@
                             <option value="학생">학생</option>
                         </select>
                     </div>
-
-                    <!-- 가구·돌봄 현황 -->
-                    <div class="form-section-title" style="margin-top: 1.8rem;">
-                        <i class="fa-solid fa-house-chimney-user"></i> 가구·돌봄 현황
-                    </div>
+                    <div class="form-section-title" style="margin-top: 1.8rem;"><i class="fa-solid fa-house-chimney-user"></i> 가구·돌봄 현황</div>
                     <div class="input-group">
                         <label>가구 형태</label>
                         <select id="mp-household">
@@ -137,27 +292,16 @@
                     <div class="input-group">
                         <label>돌봄 대상자 여부 (해당 시 체크)</label>
                         <div class="checkbox-group">
-                            <label class="checkbox-card">
-                                <span class="checkbox-content">영유아</span>
-                                <input type="checkbox" id="care-infant">
-                            </label>
-                            <label class="checkbox-card">
-                                <span class="checkbox-content">노인</span>
-                                <input type="checkbox" id="care-elderly">
-                            </label>
-                            <label class="checkbox-card">
-                                <span class="checkbox-content">장애인</span>
-                                <input type="checkbox" id="care-disabled">
-                            </label>
+                            <label class="checkbox-card"><span class="checkbox-content">영유아</span><input type="checkbox" id="care-infant"></label>
+                            <label class="checkbox-card"><span class="checkbox-content">노인</span><input type="checkbox" id="care-elderly"></label>
+                            <label class="checkbox-card"><span class="checkbox-content">장애인</span><input type="checkbox" id="care-disabled"></label>
                         </div>
                     </div>
-
                     <button type="button" class="btn-save" onclick="saveProfile()">
                         <i class="fa-solid fa-calculator"></i> 정보 저장 및 맞춤 정책 재계산
                     </button>
                 </form>
             </section>
-
             <section id="docs-section" style="margin-top: 5rem;">
                 <h2 class="section-title"><i class="fa-solid fa-star"></i> 찜한 정책</h2>
                 <p class="section-desc">정보 탐색에서 ⭐ 찜한 정책의 필요 서류가 자동으로 표시됩니다.</p>
@@ -165,20 +309,48 @@
                     <p style="color:#94a3b8;font-size:0.88rem;">불러오는 중...</p>
                 </div>
             </section>
-
             <section id="scrap-section" style="margin-top: 5rem;">
                 <h2 class="section-title"><i class="fa-solid fa-bookmark"></i> 스크랩 목록</h2>
-
-                <div id="scrap-list" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                <div id="scrap-list" style="margin-top: 1rem; display: flex; flex-direction:column; gap: 0.8rem;">
                     <p style="color:#94a3b8; font-size:0.88rem;">불러오는 중...</p>
                 </div>
             </section>
-
         </div>
     </main>
-    <script>
 
-        // ── XSS 방어: 사용자 입력을 HTML로 해석되지 않게 이스케이프 ──
+    <!-- 플로팅 챗봇 위젯 -->
+    <div class="chat-fab-tooltip" id="fabTooltip">AI 챗봇에게 물어보세요 🐬</div>
+    <button class="chat-fab" id="chatFab" onclick="toggleWidget()" style="position:fixed;">
+        <span id="fabIcon">🐬</span>
+        <span class="fab-badge" id="fabBadge" style="display:none;">1</span>
+    </button>
+    <div class="chatbot-widget" id="chatbotWidget">
+        <div class="widget-header">
+            <div class="widget-avatar">🐬</div>
+            <div class="widget-title">
+                <h2>돌고래 AI 챗봇</h2>
+                <p>가족돌봄청년 맞춤 복지 안내</p>
+            </div>
+            <button onclick="resetChat()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.7rem;font-weight:600;cursor:pointer;font-family:Pretendard,sans-serif;margin-right:6px;">🔄 새 대화</button><button class="widget-close" onclick="closeWidget()">✕</button>
+        </div>
+        <div class="widget-chat" id="widgetChat"></div>
+        <div class="widget-chips" id="widgetChips">
+            <button class="p-chip" onclick="sendChip(this)">📋 지원 가능한 복지</button>
+            <button class="p-chip" onclick="sendChip(this)">🏠 월세 지원</button>
+            <button class="p-chip" onclick="sendChip(this)">📝 필요 서류</button>
+            <button class="p-chip" onclick="sendChip(this)">💼 취업 지원</button>
+        </div>
+        <div class="widget-input-area">
+            <textarea id="widgetInput" rows="1" placeholder="질문을 입력해 주세요…" oninput="autoResize(this)"></textarea>
+            <button id="widgetSend" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
         function escapeHtml(str) {
             return String(str ?? '')
                 .replace(/&/g, '&amp;')
@@ -188,8 +360,6 @@
                 .replace(/'/g, '&#39;');
         }
 
-
-        // ── 네비게이션 로그인 표시 ──
         const loggedInUser = localStorage.getItem('userid');
         const navRight = document.getElementById('nav-right');
         if (loggedInUser && navRight) {
@@ -207,43 +377,37 @@
             });
         }
 
-        // ── 사이드바 프로필 업데이트 ──
         function updateSidebar() {
             const userid = localStorage.getItem('userid') || '—';
             const s = JSON.parse(localStorage.getItem('userProfile') || '{}');
             document.getElementById('sidebar-name').textContent = `${userid} 님`;
             if (s.age && s.region) {
-                document.getElementById('sidebar-status').textContent =
-                    `${s.region} 거주 · 만 ${s.age}세`;
+                document.getElementById('sidebar-status').textContent = `${s.region} 거주 · 만 ${s.age}세`;
             }
         }
 
-        // ── 저장된 프로필 불러와서 폼에 반영 ──
         const saved = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        if (saved.age)      document.getElementById('mp-age').value         = saved.age;
-        if (saved.region)   document.getElementById('mp-region').value      = saved.region;
-        if (saved.familySize)   document.getElementById('mp-family-size').value = saved.familySize;
-        if (saved.incomeMan)    document.getElementById('mp-income-man').value  = saved.incomeMan;
+        if (saved.age)          document.getElementById('mp-age').value          = saved.age;
+        if (saved.region)       document.getElementById('mp-region').value       = saved.region;
+        if (saved.familySize)   document.getElementById('mp-family-size').value  = saved.familySize;
+        if (saved.incomeMan)    document.getElementById('mp-income-man').value   = saved.incomeMan;
         if (saved.careInfant)   document.getElementById('care-infant').checked   = saved.careInfant;
         if (saved.careElderly)  document.getElementById('care-elderly').checked  = saved.careElderly;
-        if (saved.careDisabled)  document.getElementById('care-disabled').checked  = saved.careDisabled;
-        if (saved.employment)    document.getElementById('mp-employment').value    = saved.employment;
-        if (saved.household)     document.getElementById('mp-household').value     = saved.household;
-
+        if (saved.careDisabled) document.getElementById('care-disabled').checked = saved.careDisabled;
+        if (saved.employment)   document.getElementById('mp-employment').value   = saved.employment;
+        if (saved.household)    document.getElementById('mp-household').value    = saved.household;
         updateSidebar();
         updateIncomeHint();
         loadBookmarkedDocs();
         loadScrappedPosts();
 
-        // 입력값으로 중위소득 % 계산 (없으면 null)
         function currentIncomePct() {
             const size = document.getElementById('mp-family-size').value;
             const man  = document.getElementById('mp-income-man').value;
             if (man === '') return null;
-            return calcIncomePercent(Number(man) * 10000, size);   // 만원 → 원
+            return calcIncomePercent(Number(man) * 10000, size);
         }
 
-        // 입력할 때마다 계산 결과 안내
         function updateIncomeHint() {
             const hint = document.getElementById('income-hint');
             const pct = currentIncomePct();
@@ -259,7 +423,6 @@
             hint.style.color = '#0369a1';
         }
 
-        // 하위 호환: 기존 코드가 쓰던 income 등급도 함께 저장
         function incomeTierOf(pct) {
             if (pct === null) return '';
             if (pct <= 120) return '1순위';
@@ -274,8 +437,8 @@
                 region:       document.getElementById('mp-region').value,
                 familySize:   document.getElementById('mp-family-size').value,
                 incomeMan:    document.getElementById('mp-income-man').value,
-                incomePct:    pct,                    // 기준 중위소득 대비 %
-                income:       incomeTierOf(pct),      // 하위 호환용 등급
+                incomePct:    pct,
+                income:       incomeTierOf(pct),
                 careInfant:   document.getElementById('care-infant').checked,
                 careElderly:  document.getElementById('care-elderly').checked,
                 careDisabled: document.getElementById('care-disabled').checked,
@@ -286,29 +449,24 @@
             updateSidebar();
             alert('✅ 저장되었습니다! 정보 탐색 페이지와 챗봇에 반영됩니다.');
         }
+
         async function loadBookmarkedDocs() {
             const bookmarks = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
             const container = document.getElementById('docs-list');
-
             if (bookmarks.length === 0) {
                 container.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">찜한 정책이 없습니다. 정보 탐색에서 ⭐를 눌러 정책을 찜해보세요!</p>';
                 return;
             }
-
             const res = await fetch('/api/policies');
             const allPolicies = await res.json();
-
             const hasDocs = d => { const t = (d || '').trim(); return t && t !== '-' && t !== '없음'; };
             const isUrl = s => typeof s === 'string' && /^https?:\/\//.test(s);
             const bookmarked = allPolicies.filter(p => bookmarks.includes(p['정책_ID']) && hasDocs(p['제출_서류']));
-
             if (bookmarked.length === 0) {
-                container.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">찜한 정책 중 제출 서류 정보가 있는 정책이 없습니다.</p>';
+                container.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">찜한 정책중 제출 서류 정보가 있는 정책이 없습니다.</p>';
                 return;
             }
-
             const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
-
             container.innerHTML = bookmarked.map(p => {
                 const pid = p['정책_ID'];
                 const docs = p['제출_서류'].split(',').map(d => d.trim()).filter(Boolean);
@@ -319,9 +477,7 @@
                 <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:1.4rem 1.6rem;">
                     <div style="font-size:0.9rem;font-weight:700;color:#0369a1;margin-bottom:0.6rem;">📌 ${p['정책명']}</div>
                     <div style="margin-bottom:1rem;">
-                        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:#64748b;margin-bottom:4px;">
-                            <span>준비 현황</span><span>${done} / ${docs.length}</span>
-                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:#64748b;margin-bottom:4px;"><span>준비 현황</span><span>${done} / ${docs.length}</span></div>
                         <div style="background:#e2e8f0;border-radius:10px;height:6px;overflow:hidden;">
                             <div id="prog-${pid}" style="height:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border-radius:10px;width:${pct}%;transition:width 0.4s;"></div>
                         </div>
@@ -329,11 +485,7 @@
                     <div style="display:flex;flex-direction:column;gap:0.7rem;margin-bottom:1.2rem;">
                         ${docs.map((doc, i) => `
                         <div style="display:flex;align-items:center;gap:0.7rem;">
-                            <input type="checkbox" id="doc-${pid}-${i}"
-                                data-docname="${doc}"
-                                ${docChecks[`${pid}-${i}`] ? 'checked' : ''}
-                                onchange="saveDocCheck('${pid}', ${i}, ${docs.length}, this)"
-                                style="width:16px;height:16px;accent-color:#0ea5e9;flex-shrink:0;cursor:pointer;">
+                            <input type="checkbox" id="doc-${pid}-${i}" data-docname="${doc}" ${docChecks[`${pid}-${i}`] ? 'checked' : ''} onchange="saveDocCheck('${pid}', ${i}, ${docs.length}, this)" style="width:16px;height:16px;accent-color:#0ea5e9;flex-shrink:0;cursor:pointer;">
                             <label for="doc-${pid}-${i}" style="font-size:0.85rem;font-weight:600;color:#1e293b;cursor:pointer;${docChecks[`${pid}-${i}`] ? 'text-decoration:line-through;color:#94a3b8;' : ''}">${doc}</label>
                         </div>`).join('')}
                     </div>
@@ -345,28 +497,23 @@
         async function loadScrappedPosts() {
             const scrapped = JSON.parse(localStorage.getItem('scrappedPosts') || '[]');
             const list = document.getElementById('scrap-list');
-
             if (scrapped.length === 0) {
                 list.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">스크랩한 글이 없습니다.</p>';
                 return;
             }
-
             const res = await fetch('/posts');
             const allPosts = await res.json();
             const scrappedPosts = allPosts.filter(p => scrapped.includes(p.id));
-
             if (scrappedPosts.length === 0) {
                 list.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">스크랩한 글이 없습니다.</p>';
                 return;
             }
-
             const CAT_STYLE = {
-                '정책 후기':      { color: '#0369a1', bg: '#e0f2fe' },
-                '고민 게시판':    { color: '#65a30d', bg: '#f7fee7' },
+                '정책 후기': { color: '#0369a1', bg: '#e0f2fe' },
+                '고민 게시판': { color: '#65a30d', bg: '#f7fee7' },
                 '합격/탈락 사례': { color: '#dc2626', bg: '#fef2f2' },
-                '정보 교류':      { color: '#ca8a04', bg: '#fef9c3' },
+                '정보 교류': { color: '#ca8a04', bg: '#fef9c3' },
             };
-
             list.innerHTML = scrappedPosts.map(p => {
                 const cs = CAT_STYLE[p.category] || { color: '#475569', bg: '#f1f5f9' };
                 const preview = p.content.length > 80 ? p.content.slice(0, 80) + '…' : p.content;
@@ -378,12 +525,7 @@
                     </div>
                     <h4 style="font-size:0.92rem;font-weight:700;color:#0f172a;margin-bottom:0.4rem;">${escapeHtml(p.title)}</h4>
                     <p style="font-size:0.82rem;color:#64748b;line-height:1.6;margin-bottom:0.9rem;">${escapeHtml(preview)}</p>
-                    <div style="display:flex;align-items:center;justify-content:space-between;">
-                        <a href="community.html?post=${p.id}" style="font-size:0.8rem;font-weight:600;color:#0ea5e9;text-decoration:none;">커뮤니티에서 보기 →</a>
-                        <button class="btn-remove" title="스크랩 취소" onclick="removeScrap(${p.id}, this)">
-                            <i class="fa-solid fa-circle-xmark"></i>
-                        </button>
-                    </div>
+                    <a href="community.html?post=${p.id}" style="font-size:0.8rem;font-weight:600;color:#0ea5e9;text-decoration:none;">커뮤니티에서 보기 →</a>
                 </div>`;
             }).join('');
         }
@@ -401,27 +543,19 @@
             const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
             const docName = cb.dataset.docname;
             docChecks[`${policyId}-${docIdx}`] = cb.checked;
-
-            // 같은 서류명을 가진 다른 체크박스도 자동 동기화
             document.querySelectorAll(`input[data-docname="${docName}"]`).forEach(other => {
                 if (other === cb) return;
                 const [, pid, idx] = other.id.match(/doc-(.+)-(\d+)$/);
                 docChecks[`${pid}-${idx}`] = cb.checked;
                 applyCheck(other, cb.checked);
-
-                // 해당 정책 진행도 바도 업데이트
                 const otherBoxes = document.querySelectorAll(`[id^="doc-${pid}-"]`);
                 const otherDone = [...otherBoxes].filter(c => c.checked).length;
                 const otherPct = Math.round((otherDone / otherBoxes.length) * 100);
                 const otherBar = document.getElementById(`prog-${pid}`);
                 if (otherBar) otherBar.style.width = otherPct + '%';
             });
-
             localStorage.setItem('docChecks', JSON.stringify(docChecks));
-
             applyCheck(cb, cb.checked);
-
-            // 현재 정책 진행도 바 업데이트
             const checkboxes = document.querySelectorAll(`[id^="doc-${policyId}-"]`);
             const done = [...checkboxes].filter(c => c.checked).length;
             const pct = Math.round((done / total) * 100);
@@ -429,18 +563,159 @@
             if (bar) bar.style.width = pct + '%';
         }
 
-        function removeScrap(id, btn) {
-            let scrapped = JSON.parse(localStorage.getItem('scrappedPosts') || '[]');
-            scrapped = scrapped.filter(s => s !== id);
-            localStorage.setItem('scrappedPosts', JSON.stringify(scrapped));
-            btn.closest('.scrapped-item').remove();
-            document.getElementById('scrap-tab-count').textContent = scrapped.length;
-            if (scrapped.length === 0) {
-                document.getElementById('scrap-list').innerHTML =
-                    '<p style="color:#94a3b8;font-size:0.88rem;">스크랩한 글이 없습니다.</p>';
+        // =============================================
+        //  플로팅 챗봇 위젯 로직
+        // =============================================
+        const widget     = document.getElementById('chatbotWidget');
+        const widgetChat  = document.getElementById('widgetChat');
+        const widgetInput = document.getElementById('widgetInput');
+        const widgetSend  = document.getElementById('widgetSend');
+        const fabTooltip  = document.getElementById('fabTooltip');
+        const fabBadge    = document.getElementById('fabBadge');
+        let chatHistory = JSON.parse(sessionStorage.getItem('dolgorae_chatHistory') || '[]');
+        let initialized = false;
+        let isOpen = false;
+
+        setTimeout(() => fabTooltip.classList.add('hidden'), 3000);
+
+        function getProfile() {
+            const p = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            return (p.age && p.income) ? p : null;
+        }
+        function profileSummary() {
+            const p = getProfile();
+            if (!p) return '';
+            const parts = [`만 ${p.age}세`];
+            if (p.region)    parts.push(p.region);
+            if (p.household) parts.push(p.household);
+            return parts.join(' · ');
+        }
+
+        // 대화 저장 함수
+function saveChatHistory() {
+    sessionStorage.setItem('dolgorae_chatHistory', JSON.stringify(chatHistory));
+}
+
+// 대화 불러오기 함수
+function loadChatHistory() {
+    if (chatHistory.length > 0) {
+        chatHistory.forEach(m => {
+            const role = m.role === 'assistant' ? 'bot' : 'user';
+            renderMsg(role, m.content); // 또는 addMsg
+        });
+        const chips = document.getElementById('widgetChips');
+        if (chips) chips.style.display = 'none';
+        initialized = true;
+    }
+}
+
+// 페이지 로드 시 복원 실행
+document.addEventListener('DOMContentLoaded', loadChatHistory);
+        function openWidget() {
+            widget.classList.add('open');
+            isOpen = true;
+            fabBadge.style.display = 'none';
+            fabTooltip.classList.add('hidden');
+            if (!initialized) {
+                if (getProfile()) {
+                    addMsg('bot', '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n' +
+                        `마이페이지에 저장하신 정보(${profileSummary()})를 참고해서 안내해 드릴게요. 궁금한 점을 편하게 물어봐 주세요 😊`);
+                } else {
+                    addMsg('bot', '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊');
+                }
+                initialized = true;
+            }
+            setTimeout(() => widgetInput.focus(), 200);
+        }
+        function closeWidget() { widget.classList.remove('open'); isOpen = false; }
+
+        function resetChat() {
+    chatHistory.length = 0;
+    widgetChat.innerHTML = '';
+    initialized = false;
+    document.getElementById('widgetChips').style.display = 'flex';
+    addMsg('bot', '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊');
+    initialized = true;
+}
+        function toggleWidget() { if (isOpen) closeWidget(); else openWidget(); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) closeWidget(); });
+        function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px'; }
+
+        function renderMsg(role, text) {
+            const wrap = document.createElement('div');
+            wrap.className = `msg ${role}`;
+            if (role === 'bot') {
+                const av = document.createElement('div');
+                av.className = 'msg-av';
+                av.textContent = '🐬';
+                wrap.appendChild(av);
+            }
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+            bubble.innerHTML = escapeHtml(text)
+                .replace(/^#{1,6}\s*/gm, '')
+                .replace(/^[-*_]{3,}$/gm, '')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" target="_blank" style="color:#0ea5e9;text-decoration:underline;">$1</a>')
+                .replace(/\n/g, '<br>');
+            wrap.appendChild(bubble);
+            widgetChat.appendChild(wrap);
+            widgetChat.scrollTop = widgetChat.scrollHeight;
+        }
+        function addMsg(role, text) {
+            renderMsg(role, text);
+            chatHistory.push({ role: role === 'bot' ? 'assistant' : 'user', content: text });
+            saveChatHistory();
+        }
+
+        function showTyping() {
+            const wrap = document.createElement('div');
+            wrap.className = 'typing-wrap'; wrap.id = 'typingEl';
+            const av = document.createElement('div');
+            av.className = 'msg-av'; av.textContent = '🐬';
+            const dots = document.createElement('div');
+            dots.className = 'typing-dots';
+            dots.innerHTML = '<span></span><span></span><span></span>';
+            wrap.appendChild(av); wrap.appendChild(dots);
+            widgetChat.appendChild(wrap);
+            widgetChat.scrollTop = widgetChat.scrollHeight;
+        }
+        function removeTyping() { const el = document.getElementById('typingEl'); if (el) el.remove(); }
+        function sendChip(el) { widgetInput.value = el.textContent.replace(/^\S+\s/, '').trim(); sendMessage(); }
+        widgetInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+        async function sendMessage() {
+            const text = widgetInput.value.trim();
+            if (!text) return;
+            addMsg('user', text);
+            widgetInput.value = '';
+            widgetInput.style.height = 'auto';
+            widgetSend.disabled = true;
+            document.getElementById('widgetChips').style.display = 'none';
+            showTyping();
+            try {
+                const res = await fetch('http://localhost:3000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: chatHistory, profile: getProfile() })
+                });
+                const data = await res.json();
+                removeTyping();
+                const reply = data.reply || '죄송해요, 잠시 오류가 발생했어요. 다시 시도해 주세요.';
+                addMsg('bot', reply);
+                saveChatHistory();
+                if (!isOpen) fabBadge.style.display = 'flex';
+            } catch (err) {
+                removeTyping();
+                addMsg('bot', '⚠️ 서버에 연결할 수 없어요. node server.js 가 실행 중인지 확인해 주세요.');
+                console.error(err);
+            } finally {
+                widgetSend.disabled = false;
+                widgetInput.focus();
             }
         }
-    </script>
-</body>
 
+    </script>
+  <script src="script.js"></script>
+</body>
 </html>

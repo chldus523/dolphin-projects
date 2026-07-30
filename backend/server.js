@@ -6,6 +6,7 @@ const fs      = require('fs');
 const path    = require('path');
 const bcrypt  = require('bcrypt');
 const { matchesDistrict } = require('./policy-match.js');
+const session = require('express-session'); // [추가] express-session 패키지 로드
 
 require('dotenv').config();
 
@@ -15,7 +16,24 @@ const port = process.env.PORT || 3000;
 // ==========================================
 // 1. 서버 환경 설정
 // ==========================================
-app.use(cors());
+
+// [수정] 세션 쿠키 교환을 위해 origin 지정 및 credentials: true 추가
+app.use(cors({
+    origin: ['http://localhost:3000', 'http://127.0.0.1:5500', 'http://localhost:5500'], // 프론트엔드가 동작하는 주소들
+    credentials: true
+}));
+
+// [추가] express-session 미들웨어 설정 (세션 쿠키 처리)
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'dolgorae-secret-key', // 암호화 키
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true, // 자바스크립트를 통한 쿠키 탈취 방지
+        secure: false,  // HTTPS 환경일 때 true로 변경
+        maxAge: 1000 * 60 * 60 * 24 // 쿠키 유효 기간 (24시간)
+    }
+}));
 
 // [보안 5] 대용량 페이로드 차단 - 100KB 이상 요청은 바로 거절
 // 이유: 100KB 이상 요청이 Groq API로 넘어가면 토큰 초과로 서버가 크래시됨
@@ -59,22 +77,15 @@ try {
 }
 
 // [개선 2] 사용자 조건으로 1차 필터링 후 AI에 넘기기
-// 이유: 43개를 전부 넘기면 토큰 낭비 + 조건 안 맞는 정책까지 AI가 읽어서 환각 위험
-// 나이, 소득, 카테고리 키워드로 미리 걸러내고 맞는 것만 프롬프트에 포함
-// [개선 7] 마이페이지 프로필을 받아 나이·소득으로 정밀 필터링
-// profile 예: { age:'26', income:'2순위', region:'서울', household:'1인가구', careElderly:true }
 function filterPolicies(userMessage, profile = null) {
-    // 나이: 프로필이 있으면 우선 사용, 없으면 메시지에서 추출 (예: "25살", "25세")
     const ageMatch = userMessage.match(/(\d+)\s*(?:살|세)/);
     const profileAge = profile && parseInt(profile.age, 10);
     const age = Number.isFinite(profileAge) ? profileAge
               : (ageMatch ? parseInt(ageMatch[1]) : null);
 
-    // 소득 키워드 추출
     const highIncome = /150%|고소득|중위소득\s*15|소득\s*높|소득\s*제한\s*없/.test(userMessage);
     const lowIncome  = /60%|100%|저소득|중위소득\s*[16]|기초생활|차상위/.test(userMessage);
 
-    // 카테고리 키워드
     const keywords = {
         돌봄: /돌봄|돌봐|간병|치매|장애|요양/.test(userMessage),
         주거: /월세|주거|집|임대|전세|보증/.test(userMessage),
@@ -87,23 +98,20 @@ function filterPolicies(userMessage, profile = null) {
 
     let filtered = POLICIES;
 
-    // 나이 조건 필터
     if (age !== null) {
         const ageFiltered = filtered.filter(p => {
             const min = parseInt(p['최소_연령']) || 0;
             const max = parseInt(p['최대_연령']) || 99;
             return age >= min && age <= max;
         });
-        // 필터링 후 결과가 있으면 적용, 없으면 전체 유지
         if (ageFiltered.length > 0) filtered = ageFiltered;
     }
 
-    // [개선 7] 소득 조건 필터 (프로필이 있을 때만)
     const myPct = userIncomePct(profile);
     if (myPct !== null) {
         const incFiltered = filtered.filter(p => {
             const ceil = policyIncomeCeil(p['소득_기준']);
-            return ceil === null || myPct <= ceil;   // 비교 불가하면 유지
+            return ceil === null || myPct <= ceil;
         });
         if (incFiltered.length > 0) filtered = incFiltered;
     }
@@ -122,14 +130,11 @@ function filterPolicies(userMessage, profile = null) {
         if (catFiltered.length > 0) filtered = catFiltered;
     }
 
-    // 최대 15개로 제한 (토큰 절약)
     return filtered.slice(0, 15);
 }
 
-// (구버전 프로필 호환) 소득 등급 → 최소 중위소득 %
 const INCOME_FLOOR = { '1순위': 0, '2순위': 120, '전체': 150 };
 
-// 사용자의 중위소득 % — 신버전은 정확한 값, 구버전은 등급의 하한선
 function userIncomePct(profile) {
     if (!profile) return null;
     if (Number.isFinite(profile.incomePct)) return profile.incomePct;
@@ -137,7 +142,6 @@ function userIncomePct(profile) {
     return floor === undefined ? null : floor;
 }
 
-// 정책의 소득 기준에서 '중위소득 N%' 추출 (제한없음/비교 불가 → null)
 function policyIncomeCeil(text) {
     const s = (text || '').replace(/\s/g, '');
     if (!s || s === '-' || s.includes('제한없음')) return null;
@@ -145,7 +149,6 @@ function policyIncomeCeil(text) {
     return m ? parseInt(m[1], 10) : null;
 }
 
-// 프로필을 프롬프트용 텍스트로 변환
 function buildProfileText(profile) {
     if (!profile || !profile.age) return '';
     const INCOME_TEXT = {
@@ -172,7 +175,6 @@ function buildProfileText(profile) {
     ].join('\n');
 }
 
-// 정책 데이터를 프롬프트용 텍스트로 변환
 function buildPolicyText(policies) {
     return policies.map(p => {
         return `[${p['정책명']}] 카테고리:${p['카테고리']} | 연령:${p['최소_연령']}~${p['최대_연령']}세 | 소득:${p['소득_기준']} | 혜택:${p['지원_금액(혜택)'].slice(0,50)} | 신청:${p['신청_기간']} | 서류:${(p['제출_서류'] || '').slice(0,60)}`;
@@ -192,8 +194,6 @@ const PII_PATTERNS = [
     /\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}/,
 ];
 
-// [개선 6] 마지막 메시지만 검사 → 전체 대화 이력 검사
-// 이유: 대화 중간에 악성 내용을 끼워넣으면 마지막만 검사하면 통과됨
 function checkInputGuardrail(messages) {
     const allText = messages.map(m => m.content || '').join(' ');
 
@@ -308,7 +308,7 @@ app.post('/register', async (req, res) => {
     }
 });
  
-// 로그인 API
+// 로그인 API (세션 저장 포함)
 app.post('/login', (req, res) => {
     const { userid, password } = req.body;
     const query = 'SELECT * FROM users WHERE userid = ?';
@@ -331,6 +331,8 @@ app.post('/login', (req, res) => {
             }
         }
         if (match) {
+            // [추가] 로그인 성공 시 세션에 유저 ID 저장
+            req.session.userid = user.userid;
             res.json({ success: true, message: '로그인 성공!' });
         } else {
             res.json({ success: false, message: '아이디 또는 비밀번호가 틀렸습니다.' });
@@ -348,7 +350,6 @@ app.get('/api/policies', (req, res) => {
 // ==========================================
 app.get('/posts', (req, res) => {
     const { category, search } = req.query;
-    // 댓글 수를 LEFT JOIN 으로 함께 조회 (글마다 따로 조회하는 N+1 방지)
     let query = `SELECT p.*, COUNT(c.id) AS comment_count
                  FROM posts p
                  LEFT JOIN comments c ON c.post_id = p.id`;
@@ -380,22 +381,19 @@ app.post('/posts', (req, res) => {
 });
  
 // 글 삭제 (작성자 본인만)
-// 주의: 현재는 클라이언트가 보낸 userid를 신뢰한다. express-session 도입 시
-//       req.session.userid 로 교체해야 위조를 완전히 막을 수 있다.
 app.delete('/posts/:id', (req, res) => {
-    const { userid } = req.body;
+    // 세션 정보 또는 요청 바디에서 유저 ID를 가져옴
+    const userid = req.session.userid || req.body.userid;
     if (!userid) return res.status(400).json({ error: '로그인이 필요합니다.' });
 
     db.query('SELECT userid FROM posts WHERE id = ?', [req.params.id], (err, rows) => {
         if (err) return res.status(500).json({ error: '삭제 실패' });
         if (rows.length === 0) return res.status(404).json({ error: '글을 찾을 수 없습니다.' });
 
-        // 작성자 본인인지 서버에서 확인 (화면에서 버튼을 숨기는 것만으로는 부족)
         if (rows[0].userid !== userid) {
             return res.status(403).json({ error: '본인이 작성한 글만 삭제할 수 있습니다.' });
         }
 
-        // comments 테이블은 ON DELETE CASCADE 로 함께 삭제됨
         db.query('DELETE FROM posts WHERE id = ?', [req.params.id], (err2) => {
             if (err2) return res.status(500).json({ error: '삭제 실패' });
             res.json({ success: true });
@@ -440,20 +438,18 @@ app.post('/posts/:id/comments', (req, res) => {
 // 8. 챗봇 API
 // ==========================================
 app.post('/chat', async (req, res) => {
-    const { messages, profile } = req.body;   // [개선 7] 마이페이지 프로필 수신
+    const { messages, profile } = req.body;
  
     if (!messages || !Array.isArray(messages)) {
         return res.status(400).json({ error: 'messages 배열이 필요합니다.' });
     }
  
-    // [개선 6] 전체 대화 이력 가드레일 검사
     const guardrail = checkInputGuardrail(messages);
     if (guardrail.blocked) {
         console.log(`[가드레일 차단] reason=${guardrail.reason}`);
         return res.json({ reply: guardrail.message });
     }
  
-    // [개선 2] 마지막 사용자 메시지 기준으로 정책 1차 필터링
     const lastUserMessage = messages.filter(m => m.role === 'user').map(m => m.content).join(' ');
     const filteredPolicies = filterPolicies(lastUserMessage, profile);
     console.log(`[정책 필터링] ${POLICIES.length}개 → ${filteredPolicies.length}개` +
@@ -468,7 +464,6 @@ app.post('/chat', async (req, res) => {
             ],
             temperature: 0.6,
             max_tokens: 1024,
-            // [개선 1] reasoning_effort 제거 - Llama 모델은 이 파라미터 지원 안 함
         });
  
         const reply = completion.choices[0]?.message?.content ?? '답변을 가져오지 못했어요.';
@@ -476,7 +471,6 @@ app.post('/chat', async (req, res) => {
  
     } catch (error) {
         console.error('[Groq API Error]', error.message);
-        // [개선 5] 에러 종류에 따라 다른 메시지 반환 - 서버 크래시 방지
         if (error.status === 413 || (error.message && error.message.includes('too large'))) {
             return res.status(400).json({ error: '요청이 너무 길어요. 대화를 새로 시작해주세요.' });
         }
@@ -484,7 +478,6 @@ app.post('/chat', async (req, res) => {
     }
 });
  
-// [개선 5] 예상치 못한 에러로 서버 전체가 다운되는 것 방지
 process.on('uncaughtException', (err) => {
     console.error('❌ 예상치 못한 에러:', err.message);
 });

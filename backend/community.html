@@ -6,15 +6,7 @@
     <title>돌고래 - 커뮤니티</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* ── 왼쪽 사이드바 상단 고정 ── */
-        .container.community-grid { align-items: start; }
-        .sidebar {
-            position: sticky;
-            top: var(--header-h, 76px);   /* JS가 실제 헤더 높이로 설정 */
-            align-self: start;
-        }
-
-        /* ── 글쓰기 모달 ── */
+        /* 글쓰기 모달 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -37,124 +29,95 @@
             flex-direction: column;
             gap: 1rem;
         }
-        .modal-box h3 {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: #0f172a;
+        .modal-box h3 { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+        .modal-box select, .modal-box input[type="text"], .modal-box textarea {
+            width: 100%; border: 1.5px solid #e2e8f0; border-radius: 10px;
+            padding: 0.6rem 0.9rem; font-size: 0.88rem;
+            font-family: 'Pretendard', sans-serif; color: #0f172a;
+            outline: none; transition: border-color 0.2s; background: #f8fafc;
         }
-        .modal-box select,
-        .modal-box input[type="text"],
-        .modal-box textarea {
-            width: 100%;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 0.6rem 0.9rem;
-            font-size: 0.88rem;
-            font-family: 'Pretendard', sans-serif;
-            color: #0f172a;
-            outline: none;
-            transition: border-color 0.2s;
-            background: #f8fafc;
-        }
-        .modal-box select:focus,
-        .modal-box input[type="text"]:focus,
-        .modal-box textarea:focus { border-color: #0ea5e9; }
+        .modal-box select:focus, .modal-box input[type="text"]:focus, .modal-box textarea:focus { border-color: #0ea5e9; }
         .modal-box textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
         .modal-btns { display: flex; gap: 0.7rem; justify-content: flex-end; }
-        .btn-cancel {
-            background: none;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 0.5rem 1.2rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #64748b;
-            cursor: pointer;
-            font-family: 'Pretendard', sans-serif;
-        }
-        .btn-submit {
-            background: #0ea5e9;
-            border: none;
-            border-radius: 10px;
-            padding: 0.5rem 1.4rem;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #fff;
-            cursor: pointer;
-            font-family: 'Pretendard', sans-serif;
-            transition: background 0.2s;
-        }
+        .btn-cancel { background: none; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 600; color: #64748b; cursor: pointer; font-family: 'Pretendard', sans-serif; }
+        .btn-submit { background: #0ea5e9; border: none; border-radius: 10px; padding: 0.5rem 1.4rem; font-size: 0.85rem; font-weight: 700; color: #fff; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: background 0.2s; }
         .btn-submit:hover { background: #0284c7; }
-
-        /* ── 카테고리 필터 칩 ── */
-        .cat-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .cat-chip {
-            padding: 0.38rem 1rem;
-            border-radius: 20px;
-            border: 1.5px solid #e2e8f0;
-            background: #f8fafc;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #475569;
-            cursor: pointer;
-            transition: all 0.18s;
-        }
-        .cat-chip.active {
-            background: #0ea5e9;
-            border-color: #0ea5e9;
-            color: #fff;
-        }
-
-        /* ── 검색바 ── */
-        .search-row {
-            display: flex;
-            gap: 0.6rem;
-            margin-bottom: 1.2rem;
-        }
-        .search-row input {
-            flex: 1;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 0.55rem 1rem;
-            font-size: 0.85rem;
-            font-family: 'Pretendard', sans-serif;
-            color: #0f172a;
-            outline: none;
-            transition: border-color 0.2s;
-        }
+        /* 검색바 */
+        .search-row { display: flex; gap: 0.6rem; margin-bottom: 1.2rem; }
+        .search-row input { flex: 1; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 0.55rem 1rem; font-size: 0.85rem; font-family: 'Pretendard', sans-serif; color: #0f172a; outline: none; transition: border-color 0.2s; }
         .search-row input:focus { border-color: #0ea5e9; }
-        .search-row button {
-            background: #0ea5e9;
-            border: none;
-            border-radius: 12px;
-            padding: 0.55rem 1.2rem;
-            color: #fff;
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: 'Pretendard', sans-serif;
-            transition: background 0.2s;
-        }
+        .search-row button { background: #0ea5e9; border: none; border-radius: 12px; padding: 0.55rem 1.2rem; color: #fff; font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: background 0.2s; }
         .search-row button:hover { background: #0284c7; }
-
-        /* ── 피드 ── */
-        .feed-item { cursor: default; }
-        .feed-time { margin-left: auto; }
-        .no-posts {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #94a3b8;
-            font-size: 0.9rem;
+        /* 플로팅 챗봇 위젯 CSS */
+        .chat-fab {
+            position: fixed; bottom: 28px; right: 28px;
+            width: 60px; height: 60px; border-radius: 50%;
+            background: linear-gradient(135deg, #0369a1, #0ea5e9);
+            border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; box-shadow: 0 6px 24px rgba(14,165,233,0.45);
+            z-index: 9000; transition: transform 0.2s, box-shadow 0.2s;
+            animation: bob 3s ease-in-out infinite;
         }
+        @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        .chat-fab:hover { transform: scale(1.1); box-shadow: 0 8px 30px rgba(14,165,233,0.55); animation: none; }
+        .chat-fab-tooltip {
+            position: fixed; bottom: 38px; right: 96px;
+            background: #0f172a; color: #fff; font-size: 0.78rem; font-weight: 600;
+            padding: 7px 13px; border-radius: 20px; white-space: nowrap;
+            z-index: 8999; pointer-events: none; opacity: 1; transition: opacity 0.3s;
+            font-family: 'Pretendard', sans-serif;
+        }
+        .chat-fab-tooltip::after { content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); border: 6px solid transparent; border-left-color: #0f172a; border-right: none; }
+        .chat-fab-tooltip.hidden { opacity: 0; }
+        .chatbot-widget {
+            position: fixed; bottom: 100px; right: 28px; width: 360px; height: 520px;
+            background: #f8fafc; border-radius: 20px; box-shadow: 0 20px 60px rgba(15,23,42,0.22);
+            display: flex; flex-direction: column; overflow: hidden; z-index: 9001;
+            transform: scale(0.85) translateY(20px); transform-origin: bottom right;
+            opacity: 0; pointer-events: none;
+            transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease;
+        }
+        .chatbot-widget.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+        .widget-header { background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%); padding: 14px 16px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .widget-avatar { width: 36px; height: 36px; background: rgba(255,255,255,0.18); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .widget-title h2 { font-size: 0.88rem; font-weight: 800; color: #fff; }
+        .widget-title p { font-size: 0.67rem; color: rgba(255,255,255,0.68); margin-top: 1px; }
+        .widget-close { margin-left: auto; background: rgba(255,255,255,0.18); border: none; color: #fff; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
+        .widget-close:hover { background: rgba(255,255,255,0.3); }
+        .widget-chat { flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+        .widget-chat::-webkit-scrollbar { width: 3px; }
+        .widget-chat::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .msg { display: flex; align-items: flex-end; gap: 6px; max-width: 88%; animation: msgIn 0.25s ease forwards; }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .msg.bot { align-self: flex-start; }
+        .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-av { width: 26px; height: 26px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+        .msg-bubble { padding: 9px 12px; border-radius: 14px; font-size: 0.82rem; line-height: 1.6; word-break: keep-all; }
+        .msg.bot .msg-bubble { background: #fff; color: #0f172a; border-bottom-left-radius: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
+        .msg.user .msg-bubble { background: #0ea5e9; color: #fff; border-bottom-right-radius: 3px; }
+        .typing-wrap { display: flex; align-items: flex-end; gap: 6px; align-self: flex-start; animation: msgIn 0.25s ease forwards; }
+        .typing-dots { display: flex; gap: 4px; padding: 10px 13px; background: #fff; border-radius: 14px; border-bottom-left-radius: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
+        .typing-dots span { width: 5px; height: 5px; background: #7dd3fc; border-radius: 50%; animation: dot 1.4s ease-in-out infinite; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dot { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1.1); opacity: 1; } }
+        .widget-chips { padding: 2px 12px 8px; display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 0; }
+        .p-chip { background: #fff; border: 1.5px solid #bae6fd; color: #0369a1; font-size: 0.68rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: all 0.18s; }
+        .p-chip:hover { background: #0ea5e9; border-color: #0ea5e9; color: #fff; }
+        .widget-input-area { padding: 8px 10px 10px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; gap: 7px; align-items: flex-end; flex-shrink: 0; }
+        #widgetInput { flex: 1; background: #f1f5f9; border: 1.5px solid #e2e8f0; border-radius: 11px; padding: 8px 11px; font-size: 0.81rem; font-family: 'Pretendard', sans-serif; color: #0f172a; resize: none; outline: none; max-height: 80px; line-height: 1.5; transition: border-color 0.2s, box-shadow 0.2s; }
+        #widgetInput:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+        #widgetInput::placeholder { color: #94a3b8; }
+        #widgetSend { width: 34px; height: 34px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border: none; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 3px 8px rgba(14,165,233,0.4); transition: all 0.18s; }
+        #widgetSend:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.5); }
+        #widgetSend:disabled { opacity: 0.4; cursor: not-allowed; }
+        #widgetSend svg { width: 15px; height: 15px; fill: #fff; }
+        .fab-badge { position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; background: #ef4444; border-radius: 50%; font-size: 0.65rem; font-weight: 800; color: #fff; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+        @media (max-width: 420px) { .chatbot-widget { right: 12px; bottom: 90px; width: calc(100vw - 24px); height: 70vh; } .chat-fab { bottom: 16px; right: 16px; } }
     </style>
 </head>
 <body>
-
     <header>
         <div class="nav-inner">
             <a href="home.html" class="logo">🐬 청년정책 돌고래</a>
@@ -167,12 +130,9 @@
             <div id="nav-right"></div>
         </div>
     </header>
-
     <main class="container community-grid">
-
         <aside class="sidebar">
             <button class="btn-write" onclick="openModal()">📝 새로운 글쓰기</button>
-
             <div class="sidebar-menu-box">
                 <div class="menu-title">게시판 카테고리</div>
                 <ul class="category-list">
@@ -182,9 +142,7 @@
                     <li class="category-item" onclick="selectCategory('합격/탈락 사례', this)"><a href="#">✅ 합격/탈락 사례</a></li>
                     <li class="category-item" onclick="selectCategory('정보 교류', this)"><a href="#">💡 정보 교류</a></li>
                 </ul>
-
                 <div class="divider"></div>
-
                 <div class="menu-title">개인 보관함</div>
                 <ul class="category-list">
                     <li class="category-item" onclick="showScrapped(this)">
@@ -193,18 +151,14 @@
                 </ul>
             </div>
         </aside>
-
         <section class="board-main">
-
             <div class="search-row">
                 <input type="text" id="search-input" placeholder="키워드나 정책명을 검색해 보세요 (예: 청년월세 후기, 도약계좌)">
                 <button onclick="loadPosts()">검색</button>
             </div>
-
             <div class="feed-container" id="feed-container">
                 <div class="no-posts">불러오는 중...</div>
             </div>
-
         </section>
     </main>
 
@@ -227,21 +181,55 @@
         </div>
     </div>
 
-    <script>
-        const CAT_STYLE = {
-            '정책 후기':     { color: '#0369a1', bg: '#e0f2fe' },
-            '고민 게시판':   { color: '#65a30d', bg: '#f7fee7' },
-            '합격/탈락 사례': { color: '#dc2626', bg: '#fef2f2' },
-            '정보 교류':     { color: '#ca8a04', bg: '#fef9c3' },
-        };
-        const CAT_EMOJI = {
-            '정책 후기': '📝', '고민 게시판': '🤫', '합격/탈락 사례': '✅', '정보 교류': '💡'
-        };
+    <!-- 플로팅 챗봇 위젯 -->
+    <div class="chat-fab-tooltip" id="fabTooltip">AI 챗봇에게 물어보세요 🐬</div>
+    <button class="chat-fab" id="chatFab" onclick="toggleWidget()" style="position:fixed;">
+        <span id="fabIcon">🐬</span>
+        <span class="fab-badge" id="fabBadge" style="display:none;">1</span>
+    </button>
+    <div class="chatbot-widget" id="chatbotWidget">
+        <div class="widget-header">
+            <div class="widget-avatar">🐬</div>
+            <div class="widget-title">
+                <h2>돌고래 AI 챗봇</h2>
+                <p>가족돌봄청년 맞춤 복지 안내</p>
+            </div>
+            <button class="widget-close" onclick="closeWidget()">✕</button>
+        </div>
+        <div class="widget-chat" id="widgetChat"></div>
+        <div class="widget-chips" id="widgetChips">
+            <button class="p-chip" onclick="sendChip(this)">📋 지원 가능한 복지</button>
+            <button class="p-chip" onclick="sendChip(this)">🏠 월세 지원</button>
+            <button class="p-chip" onclick="sendChip(this)">📝 필요 서류</button>
+            <button class="p-chip" onclick="sendChip(this)">💼 취업 지원</button>
+        </div>
+        <div class="widget-input-area">
+            <textarea id="widgetInput" rows="1" placeholder="질문을 입력해 주세요…" oninput="autoResize(this)"></textarea>
+            <button id="widgetSend" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
 
-        // ── 로그인 체크 & 네비 ──
+    <script>
+        const widget     = document.getElementById('chatbotWidget');
+        const widgetChat  = document.getElementById('widgetChat');
+        const widgetInput = document.getElementById('widgetInput');
+        const widgetSend  = document.getElementById('widgetSend');
+        const fabTooltip  = document.getElementById('fabTooltip');
+        const fabBadge    = document.getElementById('fabBadge');
+        const CAT_STYLE = {
+            '정책 후기':      { color: '#0369a1', bg: '#e0f2fe' },
+            '고민 게시판':    { color: '#65a30d', bg: '#f7fee7' },
+            '합격/탈락 사례': { color: '#dc2626', bg: '#fef2f2' },
+            '정보 교류':      { color: '#ca8a04', bg: '#fef9c3' },
+        };
+        const CAT_EMOJI = { '정책 후기': '📝', '고민 게시판': '🤫', '합격/탈락 사례': '✅', '정보 교류': '💡' };
+
         const loggedInUser = localStorage.getItem('userid');
         const navRight = document.getElementById('nav-right');
-
         if (!loggedInUser) {
             alert('로그인이 필요한 페이지입니다!');
             window.location.href = 'index.html';
@@ -253,43 +241,22 @@
             const lb = document.getElementById('btn-logout');
             lb.addEventListener('mouseenter', () => { lb.style.borderColor='#0ea5e9'; lb.style.color='#0ea5e9'; });
             lb.addEventListener('mouseleave', () => { lb.style.borderColor='#e2e8f0'; lb.style.color='#475569'; });
-            lb.addEventListener('click', () => {
-                localStorage.removeItem('userid');
-                window.location.href = 'index.html';
-            });
+            lb.addEventListener('click', () => { localStorage.removeItem('userid'); window.location.href = 'index.html'; });
         }
 
-        // ── XSS 방어: 사용자 입력을 HTML로 해석되지 않게 이스케이프 ──
         function escapeHtml(str) {
-            return String(str ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+            return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
         }
 
-        // ── 스크랩 (localStorage) ──
         let scrapped = JSON.parse(localStorage.getItem('scrappedPosts') || '[]');
-        function updateScrapCount() {
-            document.getElementById('scrap-count').textContent = scrapped.length;
-        }
+        function updateScrapCount() { document.getElementById('scrap-count').textContent = scrapped.length; }
         function toggleScrap(id, btn) {
             const idx = scrapped.indexOf(id);
-            if (idx === -1) {
-                scrapped.push(id);
-                btn.textContent = '⭐ 스크랩 취소';
-                btn.classList.add('scrapped');
-            } else {
-                scrapped.splice(idx, 1);
-                btn.textContent = '⭐ 스크랩';
-                btn.classList.remove('scrapped');
-            }
+            if (idx === -1) { scrapped.push(id); btn.textContent = '⭐ 스크랩 취소'; btn.classList.add('scrapped'); }
+            else { scrapped.splice(idx, 1); btn.textContent = '⭐ 스크랩'; btn.classList.remove('scrapped'); }
             localStorage.setItem('scrappedPosts', JSON.stringify(scrapped));
             updateScrapCount();
         }
-
-        // ── 좋아요 ──
         async function likePost(id, btn) {
             btn.disabled = true;
             await fetch(`/posts/${id}/like`, { method: 'POST' });
@@ -297,39 +264,19 @@
             btn.dataset.count = count;
             btn.textContent = `👍 ${count}`;
         }
-
-        // ── 글 삭제 (작성자 본인만) ──
         async function deletePost(postId) {
-            if (!confirm('이 글을 삭제할까요?\n달린 댓글도 함께 삭제되며 되돌릴 수 없습니다.')) return;
-
-            const res = await fetch(`/posts/${postId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userid: loggedInUser })
-            });
+            if (!confirm('이 글을 삭제할까요?')) return;
+            const res = await fetch(`/posts/${postId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userid: loggedInUser }) });
             const data = await res.json();
-
             if (data.success) {
-                // 스크랩 목록에 남아있던 경우 함께 정리
                 scrapped = scrapped.filter(id => id !== postId);
                 localStorage.setItem('scrappedPosts', JSON.stringify(scrapped));
                 updateScrapCount();
                 document.getElementById(`post-${postId}`)?.remove();
-            } else {
-                alert(data.error || '삭제에 실패했습니다.');
-            }
+            } else { alert(data.error || '삭제에 실패했습니다.'); }
         }
-
-        // ── 댓글 버튼 표시 (개수 + 색상 강조) ──
-        function commentBtnLabel(count) {
-            return Number(count) > 0 ? `💬 ${count}` : '💬 댓글';
-        }
-        function commentBtnStyle(count) {
-            return Number(count) > 0
-                ? 'color:#0ea5e9;font-weight:700;'   // 댓글 있음 — 파란색 강조
-                : 'color:#94a3b8;font-weight:500;';  // 댓글 없음 — 연한 회색
-        }
-        // 댓글 작성/삭제 후 버튼을 최신 개수로 갱신
+        function commentBtnLabel(count) { return Number(count) > 0 ? `💬 ${count}` : '💬 댓글'; }
+        function commentBtnStyle(count) { return Number(count) > 0 ? 'color:#0ea5e9;font-weight:700;' : 'color:#94a3b8;font-weight:500;'; }
         function refreshCommentBtn(postId, count) {
             const btn = document.getElementById(`cbtn-${postId}`);
             if (!btn) return;
@@ -337,24 +284,18 @@
             btn.textContent = commentBtnLabel(count);
             btn.style.cssText = `background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(count)}`;
         }
-
-        // ── 댓글 ──
-        function toggleComments(postId, btn) {
+        function toggleComments(postId) {
             const section = document.getElementById(`comments-${postId}`);
             const willOpen = section.style.display === 'none';
             section.style.display = willOpen ? 'block' : 'none';
             if (willOpen) loadComments(postId);
         }
-
         async function loadComments(postId) {
             const res = await fetch(`/posts/${postId}/comments`);
             const comments = await res.json();
-            refreshCommentBtn(postId, comments.length);   // 실제 개수로 동기화
+            refreshCommentBtn(postId, comments.length);
             const list = document.getElementById(`comment-list-${postId}`);
-            if (comments.length === 0) {
-                list.innerHTML = '<p style="color:#94a3b8;font-size:0.82rem;padding:0.3rem 0;">아직 댓글이 없어요. 첫 댓글을 남겨보세요!</p>';
-                return;
-            }
+            if (comments.length === 0) { list.innerHTML = '<p style="color:#94a3b8;font-size:0.82rem;padding:0.3rem 0;">아직 댓글이 없어요.</p>'; return; }
             list.innerHTML = comments.map(c => `
                 <div style="padding:0.5rem 0;border-bottom:1px solid #f1f5f9;">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:2px;">
@@ -364,27 +305,15 @@
                     <p style="font-size:0.85rem;color:#334155;line-height:1.5;">${escapeHtml(c.content)}</p>
                 </div>`).join('');
         }
-
         async function submitComment(postId) {
             const input = document.getElementById(`comment-input-${postId}`);
             const content = input.value.trim();
             if (!content) return;
-
-            const res = await fetch(`/posts/${postId}/comments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userid: loggedInUser, content })
-            });
+            const res = await fetch(`/posts/${postId}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userid: loggedInUser, content }) });
             const data = await res.json();
-            if (data.success) {
-                input.value = '';
-                loadComments(postId);
-            } else {
-                alert(data.error || '댓글 작성에 실패했습니다.');
-            }
+            if (data.success) { input.value = ''; loadComments(postId); }
+            else { alert(data.error || '댓글 작성에 실패했습니다.'); }
         }
-
-        // ── 시간 표시 ──
         function timeAgo(dateStr) {
             const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
             if (diff < 60) return '방금 전';
@@ -392,14 +321,9 @@
             if (diff < 86400) return `${Math.floor(diff/3600)}시간 전`;
             return `${Math.floor(diff/86400)}일 전`;
         }
-
-        // ── 게시글 렌더링 ──
         function renderPosts(posts) {
             const container = document.getElementById('feed-container');
-            if (posts.length === 0) {
-                container.innerHTML = '<div class="no-posts">😥 게시글이 없습니다.</div>';
-                return;
-            }
+            if (posts.length === 0) { container.innerHTML = '<div class="no-posts">😥 게시글이 없습니다.</div>'; return; }
             container.innerHTML = posts.map(p => {
                 const cs = CAT_STYLE[p.category] || { color: '#475569', bg: '#f1f5f9' };
                 const emoji = CAT_EMOJI[p.category] || '';
@@ -418,60 +342,37 @@
                     <div class="feed-bottom">
                         <div class="feed-stats">
                             <span class="stat-item">
-                                <button onclick="likePost(${p.id}, this)" data-count="${p.likes}"
-                                    style="background:none;border:none;cursor:pointer;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;">
-                                    👍 ${p.likes}
-                                </button>
+                                <button onclick="likePost(${p.id}, this)" data-count="${p.likes}" style="background:none;border:none;cursor:pointer;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;">👍 ${p.likes}</button>
                             </span>
                             <span class="stat-item">
-                                <button id="cbtn-${p.id}" onclick="toggleComments(${p.id}, this)"
-                                    data-count="${p.comment_count || 0}"
-                                    style="background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(p.comment_count)}">
-                                    ${commentBtnLabel(p.comment_count)}
-                                </button>
+                                <button id="cbtn-${p.id}" onclick="toggleComments(${p.id})" data-count="${p.comment_count || 0}" style="background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(p.comment_count)}">${commentBtnLabel(p.comment_count)}</button>
                             </span>
                         </div>
                         <div style="display:flex;align-items:center;gap:0.5rem;">
-                            ${p.userid === loggedInUser ? `
-                            <button onclick="deletePost(${p.id})" title="삭제"
-                                style="background:none;border:1px solid #fecaca;color:#ef4444;border-radius:8px;padding:0.35rem 0.7rem;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'Pretendard',sans-serif;">
-                                🗑️ 삭제
-                            </button>` : ''}
-                            <button class="btn-scrap ${isScrapped ? 'scrapped' : ''}"
-                                onclick="toggleScrap(${p.id}, this)">
-                                ${isScrapped ? '⭐ 스크랩 취소' : '⭐ 스크랩'}
-                            </button>
+                            ${p.userid === loggedInUser ? `<button onclick="deletePost(${p.id})" style="background:none;border:1px solid #fecaca;color:#ef4444;border-radius:8px;padding:0.35rem 0.7rem;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'Pretendard',sans-serif;">🗑️ 삭제</button>` : ''}
+                            <button class="btn-scrap ${isScrapped ? 'scrapped' : ''}" onclick="toggleScrap(${p.id}, this)">${isScrapped ? '⭐ 스크랩 취소' : '⭐ 스크랩'}</button>
                         </div>
                     </div>
                     <div class="comment-section" id="comments-${p.id}" style="display:none;border-top:1px solid #e2e8f0;margin-top:0.8rem;padding-top:0.9rem;">
                         <div class="comment-list" id="comment-list-${p.id}"></div>
                         <div style="display:flex;gap:0.5rem;margin-top:0.7rem;">
-                            <input type="text" id="comment-input-${p.id}" placeholder="따뜻한 댓글을 남겨주세요"
-                                onkeydown="if(event.key==='Enter')submitComment(${p.id})"
-                                style="flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:0.5rem 0.9rem;font-size:0.85rem;font-family:'Pretendard',sans-serif;outline:none;">
-                            <button onclick="submitComment(${p.id})"
-                                style="background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:0.5rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:'Pretendard',sans-serif;">등록</button>
+                            <input type="text" id="comment-input-${p.id}" placeholder="따뜻한 댓글을 남겨주세요" onkeydown="if(event.key==='Enter')submitComment(${p.id})" style="flex:1;border:1.5px solid #e2e8f0;border-radius:10px;padding:0.5rem 0.9rem;font-size:0.85rem;font-family:'Pretendard',sans-serif;outline:none;">
+                            <button onclick="submitComment(${p.id})" style="background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:0.5rem 1rem;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:'Pretendard',sans-serif;">등록</button>
                         </div>
                     </div>
                 </div>`;
             }).join('');
         }
-
-        // ── 게시글 불러오기 ──
         let currentCategory = '전체';
-
         async function loadPosts() {
             const search = document.getElementById('search-input').value.trim();
             const params = new URLSearchParams();
             if (currentCategory !== '전체') params.append('category', currentCategory);
             if (search) params.append('search', search);
-
             const res = await fetch(`/posts?${params.toString()}`);
             const posts = await res.json();
             renderPosts(posts);
         }
-
-        // ── 카테고리 선택 ──
         function selectCategory(cat, el) {
             document.querySelectorAll('.category-item').forEach(li => li.classList.remove('active'));
             el.classList.add('active');
@@ -479,92 +380,147 @@
             document.getElementById('search-input').value = '';
             loadPosts();
         }
-
-        // ── 스크랩한 글만 보기 ──
         async function showScrapped(el) {
             document.querySelectorAll('.category-item').forEach(li => li.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('search-input').value = '';
-
             const feed = document.getElementById('feed-container');
-            if (scrapped.length === 0) {
-                feed.innerHTML = '<div class="no-posts">⭐ 스크랩한 글이 없습니다.<br>글 하단의 스크랩 버튼을 눌러 보관해 보세요!</div>';
-                return;
-            }
-
+            if (scrapped.length === 0) { feed.innerHTML = '<div class="no-posts">⭐ 스크랩한 글이 없습니다.</div>'; return; }
             const res = await fetch('/posts');
             const all = await res.json();
             renderPosts(all.filter(p => scrapped.includes(p.id)));
         }
-
-        // ── 검색 엔터키 ──
-        document.getElementById('search-input').addEventListener('keydown', e => {
-            if (e.key === 'Enter') loadPosts();
-        });
-
-        // ── 글쓰기 모달 ──
-        function openModal() {
-            document.getElementById('writeModal').classList.add('open');
-        }
-        function closeModal() {
-            document.getElementById('writeModal').classList.remove('open');
-            document.getElementById('write-title').value = '';
-            document.getElementById('write-content').value = '';
-        }
-        function handleModalClick(e) {
-            if (e.target === document.getElementById('writeModal')) closeModal();
-        }
-
+        document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') loadPosts(); });
+        function openModal() { document.getElementById('writeModal').classList.add('open'); }
+        function closeModal() { document.getElementById('writeModal').classList.remove('open'); document.getElementById('write-title').value = ''; document.getElementById('write-content').value = ''; }
+        function handleModalClick(e) { if (e.target === document.getElementById('writeModal')) closeModal(); }
         async function submitPost() {
             const category = document.getElementById('write-category').value;
-            const title    = document.getElementById('write-title').value.trim();
-            const content  = document.getElementById('write-content').value.trim();
-
-            if (!title || !content) {
-                alert('제목과 내용을 모두 입력해 주세요.');
-                return;
-            }
-
-            const res = await fetch('/posts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userid: loggedInUser, category, title, content })
-            });
+            const title = document.getElementById('write-title').value.trim();
+            const content = document.getElementById('write-content').value.trim();
+            if (!title || !content) { alert('제목과 내용을 모두 입력해 주세요.'); return; }
+            const res = await fetch('/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userid: loggedInUser, category, title, content }) });
             const data = await res.json();
-            if (data.success) {
-                closeModal();
-                loadPosts();
-            } else {
-                alert('게시글 저장에 실패했습니다.');
-            }
+            if (data.success) { closeModal(); loadPosts(); }
+            else { alert('게시글 저장에 실패했습니다.'); }
         }
-
-        // ── 초기 로드 ──
         updateScrapCount();
         loadPosts().then(() => {
             const targetId = new URLSearchParams(window.location.search).get('post');
             if (targetId) {
                 setTimeout(() => {
                     const el = document.getElementById(`post-${targetId}`);
-                    if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        el.style.transition = 'box-shadow 0.3s';
-                        el.style.boxShadow = '0 0 0 3px #0ea5e9';
-                        setTimeout(() => el.style.boxShadow = '', 2500);
-                    }
+                    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.transition = 'box-shadow 0.3s'; el.style.boxShadow = '0 0 0 3px #0ea5e9'; setTimeout(() => el.style.boxShadow = '', 2500); }
                 }, 300);
             }
         });
-
-        // ── 사이드바 고정 위치 (헤더 높이는 창 폭에 따라 달라지므로 실측) ──
-        function syncSidebarTop() {
-            const header = document.querySelector('header');
-            if (!header) return;
-            document.documentElement.style.setProperty('--header-h', (header.offsetHeight + 24) + 'px');
-        }
+        function syncSidebarTop() { const header = document.querySelector('header'); if (!header) return; document.documentElement.style.setProperty('--header-h', (header.offsetHeight + 24) + 'px'); }
         syncSidebarTop();
         window.addEventListener('resize', syncSidebarTop);
-    </script>
 
+        // 플로팅 챗봇 위젯 로직
+
+        // =============================================
+        //  플로팅 챗봇 위젯 (sessionStorage 대화 유지)
+        // =============================================
+        let chatHistory = JSON.parse(sessionStorage.getItem('dolgorae_chatHistory') || '[]');
+        let initialized = false, isOpen = false;
+
+        function saveChatHistory() {
+            sessionStorage.setItem('dolgorae_chatHistory', JSON.stringify(chatHistory));
+        }
+        function loadChatHistory() {
+            if (chatHistory.length > 0) {
+                chatHistory.forEach(m => {
+                    renderMsg(m.role === 'assistant' ? 'bot' : 'user', m.content);
+                });
+                document.getElementById('widgetChips').style.display = 'none';
+                initialized = true;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadChatHistory);
+
+        setTimeout(() => fabTooltip.classList.add('hidden'), 3000);
+
+        function getProfile() { const p = JSON.parse(localStorage.getItem('userProfile') || '{}'); return (p.age && p.income) ? p : null; }
+        function profileSummary() { const p = getProfile(); if (!p) return ''; const parts = [`만 ${p.age}세`]; if (p.region) parts.push(p.region); if (p.household) parts.push(p.household); return parts.join(' · '); }
+
+        function openWidget() {
+            widget.classList.add('open'); isOpen = true;
+            fabBadge.style.display = 'none'; fabTooltip.classList.add('hidden');
+            if (!initialized) {
+                const welcome = getProfile()
+                    ? `안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n마이페이지에 저장하신 정보(${profileSummary()})를 참고해서 안내해 드릴게요. 궁금한 점을 편하게 물어봐 주세요 😊`
+                    : '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊';
+                addMsg('bot', welcome);
+                initialized = true;
+            }
+            setTimeout(() => widgetInput.focus(), 200);
+        }
+        function closeWidget() { widget.classList.remove('open'); isOpen = false; }
+        function resetChat() {
+            chatHistory = []; saveChatHistory();
+            widgetChat.innerHTML = ''; initialized = false;
+            document.getElementById('widgetChips').style.display = 'flex';
+            addMsg('bot', '안녕하세요! 가족돌봄청년을 위한 복지 안내 챗봇 돌고래예요 🐬\n\n나이, 가구 형태, 소득 수준을 알려주시면 맞춤 지원 정책을 바로 찾아드릴게요. 편하게 질문해 주세요 😊');
+            initialized = true;
+        }
+        function toggleWidget() { if (isOpen) closeWidget(); else openWidget(); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) closeWidget(); });
+        function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px'; }
+
+        function escapeHtml(str) { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        function renderMsg(role, text) {
+            const wrap = document.createElement('div');
+            wrap.className = `msg ${role}`;
+            if (role === 'bot') { const av = document.createElement('div'); av.className = 'msg-av'; av.textContent = '🐬'; wrap.appendChild(av); }
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+            bubble.innerHTML = escapeHtml(text).replace(/^#{1,6}\s*/gm,'').replace(/^[-*_]{3,}$/gm,'').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/(https?:\/\/[^\s)]+)/g,'<a href="$1" target="_blank" style="color:#0ea5e9;text-decoration:underline;">$1</a>').replace(/\n/g,'<br>');
+            wrap.appendChild(bubble);
+            widgetChat.appendChild(wrap);
+            widgetChat.scrollTop = widgetChat.scrollHeight;
+        }
+        function addMsg(role, text) {
+            renderMsg(role, text);
+            chatHistory.push({ role: role === 'bot' ? 'assistant' : 'user', content: text });
+            saveChatHistory();
+        }
+        function showTyping() {
+            const wrap = document.createElement('div'); wrap.className = 'typing-wrap'; wrap.id = 'typingEl';
+            const av = document.createElement('div'); av.className = 'msg-av'; av.textContent = '🐬';
+            const dots = document.createElement('div'); dots.className = 'typing-dots'; dots.innerHTML = '<span></span><span></span><span></span>';
+            wrap.appendChild(av); wrap.appendChild(dots); widgetChat.appendChild(wrap); widgetChat.scrollTop = widgetChat.scrollHeight;
+        }
+        function removeTyping() { const el = document.getElementById('typingEl'); if (el) el.remove(); }
+        function sendChip(el) { widgetInput.value = el.textContent.replace(/^\S+\s/, '').trim(); sendMessage(); }
+        widgetInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+        async function sendMessage() {
+            const text = widgetInput.value.trim();
+            if (!text) return;
+            addMsg('user', text);
+            widgetInput.value = ''; widgetInput.style.height = 'auto';
+            widgetSend.disabled = true;
+            document.getElementById('widgetChips').style.display = 'none';
+            showTyping();
+            try {
+                const res = await fetch('http://localhost:3000/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ messages: chatHistory, profile: getProfile() }) });
+                const data = await res.json();
+                removeTyping();
+                const reply = data.reply || '죄송해요, 잠시 오류가 발생했어요. 다시 시도해 주세요.';
+                addMsg('bot', reply);
+                if (!isOpen) fabBadge.style.display = 'flex';
+            } catch (err) {
+                removeTyping();
+                addMsg('bot', '⚠️ 서버에 연결할 수 없어요. node server.js 가 실행 중인지 확인해 주세요.');
+                console.error(err);
+            } finally {
+                widgetSend.disabled = false;
+                widgetInput.focus();
+            }
+        }
+    </script>
 </body>
 </html>
