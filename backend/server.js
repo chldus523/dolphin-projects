@@ -71,7 +71,7 @@ const CHAT_MODEL = 'llama-3.3-70b-versatile';
 // ==========================================
 let POLICIES = [];
 try {
-    const policyPath = path.join(__dirname, '..', 'data', 'policies.json');
+    const policyPath = path.join(__dirname, 'policies.json');
     POLICIES = JSON.parse(fs.readFileSync(policyPath, 'utf-8'));
     console.log(`📋 정책 데이터 로드 완료: ${POLICIES.length}개`);
 } catch (e) {
