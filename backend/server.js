@@ -5,6 +5,7 @@ const Groq    = require('groq-sdk');
 const fs      = require('fs');
 const path    = require('path');
 const bcrypt  = require('bcrypt');
+const { matchesDistrict } = require('./policy-match.js');
 
 require('dotenv').config();
 
@@ -105,6 +106,12 @@ function filterPolicies(userMessage, profile = null) {
             return ceil === null || myPct <= ceil;   // 비교 불가하면 유지
         });
         if (incFiltered.length > 0) filtered = incFiltered;
+    }
+
+    // [개선 8] 거주 자치구 필터 — 특정 구 전용 정책은 그 구 주민만
+    if (profile && profile.region) {
+        const guFiltered = filtered.filter(p => matchesDistrict(p, profile.region));
+        if (guFiltered.length > 0) filtered = guFiltered;
     }
 
     // 카테고리 필터 (키워드가 있을 때만)

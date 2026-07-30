@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>돌고래 - 정보 탐색</title>
     <link rel="stylesheet" href="style.css">
+    <script src="policy-match.js"></script>
     <style>
         /* ── 키워드 워드클라우드 필터 ── */
         .filter-wrapper {
@@ -396,6 +397,10 @@
             const myPct = userIncomePct();
             if (ceil !== null && myPct !== null && myPct > ceil) {
                 return `소득 조건 (중위소득 ${ceil}% 이하)`;
+            }
+            // 3) 거주 자치구 — 특정 구 전용 정책은 그 구 주민만
+            if (!matchesDistrict(p, userProfile.region)) {
+                return `지역 조건 (${policyDistrict(p)} 거주자 대상)`;
             }
             return null;
         }
