@@ -383,8 +383,13 @@
             if (currentStep === 1) {
                 const age = document.getElementById('ob-age').value;
                 const region = document.getElementById('ob-region').value;
-                if (!age || !region) {
-                    alert('나이와 거주 지역을 모두 입력해 주세요.');
+                if (age === '' || !region) {
+                    alert('나이와 거주 자치구를 모두 입력해 주세요.');
+                    return false;
+                }
+                const ageNum = Number(age);
+                if (!Number.isInteger(ageNum) || ageNum < 13 || ageNum > 39) {
+                    alert('나이는 만 13세부터 39세까지 입력할 수 있어요.');
                     return false;
                 }
             }
@@ -396,8 +401,19 @@
                     alert('가구원 수와 월 소득을 입력해 주세요.');
                     return false;
                 }
+                if (Number(man) < 0) {
+                    alert('월 소득을 올바르게 입력해 주세요.');
+                    return false;
+                }
                 if (!employment) {
                     alert('취업 상태를 선택해 주세요.');
+                    return false;
+                }
+            }
+            if (currentStep === 3) {
+                const household = document.getElementById('ob-household').value;
+                if (!household) {
+                    alert('가구 형태를 선택해 주세요.');
                     return false;
                 }
             }

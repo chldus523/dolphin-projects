@@ -231,7 +231,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                         <div class="input-group">
                             <label>나이 (만)</label>
-                            <input type="number" id="mp-age" value="25">
+                            <input type="number" id="mp-age" placeholder="예: 27" min="13" max="39">
                         </div>
                         <div class="input-group">
                             <label>거주 자치구 <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">(서울시 정책 안내)</span></label>
@@ -258,6 +258,7 @@
                         <div class="input-group">
                             <label>가구원 수 (본인 포함)</label>
                             <select id="mp-family-size" onchange="updateIncomeHint()">
+                                <option value="">선택해주세요</option>
                                 <option value="1">1인</option><option value="2">2인</option>
                                 <option value="3">3인</option><option value="4">4인</option>
                                 <option value="5">5인</option><option value="6">6인 이상</option>
@@ -274,6 +275,7 @@
                     <div class="input-group">
                         <label>취업 상태</label>
                         <select id="mp-employment">
+                            <option value="">선택해주세요</option>
                             <option value="재직자">재직자 (직장인)</option>
                             <option value="구직자">구직자 (취업 준비 중)</option>
                             <option value="프리랜서">프리랜서 / 자영업</option>
@@ -284,6 +286,7 @@
                     <div class="input-group">
                         <label>가구 형태</label>
                         <select id="mp-household">
+                            <option value="">선택해주세요</option>
                             <option value="1인가구">1인가구 (독립 거주)</option>
                             <option value="부모별거">부모와 별거 (독립 거주)</option>
                             <option value="부모동거">부모와 동거</option>
