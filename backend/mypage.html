@@ -447,7 +447,7 @@ async function loadProfile() {
 loadProfile();
 updateSidebar();
 alert('✅ 저장되었습니다! 정보 탐색 페이지와 챗봇에 반영됩니다.');
-        }
+
 
         async function loadBookmarkedDocs() {
             const bookmarks = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
@@ -565,10 +565,6 @@ alert('✅ 저장되었습니다! 정보 탐색 페이지와 챗봇에 반영됩
         // =============================================
         //  플로팅 챗봇 위젯 로직
         // =============================================
-        const widget     = document.getElementById('chatbotWidget');
-        const widgetChat  = document.getElementById('widgetChat');
-        const widgetInput = document.getElementById('widgetInput');
-        const widgetSend  = document.getElementById('widgetSend');
         const fabTooltip  = document.getElementById('fabTooltip');
         const fabBadge    = document.getElementById('fabBadge');
         let chatHistory = JSON.parse(sessionStorage.getItem('dolgorae_chatHistory') || '[]');
@@ -715,6 +711,6 @@ document.addEventListener('DOMContentLoaded', loadChatHistory);
         }
 
     </script>
-  <script src="script.js"></script>
+<script src="chatbot.js"></script>
 </body>
 </html>

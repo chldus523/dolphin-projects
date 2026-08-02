@@ -228,6 +228,7 @@ function buildSystemPrompt(filteredPolicies, profile = null) {
     const profileText = buildProfileText(profile);
 
     return `
+반드시 한국어로만 답변한다. 영어, 중국어, 일본어 등 다른 언어는 절대 사용하지 않는다.
 [가장 중요한 출력 형식 규칙 - 반드시 지킬 것]
 너는 카카오톡이나 문자메시지처럼 순수한 대화체로만 답변한다.
 다음 기호들은 단 하나도 출력하면 안 된다: #, ##, ###, ####, ---, ***, ___, *, -, •, >
