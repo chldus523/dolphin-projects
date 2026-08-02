@@ -445,6 +445,78 @@ async function loadProfile() {
     updateIncomeHint();
 }
 loadProfile();
+function currentIncomePct() {
+            const size = document.getElementById('mp-family-size').value;
+            const man  = document.getElementById('mp-income-man').value;
+            if (man === '') return null;
+            return calcIncomePercent(Number(man) * 10000, size);
+        }
+        function updateIncomeHint() {
+            const hint = document.getElementById('income-hint');
+            const pct = currentIncomePct();
+            if (pct === null) {
+                hint.textContent = '가구원 수와 월 소득을 입력하면 기준 중위소득 대비 비율을 자동으로 계산해 드려요.';
+                hint.style.color = '#64748b';
+                return;
+            }
+            const size = document.getElementById('mp-family-size').value;
+            const base = Math.round(medianIncomeOf(size) / 10000);
+            hint.innerHTML = `📊 <b>${incomePercentLabel(pct)}</b>에 해당해요. <span style="color:#94a3b8;">(${MEDIAN_INCOME_YEAR}년 ${size}인 가구 기준 중위소득 ${base.toLocaleString()}만원)</span>`;
+            hint.style.color = '#0369a1';
+        }
+        function incomeTierOf(pct) {
+            if (pct === null) return '';
+            if (pct <= 120) return '1순위';
+            if (pct <= 150) return '2순위';
+            return '전체';
+        }
+        function saveProfile() {
+            const age    = document.getElementById('mp-age').value;
+            const region = document.getElementById('mp-region').value;
+            const size   = document.getElementById('mp-family-size').value;
+            const man    = document.getElementById('mp-income-man').value;
+            if (age === '' || !region || !size || man === '') {
+                alert('나이, 거주 자치구, 가구원 수, 월 소득을 모두 입력해 주세요.');
+                return;
+            }
+            const ageNum = Number(age);
+            if (!Number.isInteger(ageNum) || ageNum < 13 || ageNum > 39) {
+                alert('나이는 만 13세부터 39세까지 입력할 수 있어요.');
+                return;
+            }
+            if (Number(man) < 0) {
+                alert('월 소득을 올바르게 입력해 주세요.');
+                return;
+            }
+            const pct = currentIncomePct();
+            const profile = {
+                age, region, familySize: size, incomeMan: man,
+                incomePct: pct, income: incomeTierOf(pct),
+                careInfant:   document.getElementById('care-infant').checked,
+                careElderly:  document.getElementById('care-elderly').checked,
+                careDisabled: document.getElementById('care-disabled').checked,
+                employment:   document.getElementById('mp-employment').value,
+                household:    document.getElementById('mp-household').value,
+            };
+            localStorage.setItem('userProfile', JSON.stringify(profile));
+            fetch('/api/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    age: Number(age), region, family_size: Number(size),
+                    income_man: Number(man), income_pct: pct,
+                    income: incomeTierOf(pct),
+                    care_infant:   document.getElementById('care-infant').checked,
+                    care_elderly:  document.getElementById('care-elderly').checked,
+                    care_disabled: document.getElementById('care-disabled').checked,
+                    employment:    document.getElementById('mp-employment').value,
+                    household:     document.getElementById('mp-household').value,
+                })
+            }).catch(e => console.error('프로필 DB 저장 실패:', e));
+            updateSidebar();
+            alert('✅ 저장되었습니다! 정보 탐색 페이지와 챗봇에 반영됩니다.');
+        }
 updateSidebar();
 
 
