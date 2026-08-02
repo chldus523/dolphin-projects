@@ -368,8 +368,8 @@ app.get('/api/policies', (req, res) => {
 app.get('/posts', (req, res) => {
     const { category, search } = req.query;
     let query = `SELECT p.*, COUNT(c.id) AS comment_count
-                 FROM posts p
-                 LEFT JOIN comments c ON c.post_id = p.id`;
+                FROM posts p
+                LEFT JOIN comments c ON c.post_id = p.id`;
     const params = [];
     const conditions = [];
     if (category && category !== '전체') { conditions.push('p.category = ?'); params.push(category); }
@@ -381,7 +381,7 @@ app.get('/posts', (req, res) => {
         res.json(results);
     });
 });
- 
+
 app.post('/posts', (req, res) => {
     const userid = req.session.userid;              // 세션에서만 작성자 확인 (위조 불가)
     if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
@@ -512,9 +512,97 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason) => {
     console.error('❌ 처리되지 않은 Promise 거부:', reason);
 });
- 
+
+// =============================================
+// 프로필 API
+// =============================================
+app.get('/api/profile', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인 필요' });
+    db.query('SELECT * FROM user_profiles WHERE userid = ?', [userid], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows[0] || {});
+    });
+});
+
+app.post('/api/profile', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인 필요' });
+    const { age, region, family_size, income_man, income_pct, income, care_infant, care_elderly, care_disabled, employment, household } = req.body;
+    db.query(`INSERT INTO user_profiles (userid, age, region, family_size, income_man, income_pct, income, care_infant, care_elderly, care_disabled, employment, household)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE age=VALUES(age), region=VALUES(region), family_size=VALUES(family_size),
+        income_man=VALUES(income_man), income_pct=VALUES(income_pct), income=VALUES(income),
+        care_infant=VALUES(care_infant), care_elderly=VALUES(care_elderly), care_disabled=VALUES(care_disabled),
+        employment=VALUES(employment), household=VALUES(household)`,
+        [userid, age, region, family_size, income_man, income_pct, income, care_infant?1:0, care_elderly?1:0, care_disabled?1:0, employment, household],
+        (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        }
+    );
+});
+
+// =============================================
+// 즐겨찾기 API
+// =============================================
+app.get('/api/bookmarks', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인 필요' });
+    db.query('SELECT policy_id FROM policy_bookmarks WHERE userid = ?', [userid], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows.map(r => r.policy_id));
+    });
+});
+
+app.post('/api/bookmarks', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인 필요' });
+    const { policy_id } = req.body;
+    db.query('INSERT IGNORE INTO policy_bookmarks (userid, policy_id) VALUES (?, ?)', [userid, policy_id], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+app.delete('/api/bookmarks/:policy_id', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인 필요' });
+    db.query('DELETE FROM policy_bookmarks WHERE userid = ? AND policy_id = ?', [userid, req.params.policy_id], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+// =============================================
+// 서류체크 API
+// =============================================
+app.get('/api/doc-checks', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인 필요' });
+    db.query('SELECT policy_id, doc_index, checked FROM document_checks WHERE userid = ?', [userid], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const result = {};
+        rows.forEach(r => { result[`${r.policy_id}-${r.doc_index}`] = !!r.checked; });
+        res.json(result);
+    });
+});
+
+app.post('/api/doc-checks', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인 필요' });
+    const { policy_id, doc_index, checked } = req.body;
+    db.query(`INSERT INTO document_checks (userid, policy_id, doc_index, checked) VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE checked=VALUES(checked)`,
+        [userid, policy_id, doc_index, checked ? 1 : 0],
+        (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        }
+    );
+});
 // ==========================================
-// 9. 서버 실행
+// 10. 서버 실행
 // ==========================================
 app.listen(port, () => {
     console.log(`🐬 돌고래 서버가 http://localhost:${port} 에서 힘차게 헤엄치는 중입니다!`);
