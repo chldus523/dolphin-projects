@@ -392,8 +392,8 @@ app.post('/posts', (req, res) => {
     if (!category || !title || !content) {
         return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
     }
-    if (title.length > 100)   return res.status(400).json({ error: '제목은 100자 이내로 입력해 주세요.' });
-    if (content.length > 2000) return res.status(400).json({ error: '내용은 2000자 이내로 입력해 주세요.' });
+    if (title.length < 2 || title.length > 100)   return res.status(400).json({ error: '제목은 2자 이상 100자 이내로 입력해 주세요.' });
+    if (content.length < 10 || content.length > 2000) return res.status(400).json({ error: '내용은 10자 이상 2000자 이내로 입력해 주세요.' });
 
     db.query(
         'INSERT INTO posts (userid, category, title, content) VALUES (?, ?, ?, ?)',
