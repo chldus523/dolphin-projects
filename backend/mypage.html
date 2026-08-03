@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="median-income.js"></script>
+    <script src="user-sync.js"></script>
     <style>
         /* 플로팅 챗봇 위젯 CSS */
         .chat-fab {
@@ -381,13 +382,16 @@
         // 세션 기반 로그인 확인 (비로그인 시 로그인 페이지로)
         fetch('/me', { credentials: 'include' })
             .then(r => r.json())
-            .then(({ userid }) => {
+            .then(async ({ userid }) => {
                 if (!userid) {
                     alert('로그인이 필요한 페이지입니다!');
                     window.location.href = 'index.html';
                     return;
                 }
                 localStorage.setItem('userid', userid);   // 표시용 미러 갱신
+                await pullUserData();                     // 서버에서 즐겨찾기·서류체크 받아 캐시에 채움
+                loadBookmarkedDocs();                     // 찜한 정책 서류 목록 로드
+                loadScrappedPosts();                      // 스크랩 목록 로드
             })
             .catch(() => {});
 
@@ -613,10 +617,12 @@ updateSidebar();
             const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
             const docName = cb.dataset.docname;
             docChecks[`${policyId}-${docIdx}`] = cb.checked;
+            pushDocCheck(policyId, docIdx, cb.checked);   // 서버(계정)에 반영
             document.querySelectorAll(`input[data-docname="${docName}"]`).forEach(other => {
                 if (other === cb) return;
                 const [, pid, idx] = other.id.match(/doc-(.+)-(\d+)$/);
                 docChecks[`${pid}-${idx}`] = cb.checked;
+                pushDocCheck(pid, parseInt(idx, 10), cb.checked);   // 동기화된 항목도 서버 반영
                 applyCheck(other, cb.checked);
                 const otherBoxes = document.querySelectorAll(`[id^="doc-${pid}-"]`);
                 const otherDone = [...otherBoxes].filter(c => c.checked).length;
