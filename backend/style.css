@@ -1447,7 +1447,7 @@ main.container:has(.profile-card) {
     .logo { margin-right: 0.8rem; font-size: 0.95rem; white-space: nowrap; }
     .nav-links { gap: 0.9rem; }
     .nav-links a { font-size: 0.85rem; white-space: nowrap; }
-    #nav-right { margin-left: 0.5rem; font-size: 0.85rem; white-space: nowrap; }
+    #nav-right { font-size: 0.85rem; white-space: nowrap; }  /* margin-left: auto 유지 → 오른쪽 정렬 */
     #btn-logout { white-space: nowrap; }
     /* 컨테이너 좌우 여백 대칭 + 그리드 자식이 폭을 밀어내지 않게 */
     .container { padding-left: 1.2rem; padding-right: 1.2rem; }
@@ -1466,7 +1466,7 @@ main.container:has(.profile-card) {
     .logo::before { content: '🐬'; font-size: 1.6rem; }
     .nav-links { gap: 0.6rem; }
     .nav-links a { font-size: 0.8rem; }
-    #nav-right { margin-left: 0.4rem; font-size: 0.8rem; }
+    #nav-right { font-size: 0.8rem; }  /* margin-left: auto 유지 → 오른쪽 정렬 */
     #nav-right span { margin-right: 6px !important; }
     #btn-logout { padding: 0.25rem 0.55rem !important; }
     /* 돌봄 대상자 체크: 라벨 위 / 체크박스 아래로 세로 배치해 넉넉하게 */
