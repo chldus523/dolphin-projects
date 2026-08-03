@@ -111,6 +111,20 @@
             padding: 0.2rem 0.6rem;
         }
         .policy-benefit { font-size: 0.86rem; color: #334155; line-height: 1.55; margin: 0.4rem 0 0.8rem; }
+        /* 즐겨찾기 전 필요 서류 미리보기 */
+        .doc-preview { margin: 0.7rem 0 0.2rem; border-top: 1px dashed #e2e8f0; padding-top: 0.7rem; }
+        .doc-preview summary {
+            list-style: none; cursor: pointer; user-select: none;
+            font-size: 0.8rem; font-weight: 700; color: #0369a1;
+            display: flex; align-items: center; gap: 0.35rem;
+        }
+        .doc-preview summary::-webkit-details-marker { display: none; }
+        .doc-preview summary::before { content: '▸'; font-size: 0.7rem; transition: transform 0.2s; }
+        .doc-preview[open] summary::before { transform: rotate(90deg); }
+        .doc-preview ul { list-style: none; margin: 0.6rem 0 0; display: flex; flex-direction: column; gap: 0.35rem; }
+        .doc-preview li { font-size: 0.82rem; color: #334155; display: flex; align-items: flex-start; gap: 0.4rem; }
+        .doc-preview li::before { content: '📄'; font-size: 0.75rem; }
+        .doc-preview .no-doc { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; }
         .btn-doc-link {
             display: inline-block;
             background: #0ea5e9;
@@ -448,7 +462,13 @@
             const rightSlot = reason
                 ? `<span class="exclude-reason" style="margin-left:auto;">❌ ${reason}</span>`
                 : `<button onclick="toggleBookmark('${id}', this)" data-id="${id}" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:1.15rem;line-height:1;padding:0 0.2rem;" title="${isBm ? '찜 취소' : '찜하기'}">${isBm ? '⭐' : '☆'}</button>`;
-            return `<div class="policy-item ${reason ? 'excluded' : ''}"><div class="policy-top"><span class="policy-tag" style="color:${g.color};background:${g.bg};">${g.emoji} ${p['카테고리']}</span><span class="d-day-badge" style="color:#16a34a;background:#dcfce7;border-color:#86efac;">${p['신청_기간'] || '상시'}</span>${rightSlot}</div><h3>${p['정책명']}</h3><p class="policy-benefit">💰 ${benefit}</p><div class="policy-meta"><span>👤 ${ageText(p)}</span><span>📊 ${p['소득_기준'] || '제한 없음'}</span>${linkHtml}</div></div>`;
+            const docList = hasDocs(p['제출_서류']) ? p['제출_서류'].split(',').map(d => d.trim()).filter(Boolean) : [];
+            const docPreview = `<details class="doc-preview"><summary>📋 필요 서류 미리보기${docList.length ? ` (${docList.length}건)` : ''}</summary>${
+                docList.length
+                    ? `<ul>${docList.map(d => `<li>${d}</li>`).join('')}</ul>`
+                    : `<p class="no-doc">이 정책은 제출 서류 정보가 따로 안내되어 있지 않아요. 신청 페이지에서 확인해 주세요.</p>`
+            }</details>`;
+            return `<div class="policy-item ${reason ? 'excluded' : ''}"><div class="policy-top"><span class="policy-tag" style="color:${g.color};background:${g.bg};">${g.emoji} ${p['카테고리']}</span><span class="d-day-badge" style="color:#16a34a;background:#dcfce7;border-color:#86efac;">${p['신청_기간'] || '상시'}</span>${rightSlot}</div><h3>${p['정책명']}</h3><p class="policy-benefit">💰 ${benefit}</p><div class="policy-meta"><span>👤 ${ageText(p)}</span><span>📊 ${p['소득_기준'] || '제한 없음'}</span>${linkHtml}</div>${docPreview}</div>`;
         }
 
         function toggleExcluded(header) {
