@@ -1459,11 +1459,30 @@ main.container:has(.profile-card) {
     #hero p { font-size: 0.98rem; word-break: keep-all; }
     .features-header h2 { font-size: 1.5rem; word-break: keep-all; }
 }
+@media (max-width: 600px) {
+    /* 좁은 화면: 로고 텍스트 숨기고 돌고래 이모지만 (헤더 공간 확보 → 로그아웃 안 짤림) */
+    .nav-inner { padding: 0.6rem 0.7rem; }
+    .logo { font-size: 0; margin-right: 0.5rem; }
+    .logo::before { content: '🐬'; font-size: 1.6rem; }
+    .nav-links { gap: 0.6rem; }
+    .nav-links a { font-size: 0.8rem; }
+    #nav-right { margin-left: 0.4rem; font-size: 0.8rem; }
+    #nav-right span { margin-right: 6px !important; }
+    #btn-logout { padding: 0.25rem 0.55rem !important; }
+    /* 돌봄 대상자 체크: 라벨 위 / 체크박스 아래로 세로 배치해 넉넉하게 */
+    .checkbox-group { gap: 0.6rem; }
+    .checkbox-card { flex-direction: column; justify-content: center; gap: 0.5rem; padding: 0.9rem 0.4rem; }
+}
 @media (max-width: 480px) {
-    .logo { font-size: 0.9rem; margin-right: 0.6rem; }
     .nav-links { gap: 0.7rem; }
     .nav-links a { font-size: 0.8rem; }
     #nav-right { font-size: 0.8rem; }
     #hero { padding: 6rem 1.2rem 3rem; }
     #hero h1 { font-size: 1.5rem; }
+}
+/* 아주 좁은 폰: 사용자명 숨기고 로그아웃 버튼만 (짤림 방지) */
+@media (max-width: 400px) {
+    #nav-right span { display: none !important; }
+    .nav-links { gap: 0.5rem; }
+    .nav-links a { font-size: 0.78rem; }
 }
