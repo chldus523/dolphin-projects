@@ -500,6 +500,11 @@ header {
     .container.community-grid {
         grid-template-columns: 1fr;
     }
+    /* 커뮤니티: 고정 사이드바를 모바일에선 정적으로 */
+    .sidebar {
+        position: static !important;
+        top: auto !important;
+    }
 }
 
 /* ==========================================
@@ -1423,4 +1428,14 @@ main.container:has(.profile-card) {
 
 .btn-remove:hover {
     color: #ef4444; /* 마우스를 올리면 경고성 빨간색으로 변경 */
+}
+
+/* ── 마이페이지 모바일 반응형 (기본 그리드 정의보다 뒤에 와야 적용됨) ── */
+@media (max-width: 768px) {
+    main.container:has(.profile-card) {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1.2rem;
+        margin-bottom: 3rem;
+    }
 }
