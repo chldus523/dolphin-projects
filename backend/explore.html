@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="policy-match.js"></script>
     <script src="doc-catalog.js"></script>
+    <script src="user-sync.js"></script>
     <style>
         /* ── 키워드 워드클라우드 필터 ── */
         .filter-wrapper {
@@ -517,9 +518,11 @@
 
         function toggleBookmark(id, btn) {
             const idx = bookmarks.indexOf(id);
-            if (idx === -1) { bookmarks.push(id); btn.textContent = '⭐'; btn.title = '찜 취소'; }
-            else { bookmarks.splice(idx, 1); btn.textContent = '☆'; btn.title = '찜하기'; }
+            let added;
+            if (idx === -1) { bookmarks.push(id); btn.textContent = '⭐'; btn.title = '찜 취소'; added = true; }
+            else { bookmarks.splice(idx, 1); btn.textContent = '☆'; btn.title = '찜하기'; added = false; }
             localStorage.setItem('bookmarkedPolicies', JSON.stringify(bookmarks));
+            pushBookmark(id, added);   // 서버(계정)에도 반영
             buildGuideData();
         }
 
@@ -575,8 +578,9 @@
         function guideCheck(policyId, docIdx, cb) {
             const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
             docChecks[`${policyId}-${docIdx}`] = cb.checked;
+            pushDocCheck(policyId, docIdx, cb.checked);   // 서버(계정)에 반영
             const docName = cb.dataset.docname;
-            GUIDE_DATA.forEach(g => { g.docs.forEach((doc, i) => { if (doc === docName && !(g.policyId === policyId && i === docIdx)) { docChecks[`${g.policyId}-${i}`] = cb.checked; } }); });
+            GUIDE_DATA.forEach(g => { g.docs.forEach((doc, i) => { if (doc === docName && !(g.policyId === policyId && i === docIdx)) { docChecks[`${g.policyId}-${i}`] = cb.checked; pushDocCheck(g.policyId, i, cb.checked); } }); });
             localStorage.setItem('docChecks', JSON.stringify(docChecks));
             const label = document.querySelector(`label[for="sg-${policyId}-${docIdx}"]`);
             if (label) { label.style.textDecoration = cb.checked ? 'line-through' : ''; label.style.color = cb.checked ? '#94a3b8' : '#1e293b'; }
@@ -596,7 +600,11 @@
             sidebar.style.top = (headerH + filter.offsetHeight + 24) + 'px';
         }
 
-        window.addEventListener('load', () => { loadPolicies().then(() => { buildGuideData(); syncSidebarTop(); }); });
+        window.addEventListener('load', async () => {
+            await pullUserData();   // 서버에서 즐겨찾기·서류체크를 받아 localStorage 캐시에 채움
+            bookmarks = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
+            loadPolicies().then(() => { buildGuideData(); syncSidebarTop(); });
+        });
         window.addEventListener('resize', syncSidebarTop);
     </script>
 <script src="chatbot.js"></script>
