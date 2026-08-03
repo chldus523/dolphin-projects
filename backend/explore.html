@@ -336,8 +336,8 @@
         const navRight = document.getElementById('nav-right');
         if (loggedInUser && navRight) {
             navRight.innerHTML = `
-                <span style="color: var(--text-main); margin-left: 2rem;">👤 <b>${loggedInUser}</b>님</span>
-                <button id="btn-logout" style="background:none;border:1px solid var(--border);padding:0.3rem 0.7rem;border-radius:6px;font-weight:600;cursor:pointer;margin-left:1rem;color:var(--text-sub);font-size:0.85rem;transition:all 0.2s;">로그아웃</button>`;
+                <span style="margin-right:12px;color:#0f172a;font-size:0.9rem;">👤 <b>${loggedInUser}</b>님</span>
+                <button id="btn-logout" style="background:none;border:1px solid #e2e8f0;padding:0.3rem 0.8rem;border-radius:8px;font-weight:600;cursor:pointer;color:#475569;font-size:0.82rem;transition:all 0.2s;font-family:'Pretendard',sans-serif;">로그아웃</button>`;
             document.getElementById('btn-logout').addEventListener('click', doLogout);
         } else if (navRight) {
             navRight.innerHTML = `<a href="index.html">로그인</a>`;
