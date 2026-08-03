@@ -145,6 +145,11 @@
             .filter-wrapper { position: static !important; margin-bottom: 1.2rem; }
             .filter-wrapper::before { display: none; }
         }
+        /* 워드클라우드: 태그 폭이 제각각이라 안 맞음 → 2열 그리드로 정렬 */
+        @media (max-width: 768px) {
+            .word-cloud { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+            .wc-tag { width: 100%; justify-content: center; box-sizing: border-box; }
+        }
         @media (max-width: 480px) {
             .filter-wrapper { padding: 1.1rem 1.2rem; }
             .word-cloud { gap: 0.5rem; }
