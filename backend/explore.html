@@ -6,6 +6,7 @@
     <title>돌고래 - 정보 탐색</title>
     <link rel="stylesheet" href="style.css">
     <script src="policy-match.js"></script>
+    <script src="doc-catalog.js"></script>
     <style>
         /* ── 키워드 워드클라우드 필터 ── */
         .filter-wrapper {
@@ -124,6 +125,14 @@
         .doc-preview ul { list-style: none; margin: 0.6rem 0 0; display: flex; flex-direction: column; gap: 0.35rem; }
         .doc-preview li { font-size: 0.82rem; color: #334155; display: flex; align-items: flex-start; gap: 0.4rem; }
         .doc-preview li::before { content: '📄'; font-size: 0.75rem; }
+        .doc-preview li > span { flex: 1; }
+        .doc-issue-link {
+            font-size: 0.74rem; font-weight: 700; color: #0ea5e9;
+            text-decoration: none; white-space: nowrap;
+            border: 1px solid #bae6fd; border-radius: 6px; padding: 1px 7px;
+            transition: all 0.15s;
+        }
+        .doc-issue-link:hover { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
         .doc-preview .no-doc { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; }
         .btn-doc-link {
             display: inline-block;
@@ -465,7 +474,13 @@
             const docList = hasDocs(p['제출_서류']) ? p['제출_서류'].split(',').map(d => d.trim()).filter(Boolean) : [];
             const docPreview = `<details class="doc-preview"><summary>📋 필요 서류 미리보기${docList.length ? ` (${docList.length}건)` : ''}</summary>${
                 docList.length
-                    ? `<ul>${docList.map(d => `<li>${d}</li>`).join('')}</ul>`
+                    ? `<ul>${docList.map(d => {
+                        const iss = docIssue(d);
+                        const issueLink = iss
+                            ? ` <a href="${iss.url}" target="_blank" class="doc-issue-link">${iss.issuer}에서 발급 ↗</a>`
+                            : '';
+                        return `<li><span>${d}</span>${issueLink}</li>`;
+                      }).join('')}</ul>`
                     : `<p class="no-doc">이 정책은 제출 서류 정보가 따로 안내되어 있지 않아요. 신청 페이지에서 확인해 주세요.</p>`
             }</details>`;
             return `<div class="policy-item ${reason ? 'excluded' : ''}"><div class="policy-top"><span class="policy-tag" style="color:${g.color};background:${g.bg};">${g.emoji} ${p['카테고리']}</span><span class="d-day-badge" style="color:#16a34a;background:#dcfce7;border-color:#86efac;">${p['신청_기간'] || '상시'}</span>${rightSlot}</div><h3>${p['정책명']}</h3><p class="policy-benefit">💰 ${benefit}</p><div class="policy-meta"><span>👤 ${ageText(p)}</span><span>📊 ${p['소득_기준'] || '제한 없음'}</span>${linkHtml}</div>${docPreview}</div>`;
@@ -519,7 +534,9 @@
             }
             $('guide-checklist').innerHTML = g.docs.map((doc, i) => {
                 const checked = !!docChecks[`${g.policyId}-${i}`];
-                return `<div style="display:flex;align-items:flex-start;gap:0.6rem;"><input type="checkbox" id="sg-${g.policyId}-${i}" data-docname="${doc}" ${checked ? 'checked' : ''} onchange="guideCheck('${g.policyId}', ${i}, this)" style="width:15px;height:15px;accent-color:#0ea5e9;flex-shrink:0;margin-top:2px;cursor:pointer;"><label for="sg-${g.policyId}-${i}" style="font-size:0.9rem;font-weight:600;color:${checked ? '#94a3b8' : '#1e293b'};cursor:pointer;${checked ? 'text-decoration:line-through;' : ''}">${doc}</label></div>`;
+                const iss = docIssue(doc);
+                const issueLink = iss ? `<a href="${iss.url}" target="_blank" class="doc-issue-link" style="margin-left:auto;">${iss.issuer} ↗</a>` : '';
+                return `<div style="display:flex;align-items:flex-start;gap:0.6rem;"><input type="checkbox" id="sg-${g.policyId}-${i}" data-docname="${doc}" ${checked ? 'checked' : ''} onchange="guideCheck('${g.policyId}', ${i}, this)" style="width:15px;height:15px;accent-color:#0ea5e9;flex-shrink:0;margin-top:2px;cursor:pointer;"><label for="sg-${g.policyId}-${i}" style="font-size:0.9rem;font-weight:600;color:${checked ? '#94a3b8' : '#1e293b'};cursor:pointer;${checked ? 'text-decoration:line-through;' : ''}">${doc}</label>${issueLink}</div>`;
             }).join('');
             updateGuideProgress(g);
         }
