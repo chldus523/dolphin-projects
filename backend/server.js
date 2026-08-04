@@ -588,9 +588,12 @@ app.get('/api/doc-checks', (req, res) => {
         const key = r.doc_name ? `${r.policy_id}-${r.doc_name}` : `${r.policy_id}-${r.doc_index}`;
         result[key] = !!r.checked; 
 });
+
         res.json(result);
     });
-
+app.post('/api/doc-checks', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인 필요' });
 const { policy_id, doc_index, doc_name, checked } = req.body;
 db.query(`INSERT INTO document_checks (userid, policy_id, doc_index, doc_name, checked) VALUES (?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE checked=VALUES(checked)`,
