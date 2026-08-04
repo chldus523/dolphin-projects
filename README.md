@@ -105,6 +105,31 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
 
+-- 사용자 상태를 계정(DB)에 저장 (프로필·즐겨찾기·서류체크)
+CREATE TABLE IF NOT EXISTS user_profiles (
+    userid VARCHAR(100) PRIMARY KEY,
+    age INT, region VARCHAR(20), family_size INT,
+    income_man INT, income_pct INT, income VARCHAR(10),
+    care_infant TINYINT DEFAULT 0, care_elderly TINYINT DEFAULT 0, care_disabled TINYINT DEFAULT 0,
+    employment VARCHAR(20), household VARCHAR(20),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS policy_bookmarks (
+    userid VARCHAR(100) NOT NULL,
+    policy_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_user_policy (userid, policy_id)
+);
+
+CREATE TABLE IF NOT EXISTS document_checks (
+    userid VARCHAR(100) NOT NULL,
+    policy_id VARCHAR(50) NOT NULL,
+    doc_index INT NOT NULL,
+    checked TINYINT DEFAULT 0,
+    UNIQUE KEY uq_user_doc (userid, policy_id, doc_index)
+);
+
 INSERT INTO users (userid, password) VALUES ('test', '1234');
 ```
 
