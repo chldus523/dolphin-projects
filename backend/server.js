@@ -596,8 +596,6 @@ const { policy_id, doc_index, doc_name, checked } = req.body;
 db.query(`INSERT INTO document_checks (userid, policy_id, doc_index, doc_name, checked) VALUES (?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE checked=VALUES(checked)`,
     [userid, policy_id, doc_index, doc_name || '', checked ? 1 : 0],
-        ON DUPLICATE KEY UPDATE checked=VALUES(checked)`,
-        [userid, policy_id, doc_index, checked ? 1 : 0],
         (err) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ success: true });
