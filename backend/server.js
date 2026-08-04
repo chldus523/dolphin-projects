@@ -590,7 +590,6 @@ app.get('/api/doc-checks', (req, res) => {
 });
         res.json(result);
     });
-});
 
 const { policy_id, doc_index, doc_name, checked } = req.body;
 db.query(`INSERT INTO document_checks (userid, policy_id, doc_index, doc_name, checked) VALUES (?, ?, ?, ?, ?)
