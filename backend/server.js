@@ -6,43 +6,32 @@ const fs      = require('fs');
 const path    = require('path');
 const bcrypt  = require('bcrypt');
 const { matchesDistrict } = require('./policy-match.js');
-const session = require('express-session'); // [추가] express-session 패키지 로드
+const session = require('express-session');
 
 require('dotenv').config();
 
 const app  = express();
 const port = process.env.PORT || 3000;
 
-// ==========================================
-// 1. 서버 환경 설정
-// ==========================================
-
-// [수정] 세션 쿠키 교환을 위해 origin 지정 및 credentials: true 추가
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:5500', 'http://localhost:5500'], // 프론트엔드가 동작하는 주소들
+    origin: ['http://localhost:3000', 'http://127.0.0.1:5500', 'http://localhost:5500'],
     credentials: true
 }));
 
-// [추가] express-session 미들웨어 설정 (세션 쿠키 처리)
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'dolgorae-secret-key', // 암호화 키
+    secret: process.env.SESSION_SECRET || 'dolgorae-secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        httpOnly: true, // 자바스크립트를 통한 쿠키 탈취 방지
-        secure: false,  // HTTPS 환경일 때 true로 변경
-        maxAge: 1000 * 60 * 60 * 24 // 쿠키 유효 기간 (24시간)
+        httpOnly: true,
+        secure: false,
+        maxAge: 1000 * 60 * 60 * 24
     }
 }));
 
-// [보안 5] 대용량 페이로드 차단 - 100KB 이상 요청은 바로 거절
-// 이유: 100KB 이상 요청이 Groq API로 넘어가면 토큰 초과로 서버가 크래시됨
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(__dirname));
 
-// ==========================================
-// 2. MySQL 데이터베이스 연결
-// ==========================================
 const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
@@ -52,23 +41,14 @@ const db = mysql.createPool({
 });
 
 db.getConnection((err, connection) => {
-    if (err) {
-        console.error('❌ MySQL 연결 실패 ㅠㅠ:', err);
-        return;
-    }
+    if (err) { console.error('❌ MySQL 연결 실패 ㅠㅠ:', err); return; }
     console.log('🐬 MySQL 데이터베이스에 성공적으로 연결되었습니다!');
     connection.release();
 });
 
-// ==========================================
-// 3. Groq AI 클라이언트 초기화
-// ==========================================
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const CHAT_MODEL = 'llama-3.3-70b-versatile';
 
-// ==========================================
-// 4. 정책 데이터 로드 (policies.json)
-// ==========================================
 let POLICIES = [];
 try {
     const policyPath = path.join(__dirname, 'policies.json');
@@ -78,15 +58,10 @@ try {
     console.warn('⚠️ policies.json 로드 실패, 기본 데이터 사용:', e.message);
 }
 
-// [개선 2] 사용자 조건으로 1차 필터링 후 AI에 넘기기
 function filterPolicies(userMessage, profile = null) {
     const ageMatch = userMessage.match(/(\d+)\s*(?:살|세)/);
     const profileAge = profile && parseInt(profile.age, 10);
-    const age = Number.isFinite(profileAge) ? profileAge
-              : (ageMatch ? parseInt(ageMatch[1]) : null);
-
-    const highIncome = /150%|고소득|중위소득\s*15|소득\s*높|소득\s*제한\s*없/.test(userMessage);
-    const lowIncome  = /60%|100%|저소득|중위소득\s*[16]|기초생활|차상위/.test(userMessage);
+    const age = Number.isFinite(profileAge) ? profileAge : (ageMatch ? parseInt(ageMatch[1]) : null);
 
     const keywords = {
         돌봄: /돌봄|돌봐|간병|치매|장애|요양/.test(userMessage),
@@ -95,7 +70,6 @@ function filterPolicies(userMessage, profile = null) {
         금융: /저축|계좌|도약|금융|적금/.test(userMessage),
         생활: /생활|식비|의료|건강|문화/.test(userMessage),
     };
-
     const activeCategories = Object.keys(keywords).filter(k => keywords[k]);
 
     let filtered = POLICIES;
@@ -118,17 +92,13 @@ function filterPolicies(userMessage, profile = null) {
         if (incFiltered.length > 0) filtered = incFiltered;
     }
 
-    // [개선 8] 거주 자치구 필터 — 특정 구 전용 정책은 그 구 주민만
     if (profile && profile.region) {
         const guFiltered = filtered.filter(p => matchesDistrict(p, profile.region));
         if (guFiltered.length > 0) filtered = guFiltered;
     }
 
-    // 카테고리 필터 (키워드가 있을 때만)
     if (activeCategories.length > 0) {
-        const catFiltered = filtered.filter(p =>
-            activeCategories.includes(p['카테고리'])
-        );
+        const catFiltered = filtered.filter(p => activeCategories.includes(p['카테고리']));
         if (catFiltered.length > 0) filtered = catFiltered;
     }
 
@@ -183,46 +153,20 @@ function buildPolicyText(policies) {
     }).join('\n');
 }
 
-// ==========================================
-// 5. [1단계] 입력 가드레일
-// ==========================================
-const PROFANITY_PATTERNS = [
-    /씨발|시발|개새끼|병신|지랄|꺼져|닥쳐|미친놈|미친년/,
-];
-
-const PII_PATTERNS = [
-    /\d{6}[-\s]?\d{7}/,
-    /\d{3}[-\s]?\d{3,4}[-\s]?\d{4}/,
-    /\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}/,
-];
+const PROFANITY_PATTERNS = [/씨발|시발|개새끼|병신|지랄|꺼져|닥쳐|미친놈|미친년/];
+const PII_PATTERNS = [/\d{6}[-\s]?\d{7}/, /\d{3}[-\s]?\d{3,4}[-\s]?\d{4}/, /\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}/];
 
 function checkInputGuardrail(messages) {
     const allText = messages.map(m => m.content || '').join(' ');
-
     for (const pattern of PROFANITY_PATTERNS) {
-        if (pattern.test(allText)) {
-            return {
-                blocked: true,
-                reason: 'profanity',
-                message: '죄송해요, 욕설이나 비속어가 포함된 메시지에는 답변하기 어려워요. 편안한 말투로 다시 질문해 주시면 성심껏 도와드릴게요 🐬'
-            };
-        }
+        if (pattern.test(allText)) return { blocked: true, reason: 'profanity', message: '죄송해요, 욕설이나 비속어가 포함된 메시지에는 답변하기 어려워요. 편안한 말투로 다시 질문해 주시면 성심껏 도와드릴게요 🐬' };
     }
     for (const pattern of PII_PATTERNS) {
-        if (pattern.test(allText)) {
-            return {
-                blocked: true,
-                reason: 'pii',
-                message: '주민등록번호, 전화번호, 카드번호 같은 개인정보는 채팅으로 입력하지 말아주세요! 안전을 위해 해당 내용을 빼고 다시 질문해 주시면 안내해 드릴게요 🔒'
-            };
-        }
+        if (pattern.test(allText)) return { blocked: true, reason: 'pii', message: '주민등록번호, 전화번호, 카드번호 같은 개인정보는 채팅으로 입력하지 말아주세요! 안전을 위해 해당 내용을 빼고 다시 질문해 주시면 안내해 드릴게요 🔒' };
     }
     return { blocked: false };
 }
 
-// ==========================================
-// 6. [3단계] 시스템 프롬프트
-// ==========================================
 function buildSystemPrompt(filteredPolicies, profile = null) {
     const policyText = buildPolicyText(filteredPolicies);
     const profileText = buildProfileText(profile);
@@ -279,32 +223,19 @@ ${policyText}
 `.trim();
 }
 
-// ==========================================
-// 7. 라우팅
-// ==========================================
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
-});
+app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
 
-// 회원가입 API
 app.post('/register', async (req, res) => {
     const { userid, password } = req.body;
-    if (!userid || !password) {
-        return res.status(400).json({ success: false, message: '아이디와 비밀번호를 입력해주세요.' });
-    }
-    if (password.length < 6) {
-        return res.status(400).json({ success: false, message: '비밀번호는 6자 이상이어야 합니다.' });
-    }
+    if (!userid || !password) return res.status(400).json({ success: false, message: '아이디와 비밀번호를 입력해주세요.' });
+    if (password.length < 6) return res.status(400).json({ success: false, message: '비밀번호는 6자 이상이어야 합니다.' });
     try {
         const hashed = await bcrypt.hash(password, 10);
         db.query('INSERT INTO users (userid, password) VALUES (?, ?)', [userid, hashed], (err) => {
             if (err) {
-                if (err.code === 'ER_DUP_ENTRY') {
-                    return res.json({ success: false, message: '이미 사용 중인 아이디입니다.' });
-                }
+                if (err.code === 'ER_DUP_ENTRY') return res.json({ success: false, message: '이미 사용 중인 아이디입니다.' });
                 return res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
             }
-            // 가입 즉시 로그인 상태로 (온보딩으로 이어짐)
             req.session.userid = userid;
             res.json({ success: true, message: '회원가입이 완료되었습니다!' });
         });
@@ -312,18 +243,12 @@ app.post('/register', async (req, res) => {
         res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
     }
 });
- 
-// 로그인 API (세션 저장 포함)
+
 app.post('/login', (req, res) => {
     const { userid, password } = req.body;
-    const query = 'SELECT * FROM users WHERE userid = ?';
-    db.query(query, [userid], async (err, results) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
-        }
-        if (results.length === 0) {
-            return res.json({ success: false, message: '아이디 또는 비밀번호가 틀렸습니다.' });
-        }
+    db.query('SELECT * FROM users WHERE userid = ?', [userid], async (err, results) => {
+        if (err) return res.status(500).json({ success: false, message: '서버 에러가 발생했습니다.' });
+        if (results.length === 0) return res.json({ success: false, message: '아이디 또는 비밀번호가 틀렸습니다.' });
         const user = results[0];
         let match = false;
         if (user.password.startsWith('$2b$')) {
@@ -336,7 +261,6 @@ app.post('/login', (req, res) => {
             }
         }
         if (match) {
-            // [추가] 로그인 성공 시 세션에 유저 ID 저장
             req.session.userid = user.userid;
             res.json({ success: true, message: '로그인 성공!' });
         } else {
@@ -344,13 +268,9 @@ app.post('/login', (req, res) => {
         }
     });
 });
- 
-// 현재 로그인한 사용자 조회 (세션 기반) — 프론트가 이 값으로 사용자를 식별
-app.get('/me', (req, res) => {
-    res.json({ userid: req.session.userid || null });
-});
 
-// 로그아웃 — 서버 세션 파기
+app.get('/me', (req, res) => { res.json({ userid: req.session.userid || null }); });
+
 app.post('/logout', (req, res) => {
     req.session.destroy(() => {
         res.clearCookie('connect.sid');
@@ -358,19 +278,11 @@ app.post('/logout', (req, res) => {
     });
 });
 
-// 정책 데이터 API
-app.get('/api/policies', (req, res) => {
-    res.json(POLICIES);
-});
- 
-// ==========================================
-// 커뮤니티 API (posts 테이블)
-// ==========================================
+app.get('/api/policies', (req, res) => { res.json(POLICIES); });
+
 app.get('/posts', (req, res) => {
     const { category, search } = req.query;
-    let query = `SELECT p.*, COUNT(c.id) AS comment_count
-                FROM posts p
-                LEFT JOIN comments c ON c.post_id = p.id`;
+    let query = `SELECT p.*, COUNT(c.id) AS comment_count FROM posts p LEFT JOIN comments c ON c.post_id = p.id`;
     const params = [];
     const conditions = [];
     if (category && category !== '전체') { conditions.push('p.category = ?'); params.push(category); }
@@ -384,41 +296,27 @@ app.get('/posts', (req, res) => {
 });
 
 app.post('/posts', (req, res) => {
-    const userid = req.session.userid;              // 세션에서만 작성자 확인 (위조 불가)
+    const userid = req.session.userid;
     if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
-
     const category = (req.body.category || '').trim();
     const title    = (req.body.title || '').trim();
     const content  = (req.body.content || '').trim();
-    if (!category || !title || !content) {
-        return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
-    }
-    if (title.length < 2 || title.length > 100)   return res.status(400).json({ error: '제목은 2자 이상 100자 이내로 입력해 주세요.' });
+    if (!category || !title || !content) return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
+    if (title.length < 2 || title.length > 100) return res.status(400).json({ error: '제목은 2자 이상 100자 이내로 입력해 주세요.' });
     if (content.length < 10 || content.length > 2000) return res.status(400).json({ error: '내용은 10자 이상 2000자 이내로 입력해 주세요.' });
-
-    db.query(
-        'INSERT INTO posts (userid, category, title, content) VALUES (?, ?, ?, ?)',
-        [userid, category, title, content],
-        (err, result) => {
-            if (err) return res.status(500).json({ error: '작성 실패' });
-            res.json({ success: true, id: result.insertId });
-        }
-    );
+    db.query('INSERT INTO posts (userid, category, title, content) VALUES (?, ?, ?, ?)', [userid, category, title, content], (err, result) => {
+        if (err) return res.status(500).json({ error: '작성 실패' });
+        res.json({ success: true, id: result.insertId });
+    });
 });
- 
-// 글 삭제 (작성자 본인만)
-app.delete('/posts/:id', (req, res) => {
-    const userid = req.session.userid;              // 세션에서만 (body 위조 차단)
-    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
 
+app.delete('/posts/:id', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
     db.query('SELECT userid FROM posts WHERE id = ?', [req.params.id], (err, rows) => {
         if (err) return res.status(500).json({ error: '삭제 실패' });
         if (rows.length === 0) return res.status(404).json({ error: '글을 찾을 수 없습니다.' });
-
-        if (rows[0].userid !== userid) {
-            return res.status(403).json({ error: '본인이 작성한 글만 삭제할 수 있습니다.' });
-        }
-
+        if (rows[0].userid !== userid) return res.status(403).json({ error: '본인이 작성한 글만 삭제할 수 있습니다.' });
         db.query('DELETE FROM posts WHERE id = ?', [req.params.id], (err2) => {
             if (err2) return res.status(500).json({ error: '삭제 실패' });
             res.json({ success: true });
@@ -432,71 +330,49 @@ app.post('/posts/:id/like', (req, res) => {
         res.json({ success: true });
     });
 });
- 
-app.get('/posts/:id/comments', (req, res) => {
-    db.query(
-        'SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC',
-        [req.params.id],
-        (err, results) => {
-            if (err) return res.status(500).json({ error: '댓글 조회 실패' });
-            res.json(results);
-        }
-    );
-});
- 
-app.post('/posts/:id/comments', (req, res) => {
-    const userid = req.session.userid;              // 세션에서만 작성자 확인
-    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
 
+app.get('/posts/:id/comments', (req, res) => {
+    db.query('SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC', [req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ error: '댓글 조회 실패' });
+        res.json(results);
+    });
+});
+
+app.post('/posts/:id/comments', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
     const content = (req.body.content || '').trim();
     if (!content) return res.status(400).json({ error: '댓글 내용을 입력해 주세요.' });
     if (content.length > 500) return res.status(400).json({ error: '댓글은 500자 이내로 입력해 주세요.' });
-
-    db.query(
-        'INSERT INTO comments (post_id, userid, content) VALUES (?, ?, ?)',
-        [req.params.id, userid, content],
-        (err, result) => {
-            if (err) return res.status(500).json({ error: '댓글 작성 실패' });
-            res.json({ success: true, id: result.insertId });
-        }
-    );
+    db.query('INSERT INTO comments (post_id, userid, content) VALUES (?, ?, ?)', [req.params.id, userid, content], (err, result) => {
+        if (err) return res.status(500).json({ error: '댓글 작성 실패' });
+        res.json({ success: true, id: result.insertId });
+    });
 });
- 
-// ==========================================
-// 8. 챗봇 API
-// ==========================================
+
 app.post('/chat', async (req, res) => {
     const { messages, profile } = req.body;
- 
-    if (!messages || !Array.isArray(messages)) {
-        return res.status(400).json({ error: 'messages 배열이 필요합니다.' });
-    }
- 
+    if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'messages 배열이 필요합니다.' });
     const guardrail = checkInputGuardrail(messages);
     if (guardrail.blocked) {
         console.log(`[가드레일 차단] reason=${guardrail.reason}`);
         return res.json({ reply: guardrail.message });
     }
- 
     const lastUserMessage = messages.filter(m => m.role === 'user').map(m => m.content).join(' ');
     const filteredPolicies = filterPolicies(lastUserMessage, profile);
-    console.log(`[정책 필터링] ${POLICIES.length}개 → ${filteredPolicies.length}개` +
-        (profile?.age ? ` (프로필 적용: 만 ${profile.age}세 / ${profile.income})` : ''));
- 
+    console.log(`[정책 필터링] ${POLICIES.length}개 → ${filteredPolicies.length}개`);
     try {
         const completion = await groq.chat.completions.create({
             model: CHAT_MODEL,
             messages: [
                 { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) },
-            ...messages.slice(-20)
+                ...messages.slice(-20)
             ],
             temperature: 0.6,
             max_tokens: 1024,
         });
- 
         const reply = completion.choices[0]?.message?.content ?? '답변을 가져오지 못했어요.';
         res.json({ reply });
- 
     } catch (error) {
         console.error('[Groq API Error]', error.message);
         if (error.status === 413 || (error.message && error.message.includes('too large'))) {
@@ -505,14 +381,9 @@ app.post('/chat', async (req, res) => {
         res.status(500).json({ error: 'AI 서버 오류', detail: error.message });
     }
 });
- 
-process.on('uncaughtException', (err) => {
-    console.error('❌ 예상치 못한 에러:', err.message);
-});
- 
-process.on('unhandledRejection', (reason) => {
-    console.error('❌ 처리되지 않은 Promise 거부:', reason);
-});
+
+process.on('uncaughtException', (err) => { console.error('❌ 예상치 못한 에러:', err.message); });
+process.on('unhandledRejection', (reason) => { console.error('❌ 처리되지 않은 Promise 거부:', reason); });
 
 // =============================================
 // 프로필 API
@@ -581,29 +452,31 @@ app.delete('/api/bookmarks/:policy_id', (req, res) => {
 app.get('/api/doc-checks', (req, res) => {
     const userid = req.session.userid;
     if (!userid) return res.status(401).json({ error: '로그인 필요' });
-    db.query('SELECT policy_id, doc_index, checked FROM document_checks WHERE userid = ?', [userid], (err, rows) => {
+    db.query('SELECT policy_id, doc_index, doc_name, checked FROM document_checks WHERE userid = ?', [userid], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const result = {};
-        rows.forEach(r => { 
-        const key = r.doc_name ? `${r.policy_id}-${r.doc_name}` : `${r.policy_id}-${r.doc_index}`;
-        result[key] = !!r.checked; 
-});
-
+        rows.forEach(r => {
+            const key = r.doc_name ? `${r.policy_id}-${r.doc_name}` : `${r.policy_id}-${r.doc_index}`;
+            result[key] = !!r.checked;
+        });
         res.json(result);
     });
+});
+
 app.post('/api/doc-checks', (req, res) => {
     const userid = req.session.userid;
     if (!userid) return res.status(401).json({ error: '로그인 필요' });
-const { policy_id, doc_index, doc_name, checked } = req.body;
-db.query(`INSERT INTO document_checks (userid, policy_id, doc_index, doc_name, checked) VALUES (?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE checked=VALUES(checked)`,
-    [userid, policy_id, doc_index, doc_name || '', checked ? 1 : 0],
+    const { policy_id, doc_index, doc_name, checked } = req.body;
+    db.query(`INSERT INTO document_checks (userid, policy_id, doc_index, doc_name, checked) VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE checked=VALUES(checked)`,
+        [userid, policy_id, doc_index, doc_name || '', checked ? 1 : 0],
         (err) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ success: true });
         }
     );
 });
+
 // ==========================================
 // 10. 서버 실행
 // ==========================================
