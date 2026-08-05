@@ -9,7 +9,6 @@
     <script src="doc-catalog.js"></script>
     <script src="user-sync.js"></script>
     <style>
-        /* ── 키워드 워드클라우드 필터 ── */
         .filter-wrapper {
             background: #fff;
             border: 1.5px solid #e0f2fe;
@@ -42,36 +41,16 @@
             align-items: center;
             gap: 0.4rem;
         }
-        .word-cloud {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.7rem;
-            align-items: center;
-        }
+        .word-cloud { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
         .wc-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.5rem 1.1rem;
-            border-radius: 14px;
-            border: 1.5px solid #e2e8f0;
-            background: #f8fafc;
-            color: #475569;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.18s;
-            user-select: none;
-            line-height: 1.1;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.5rem 1.1rem; border-radius: 14px;
+            border: 1.5px solid #e2e8f0; background: #f8fafc;
+            color: #475569; font-weight: 700; cursor: pointer;
+            transition: all 0.18s; user-select: none; line-height: 1.1;
         }
         .wc-tag:hover { border-color: #94a3b8; background: #f1f5f9; color: #0f172a; }
-        .wc-tag .wc-count {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #94a3b8;
-            background: #eef2f7;
-            border-radius: 20px;
-            padding: 1px 7px;
-        }
+        .wc-tag .wc-count { font-size: 0.7rem; font-weight: 700; color: #94a3b8; background: #eef2f7; border-radius: 20px; padding: 1px 7px; }
         .wc-tag.active { color: #fff; border-color: transparent; }
         .wc-tag.active .wc-count { background: rgba(255,255,255,0.25); color: #fff; }
         .result-count { font-size: 0.8rem; color: #64748b; margin-bottom: 0.75rem; }
@@ -79,20 +58,11 @@
         .no-result { text-align: center; padding: 2.5rem 1rem; color: #94a3b8; font-size: 0.9rem; }
         .excluded-section { margin-top: 1.8rem; }
         .excluded-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #64748b;
-            background: #e2e8f0;
-            border: 1.5px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 0.7rem 1.1rem;
-            margin-bottom: 0.75rem;
-            cursor: pointer;
-            user-select: none;
-            transition: background 0.18s;
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.82rem; font-weight: 700; color: #64748b;
+            background: #e2e8f0; border: 1.5px solid #cbd5e1;
+            border-radius: 12px; padding: 0.7rem 1.1rem; margin-bottom: 0.75rem;
+            cursor: pointer; user-select: none; transition: background 0.18s;
         }
         .excluded-header:hover { background: #cbd5e1; }
         .excluded-header .toggle-icon { margin-left: auto; font-size: 0.7rem; transition: transform 0.2s; }
@@ -101,19 +71,12 @@
         .excluded-list.open { display: flex; }
         .policy-item.excluded { opacity: 0.65; border-style: dashed; border-color: #cbd5e1; background: #f8fafc; }
         .exclude-reason {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: #ef4444;
-            background: #fef2f2;
-            border: 1px solid #fca5a5;
-            border-radius: 6px;
-            padding: 0.2rem 0.6rem;
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            font-size: 0.72rem; font-weight: 700; color: #ef4444;
+            background: #fef2f2; border: 1px solid #fca5a5;
+            border-radius: 6px; padding: 0.2rem 0.6rem;
         }
         .policy-benefit { font-size: 0.86rem; color: #334155; line-height: 1.55; margin: 0.4rem 0 0.8rem; }
-        /* 즐겨찾기 전 필요 서류 미리보기 */
         .doc-preview { margin: 0.7rem 0 0.2rem; border-top: 1px dashed #e2e8f0; padding-top: 0.7rem; }
         .doc-preview summary {
             list-style: none; cursor: pointer; user-select: none;
@@ -135,18 +98,12 @@
         }
         .doc-issue-link:hover { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
         .doc-preview .no-doc { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; }
-
-        /* ── 모바일 반응형 ── */
         @media (max-width: 820px) {
-            /* 정책 목록 + 서류 가이드를 1컬럼으로 쌓기 (가이드가 아래로) */
             .explore-layout { grid-template-columns: 1fr !important; }
-            /* 사이드바 고정 해제 (좁은 화면에선 본문 아래에 자연스럽게 배치) */
             #guide-sidebar { position: static !important; top: auto !important; }
-            /* 고정 필터도 정적으로 (모바일에선 sticky가 화면을 많이 가림) */
             .filter-wrapper { position: static !important; margin-bottom: 1.2rem; }
             .filter-wrapper::before { display: none; }
         }
-        /* 워드클라우드: 태그 폭이 제각각이라 안 맞음 → 2열 그리드로 정렬 */
         @media (max-width: 768px) {
             .word-cloud { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
             .wc-tag { width: 100%; justify-content: center; box-sizing: border-box; }
@@ -157,19 +114,12 @@
             .wc-tag { padding: 0.4rem 0.8rem; font-size: 0.82rem; }
         }
         .btn-doc-link {
-            display: inline-block;
-            background: #0ea5e9;
-            color: #fff;
-            font-size: 0.8rem;
-            font-weight: 700;
-            padding: 0.5rem 1.1rem;
-            border-radius: 10px;
-            text-decoration: none;
+            display: inline-block; background: #0ea5e9; color: #fff;
+            font-size: 0.8rem; font-weight: 700; padding: 0.5rem 1.1rem;
+            border-radius: 10px; text-decoration: none;
             transition: background 0.2s, transform 0.2s;
         }
         .btn-doc-link:hover { background: #0284c7; transform: translateY(-1px); }
-
-        /* 플로팅 챗봇 위젯 CSS */
         .chat-fab {
             position: fixed; bottom: 28px; right: 28px;
             width: 60px; height: 60px; border-radius: 50%;
@@ -286,7 +236,6 @@
         </div>
     </main>
 
-    <!-- 플로팅 챗봇 위젯 -->
     <div class="chat-fab-tooltip" id="fabTooltip">AI 챗봇에게 물어보세요 🐬</div>
     <button class="chat-fab" id="chatFab" onclick="toggleWidget()" style="position:fixed;">
         <span id="fabIcon">🐬</span>
@@ -320,9 +269,6 @@
     </div>
 
     <script>
-        // ══════════════════════════════════════
-        //  네비게이션 / 로그인 상태
-        // ══════════════════════════════════════
         function clearUserData() {
             localStorage.clear();
             sessionStorage.clear();
@@ -398,7 +344,6 @@
             '서울복지포털': 'https://wis.seoul.go.kr/',
             '서울주거포털': 'https://housing.seoul.go.kr/',
             '서울특별시':   'https://www.seoul.go.kr/',
-            '서울특별시':   'https://www.seoul.go.kr/',
             '교육부':       'https://www.moe.go.kr/',
             '복지로':       'https://www.bokjiro.go.kr/',
             '정부24':       'https://www.gov.kr/',
@@ -440,7 +385,6 @@
             if (ceil !== null && myPct !== null && myPct > ceil) {
                 return `소득 조건 (중위소득 ${ceil}% 이하)`;
             }
-            // 3) 거주 자치구 — 특정 구 전용 정책은 그 구 주민만
             if (!matchesDistrict(p, userProfile.region)) {
                 return `지역 조건 (${policyDistrict(p)} 거주자 대상)`;
             }
@@ -498,9 +442,7 @@
                 docList.length
                     ? `<ul>${docList.map(d => {
                         const iss = docIssue(d);
-                        const issueLink = iss
-                            ? ` <a href="${iss.url}" target="_blank" class="doc-issue-link">${iss.issuer}에서 발급 ↗</a>`
-                            : '';
+                        const issueLink = iss ? ` <a href="${iss.url}" target="_blank" class="doc-issue-link">${iss.issuer}에서 발급 ↗</a>` : '';
                         return `<li><span>${d}</span>${issueLink}</li>`;
                       }).join('')}</ul>`
                     : `<p class="no-doc">이 정책은 제출 서류 정보가 따로 안내되어 있지 않아요. 신청 페이지에서 확인해 주세요.</p>`
@@ -522,7 +464,7 @@
             if (idx === -1) { bookmarks.push(id); btn.textContent = '⭐'; btn.title = '찜 취소'; added = true; }
             else { bookmarks.splice(idx, 1); btn.textContent = '☆'; btn.title = '찜하기'; added = false; }
             localStorage.setItem('bookmarkedPolicies', JSON.stringify(bookmarks));
-            pushBookmark(id, added);   // 서버(계정)에도 반영
+            pushBookmark(id, added);
             buildGuideData();
         }
 
@@ -557,7 +499,7 @@
                 return;
             }
             $('guide-checklist').innerHTML = g.docs.map((doc, i) => {
-                const checked = !!docChecks[`${g.policyId}-${i}`];
+                const checked = !!docChecks[`${g.policyId}-${doc}`] || !!docChecks[`${g.policyId}-${i}`];
                 const iss = docIssue(doc);
                 const issueLink = iss ? `<a href="${iss.url}" target="_blank" class="doc-issue-link" style="margin-left:auto;">${iss.issuer} ↗</a>` : '';
                 return `<div style="display:flex;align-items:flex-start;gap:0.6rem;"><input type="checkbox" id="sg-${g.policyId}-${i}" data-docname="${doc}" ${checked ? 'checked' : ''} onchange="guideCheck('${g.policyId}', ${i}, this)" style="width:15px;height:15px;accent-color:#0ea5e9;flex-shrink:0;margin-top:2px;cursor:pointer;"><label for="sg-${g.policyId}-${i}" style="font-size:0.9rem;font-weight:600;color:${checked ? '#94a3b8' : '#1e293b'};cursor:pointer;${checked ? 'text-decoration:line-through;' : ''}">${doc}</label>${issueLink}</div>`;
@@ -567,7 +509,7 @@
 
         function updateGuideProgress(g) {
             const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
-            const done = g.docs.filter((_, i) => docChecks[`${g.policyId}-${i}`]).length;
+            const done = g.docs.filter((doc, i) => docChecks[`${g.policyId}-${doc}`] || docChecks[`${g.policyId}-${i}`]).length;
             const pct = g.docs.length ? Math.round((done / g.docs.length) * 100) : 0;
             document.getElementById('guide-prog-label').textContent = `${done} / ${g.docs.length}`;
             document.getElementById('guide-prog-bar').style.width = pct + '%';
@@ -576,11 +518,18 @@
         function guideNav(dir) { if (GUIDE_DATA.length === 0) return; guideIdx = (guideIdx + dir + GUIDE_DATA.length) % GUIDE_DATA.length; renderGuide(); }
 
         function guideCheck(policyId, docIdx, cb) {
-            const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
-            docChecks[`${policyId}-${docIdx}`] = cb.checked;
-            pushDocCheck(policyId, docIdx, cb.checked);   // 서버(계정)에 반영
             const docName = cb.dataset.docname;
-            GUIDE_DATA.forEach(g => { g.docs.forEach((doc, i) => { if (doc === docName && !(g.policyId === policyId && i === docIdx)) { docChecks[`${g.policyId}-${i}`] = cb.checked; pushDocCheck(g.policyId, i, cb.checked); } }); });
+            const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
+            docChecks[`${policyId}-${docName}`] = cb.checked;
+            pushDocCheck(policyId, docIdx, docName, cb.checked);
+            GUIDE_DATA.forEach(g => {
+                g.docs.forEach((doc, i) => {
+                    if (doc === docName && !(g.policyId === policyId && i === docIdx)) {
+                        docChecks[`${g.policyId}-${doc}`] = cb.checked;
+                        pushDocCheck(g.policyId, i, doc, cb.checked);
+                    }
+                });
+            });
             localStorage.setItem('docChecks', JSON.stringify(docChecks));
             const label = document.querySelector(`label[for="sg-${policyId}-${docIdx}"]`);
             if (label) { label.style.textDecoration = cb.checked ? 'line-through' : ''; label.style.color = cb.checked ? '#94a3b8' : '#1e293b'; }
@@ -601,7 +550,7 @@
         }
 
         window.addEventListener('load', async () => {
-            await pullUserData();   // 서버에서 즐겨찾기·서류체크를 받아 localStorage 캐시에 채움
+            await pullUserData();
             bookmarks = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
             loadPolicies().then(() => { buildGuideData(); syncSidebarTop(); });
         });
