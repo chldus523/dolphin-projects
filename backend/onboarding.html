@@ -472,8 +472,27 @@
 
         function skipOnboarding() {
             // 빈 프로필로 저장해서 온보딩 반복 진입 방지
-            localStorage.setItem('userProfile', JSON.stringify({ skipped: true }));
-            window.location.href = 'home.html';
+            localStorage.setItem('userProfile', JSON.stringify(profile));
+// DB에도 저장
+fetch('/api/profile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+        age: Number(profile.age),
+        region: profile.region,
+        family_size: Number(profile.familySize),
+        income_man: Number(profile.incomeMan),
+        income_pct: profile.incomePct,
+        income: profile.income,
+        care_infant: profile.careInfant,
+        care_elderly: profile.careElderly,
+        care_disabled: profile.careDisabled,
+        employment: profile.employment,
+        household: profile.household,
+    })
+}).catch(e => console.error('온보딩 프로필 DB 저장 실패:', e));
+window.location.href = 'home.html';
         }
     </script>
 </body>
