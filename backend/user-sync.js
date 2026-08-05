@@ -44,10 +44,10 @@ function pushBookmark(policyId, added) {
 }
 
 // 서류 체크 상태를 서버에 반영
-function pushDocCheck(policyId, docIndex, checked) {
+function pushDocCheck(policyId, docIndex, docName, checked) {
     return fetch('/api/doc-checks', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ policy_id: policyId, doc_index: docIndex, checked: !!checked }),
+        body: JSON.stringify({ policy_id: policyId, doc_index: docIndex, doc_name: docName, checked: !!checked }),
     }).catch(e => console.warn('[user-sync] 서류체크 저장 실패:', e.message));
 }
