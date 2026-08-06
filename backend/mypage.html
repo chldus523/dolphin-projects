@@ -7,195 +7,77 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="median-income.js"></script>
+    <script src="doc-catalog.js"></script>
     <script src="user-sync.js"></script>
     <style>
-        /* 플로팅 챗봇 위젯 CSS */
         .chat-fab {
-            position: fixed;
-            bottom: 28px;
-            right: 28px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+            position: fixed; bottom: 28px; right: 28px;
+            width: 60px; height: 60px; border-radius: 50%;
             background: linear-gradient(135deg, #0369a1, #0ea5e9);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 6px 24px rgba(14,165,233,0.45);
-            z-index: 9000;
-            transition: transform 0.2s, box-shadow 0.2s;
+            border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; box-shadow: 0 6px 24px rgba(14,165,233,0.45);
+            z-index: 9000; transition: transform 0.2s, box-shadow 0.2s;
             animation: bob 3s ease-in-out infinite;
         }
-        @keyframes bob {
-            0%, 100% { transform: translateY(0); }
-            50%       { transform: translateY(-4px); }
-        }
-        .chat-fab:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 30px rgba(14,165,233,0.55);
-            animation: none;
-        }
+        @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        .chat-fab:hover { transform: scale(1.1); box-shadow: 0 8px 30px rgba(14,165,233,0.55); animation: none; }
         .chat-fab-tooltip {
-            position: fixed;
-            bottom: 38px;
-            right: 96px;
-            background: #0f172a;
-            color: #fff;
-            font-size: 0.78rem;
-            font-weight: 600;
-            padding: 7px 13px;
-            border-radius: 20px;
-            white-space: nowrap;
-            z-index: 8999;
-            pointer-events: none;
-            opacity: 1;
-            transition: opacity 0.3s;
-            font-family: 'Pretendard', sans-serif;
+            position: fixed; bottom: 38px; right: 96px;
+            background: #0f172a; color: #fff; font-size: 0.78rem; font-weight: 600;
+            padding: 7px 13px; border-radius: 20px; white-space: nowrap;
+            z-index: 8999; pointer-events: none; opacity: 1; transition: opacity 0.3s;
         }
-        .chat-fab-tooltip::after {
-            content: '';
-            position: absolute;
-            right: -6px;
-            top: 50%;
-            transform: translateY(-50%);
-            border: 6px solid transparent;
-            border-left-color: #0f172a;
-            border-right: none;
-        }
+        .chat-fab-tooltip::after { content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); border: 6px solid transparent; border-left-color: #0f172a; border-right: none; }
         .chat-fab-tooltip.hidden { opacity: 0; }
         .chatbot-widget {
-            position: fixed;
-            bottom: 100px;
-            right: 28px;
-            width: 360px;
-            height: 520px;
-            background: #f8fafc;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(15,23,42,0.22);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 9001;
-            transform: scale(0.85) translateY(20px);
-            transform-origin: bottom right;
-            opacity: 0;
-            pointer-events: none;
+            position: fixed; bottom: 100px; right: 28px; width: 360px; height: 520px;
+            background: #f8fafc; border-radius: 20px; box-shadow: 0 20px 60px rgba(15,23,42,0.22);
+            display: flex; flex-direction: column; overflow: hidden; z-index: 9001;
+            transform: scale(0.85) translateY(20px); transform-origin: bottom right;
+            opacity: 0; pointer-events: none;
             transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease;
         }
-        .chatbot-widget.open {
-            transform: scale(1) translateY(0);
-            opacity: 1;
-            pointer-events: all;
-        }
-        .widget-header {
-            background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%);
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-        .widget-avatar {
-            width: 36px; height: 36px;
-            background: rgba(255,255,255,0.18);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
+        .chatbot-widget.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+        .widget-header { background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%); padding: 14px 16px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .widget-avatar { width: 36px; height: 36px; background: rgba(255,255,255,0.18); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
         .widget-title h2 { font-size: 0.88rem; font-weight: 800; color: #fff; }
         .widget-title p { font-size: 0.67rem; color: rgba(255,255,255,0.68); margin-top: 1px; }
-        .widget-close {
-            margin-left: auto;
-            background: rgba(255,255,255,0.18);
-            border: none; color: #fff;
-            width: 28px; height: 28px;
-            border-radius: 8px; cursor: pointer;
-            font-size: 0.85rem;
-            display: flex; align-items: center; justify-content: center;
-            transition: background 0.2s; flex-shrink: 0;
-        }
+        .widget-close { margin-left: auto; background: rgba(255,255,255,0.18); border: none; color: #fff; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
         .widget-close:hover { background: rgba(255,255,255,0.3); }
-        .widget-chat {
-            flex: 1; overflow-y: auto;
-            padding: 14px 12px;
-            display: flex; flex-direction: column; gap: 10px;
-            scroll-behavior: smooth;
-        }
+        .widget-chat { flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
         .widget-chat::-webkit-scrollbar { width: 3px; }
         .widget-chat::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .msg { display: flex; align-items: flex-end; gap: 6px; max-width: 88%; animation: msgIn 0.25s ease forwards; }
-        @keyframes msgIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .msg.bot  { align-self: flex-start; }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .msg.bot { align-self: flex-start; }
         .msg.user { align-self: flex-end; flex-direction: row-reverse; }
-        .msg-av {
-            width: 26px; height: 26px;
-            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 13px; flex-shrink: 0;
-        }
+        .msg-av { width: 26px; height: 26px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
         .msg-bubble { padding: 9px 12px; border-radius: 14px; font-size: 0.82rem; line-height: 1.6; word-break: keep-all; }
         .msg.bot .msg-bubble { background: #fff; color: #0f172a; border-bottom-left-radius: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
         .msg.user .msg-bubble { background: #0ea5e9; color: #fff; border-bottom-right-radius: 3px; }
-        .typing-wrap { display: flex; align-items: flex-end; gap: 6px; align-self: flex-start; animation: msgIn 0.25s ease forwards; }
+        .typing-wrap { display: flex; align-items: flex-end; gap: 6px; align-self: flex-start; }
         .typing-dots { display: flex; gap: 4px; padding: 10px 13px; background: #fff; border-radius: 14px; border-bottom-left-radius: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
         .typing-dots span { width: 5px; height: 5px; background: #7dd3fc; border-radius: 50%; animation: dot 1.4s ease-in-out infinite; }
         .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes dot {
-            0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
-            40%            { transform: scale(1.1); opacity: 1; }
-        }
+        @keyframes dot { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1.1); opacity: 1; } }
         .widget-chips { padding: 2px 12px 8px; display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 0; }
-        .p-chip {
-            background: #fff; border: 1.5px solid #bae6fd;
-            color: #0369a1; font-size: 0.68rem; font-weight: 600;
-            padding: 4px 10px; border-radius: 20px; cursor: pointer;
-            font-family: 'Pretendard', sans-serif; transition: all 0.18s;
-        }
+        .p-chip { background: #fff; border: 1.5px solid #bae6fd; color: #0369a1; font-size: 0.68rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; cursor: pointer; transition: all 0.18s; }
         .p-chip:hover { background: #0ea5e9; border-color: #0ea5e9; color: #fff; }
-        .widget-input-area {
-            padding: 8px 10px 10px; background: #fff;
-            border-top: 1px solid #e2e8f0;
-            display: flex; gap: 7px; align-items: flex-end; flex-shrink: 0;
-        }
-        #widgetInput {
-            flex: 1; background: #f1f5f9;
-            border: 1.5px solid #e2e8f0; border-radius: 11px;
-            padding: 8px 11px; font-size: 0.81rem;
-            font-family: 'Pretendard', sans-serif; color: #0f172a;
-            resize: none; outline: none; max-height: 80px; line-height: 1.5;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        #widgetInput:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+        .widget-input-area { padding: 8px 10px 10px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; gap: 7px; align-items: flex-end; flex-shrink: 0; }
+        #widgetInput { flex: 1; background: #f1f5f9; border: 1.5px solid #e2e8f0; border-radius: 11px; padding: 8px 11px; font-size: 0.81rem; color: #0f172a; resize: none; outline: none; max-height: 80px; line-height: 1.5; transition: border-color 0.2s; }
+        #widgetInput:focus { border-color: #0ea5e9; }
         #widgetInput::placeholder { color: #94a3b8; }
-        #widgetSend {
-            width: 34px; height: 34px;
-            background: linear-gradient(135deg, #0ea5e9, #0284c7);
-            border: none; border-radius: 9px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; box-shadow: 0 3px 8px rgba(14,165,233,0.4); transition: all 0.18s;
-        }
-        #widgetSend:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.5); }
+        #widgetSend { width: 34px; height: 34px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border: none; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 3px 8px rgba(14,165,233,0.4); transition: all 0.18s; }
         #widgetSend:disabled { opacity: 0.4; cursor: not-allowed; }
         #widgetSend svg { width: 15px; height: 15px; fill: #fff; }
-        .fab-badge {
-            position: absolute; top: -2px; right: -2px;
-            width: 18px; height: 18px; background: #ef4444;
-            border-radius: 50%; font-size: 0.65rem; font-weight: 800;
-            color: #fff; display: flex; align-items: center; justify-content: center;
-            border: 2px solid #fff;
-        }
-        @media (max-width: 420px) {
-            .chatbot-widget { right: 12px; bottom: 90px; width: calc(100vw - 24px); height: 70vh; }
-            .chat-fab { bottom: 16px; right: 16px; }
+        .fab-badge { position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; background: #ef4444; border-radius: 50%; font-size: 0.65rem; font-weight: 800; color: #fff; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+        @media (max-width: 420px) { .chatbot-widget { right: 12px; bottom: 90px; width: calc(100vw - 24px); height: 70vh; } .chat-fab { bottom: 16px; right: 16px; } }
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            .container { flex-direction: column !important; }
+            .profile-card { width: 100% !important; }
         }
     </style>
 </head>
@@ -322,7 +204,6 @@
         </div>
     </main>
 
-    <!-- 플로팅 챗봇 위젯 -->
     <div class="chat-fab-tooltip" id="fabTooltip">AI 챗봇에게 물어보세요 🐬</div>
     <button class="chat-fab" id="chatFab" onclick="toggleWidget()" style="position:fixed;">
         <span id="fabIcon">🐬</span>
@@ -335,7 +216,8 @@
                 <h2>돌고래 AI 챗봇</h2>
                 <p>가족돌봄청년 맞춤 복지 안내</p>
             </div>
-            <button onclick="resetChat()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.7rem;font-weight:600;cursor:pointer;font-family:Pretendard,sans-serif;margin-right:6px;">🔄 새 대화</button><button class="widget-close" onclick="closeWidget()">✕</button>
+            <button onclick="resetChat()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.7rem;font-weight:600;cursor:pointer;margin-right:6px;">🔄 새 대화</button>
+            <button class="widget-close" onclick="closeWidget()">✕</button>
         </div>
         <div class="widget-chat" id="widgetChat"></div>
         <div class="widget-chips" id="widgetChips">
@@ -357,18 +239,11 @@
     <script>
         function escapeHtml(str) {
             return String(str ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        // 로그아웃 시 브라우저에 남는 개인정보를 모두 정리 (공용 PC 대비)
-        function clearUserData() {
-            localStorage.clear();
-            sessionStorage.clear();   // 챗봇 대화 이력 등
-        }
+        function clearUserData() { localStorage.clear(); sessionStorage.clear(); }
         async function doLogout() {
             try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
             clearUserData();
@@ -379,7 +254,6 @@
         const loggedInUser = localStorage.getItem('userid');
         const navRight = document.getElementById('nav-right');
 
-        // 세션 기반 로그인 확인 (비로그인 시 로그인 페이지로)
         fetch('/me', { credentials: 'include' })
             .then(r => r.json())
             .then(async ({ userid }) => {
@@ -388,18 +262,17 @@
                     window.location.href = 'index.html';
                     return;
                 }
-                localStorage.setItem('userid', userid);   // 표시용 미러 갱신
-                await pullUserData();                     // 서버에서 즐겨찾기·서류체크 받아 캐시에 채움
-                loadBookmarkedDocs();                     // 찜한 정책 서류 목록 로드
-                loadScrappedPosts();                      // 스크랩 목록 로드
+                localStorage.setItem('userid', userid);
+                await pullUserData();
+                loadBookmarkedDocs();
+                loadScrappedPosts();
             })
             .catch(() => {});
 
         if (loggedInUser && navRight) {
             navRight.innerHTML = `
                 <span style="margin-right:12px;color:#0f172a;font-size:0.9rem;">👤 <b>${loggedInUser}</b>님</span>
-                <button id="btn-logout" style="background:none;border:1px solid #e2e8f0;padding:0.3rem 0.8rem;border-radius:8px;font-weight:600;cursor:pointer;color:#475569;font-size:0.82rem;transition:all 0.2s;font-family:'Pretendard',sans-serif;">로그아웃</button>
-            `;
+                <button id="btn-logout" style="background:none;border:1px solid #e2e8f0;padding:0.3rem 0.8rem;border-radius:8px;font-weight:600;cursor:pointer;color:#475569;font-size:0.82rem;transition:all 0.2s;font-family:'Pretendard',sans-serif;">로그아웃</button>`;
             const lb = document.getElementById('btn-logout');
             lb.addEventListener('mouseenter', () => { lb.style.borderColor='#0ea5e9'; lb.style.color='#0ea5e9'; });
             lb.addEventListener('mouseleave', () => { lb.style.borderColor='#e2e8f0'; lb.style.color='#475569'; });
@@ -415,41 +288,39 @@
             }
         }
 
-        // 새 코드 (바꾸기)
-// DB에서 프로필 불러오기 (없으면 localStorage 폴백)
-async function loadProfile() {
-    try {
-        const res = await fetch('/api/profile', { credentials: 'include' });
-        const data = await res.json();
-        if (data.age) {
-            // DB 데이터로 localStorage도 동기화
-            const profile = {
-                age: data.age, region: data.region,
-                familySize: data.family_size, incomeMan: data.income_man,
-                incomePct: data.income_pct, income: data.income,
-                careInfant: !!data.care_infant, careElderly: !!data.care_elderly,
-                careDisabled: !!data.care_disabled,
-                employment: data.employment, household: data.household
-            };
-            localStorage.setItem('userProfile', JSON.stringify(profile));
-        }
-    } catch(e) { console.log('DB 프로필 로드 실패, localStorage 사용'); }
+        async function loadProfile() {
+            try {
+                const res = await fetch('/api/profile', { credentials: 'include' });
+                const data = await res.json();
+                if (data.age) {
+                    const profile = {
+                        age: data.age, region: data.region,
+                        familySize: data.family_size, incomeMan: data.income_man,
+                        incomePct: data.income_pct, income: data.income,
+                        careInfant: !!data.care_infant, careElderly: !!data.care_elderly,
+                        careDisabled: !!data.care_disabled,
+                        employment: data.employment, household: data.household
+                    };
+                    localStorage.setItem('userProfile', JSON.stringify(profile));
+                }
+            } catch(e) { console.log('DB 프로필 로드 실패, localStorage 사용'); }
 
-    const saved = JSON.parse(localStorage.getItem('userProfile') || '{}');
-    if (saved.age)          document.getElementById('mp-age').value          = saved.age;
-    if (saved.region)       document.getElementById('mp-region').value       = saved.region;
-    if (saved.familySize)   document.getElementById('mp-family-size').value  = saved.familySize;
-    if (saved.incomeMan)    document.getElementById('mp-income-man').value   = saved.incomeMan;
-    if (saved.careInfant)   document.getElementById('care-infant').checked   = saved.careInfant;
-    if (saved.careElderly)  document.getElementById('care-elderly').checked  = saved.careElderly;
-    if (saved.careDisabled) document.getElementById('care-disabled').checked = saved.careDisabled;
-    if (saved.employment)   document.getElementById('mp-employment').value   = saved.employment;
-    if (saved.household)    document.getElementById('mp-household').value    = saved.household;
-    updateSidebar();
-    updateIncomeHint();
-}
-loadProfile();
-function currentIncomePct() {
+            const saved = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            if (saved.age)          document.getElementById('mp-age').value         = saved.age;
+            if (saved.region)       document.getElementById('mp-region').value      = saved.region;
+            if (saved.familySize)   document.getElementById('mp-family-size').value = saved.familySize;
+            if (saved.incomeMan)    document.getElementById('mp-income-man').value  = saved.incomeMan;
+            if (saved.careInfant)   document.getElementById('care-infant').checked  = saved.careInfant;
+            if (saved.careElderly)  document.getElementById('care-elderly').checked = saved.careElderly;
+            if (saved.careDisabled) document.getElementById('care-disabled').checked= saved.careDisabled;
+            if (saved.employment)   document.getElementById('mp-employment').value  = saved.employment;
+            if (saved.household)    document.getElementById('mp-household').value   = saved.household;
+            updateSidebar();
+            updateIncomeHint();
+        }
+        loadProfile();
+
+        function currentIncomePct() {
             const size = document.getElementById('mp-family-size').value;
             const man  = document.getElementById('mp-income-man').value;
             if (man === '') return null;
@@ -504,33 +375,31 @@ function currentIncomePct() {
             };
             localStorage.setItem('userProfile', JSON.stringify(profile));
             fetch('/api/profile', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({
-        age: Number(age), region, family_size: Number(size),
-        income_man: Number(man), income_pct: pct,
-        income: incomeTierOf(pct),
-        care_infant:   document.getElementById('care-infant').checked,
-        care_elderly:  document.getElementById('care-elderly').checked,
-        care_disabled: document.getElementById('care-disabled').checked,
-        employment:    document.getElementById('mp-employment').value,
-        household:     document.getElementById('mp-household').value,
-    })
-}).then(async res => {
-    if (res.ok) {
-        updateSidebar();
-        alert('✅ 저장되었습니다! 정보 탐색 페이지와 챗봇에 반영됩니다.');
-    } else {
-        alert('⚠️ 서버 저장에 실패했습니다. 다시 시도해 주세요.');
-    }
-}).catch(e => {
-    console.error('프로필 DB 저장 실패:', e);
-    alert('⚠️ 저장 중 오류가 발생했습니다. 네트워크를 확인해 주세요.');
-});
-            
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    age: Number(age), region, family_size: Number(size),
+                    income_man: Number(man), income_pct: pct,
+                    income: incomeTierOf(pct),
+                    care_infant:   document.getElementById('care-infant').checked,
+                    care_elderly:  document.getElementById('care-elderly').checked,
+                    care_disabled: document.getElementById('care-disabled').checked,
+                    employment:    document.getElementById('mp-employment').value,
+                    household:     document.getElementById('mp-household').value,
+                })
+            }).then(async res => {
+                if (res.ok) {
+                    updateSidebar();
+                    alert('✅ 저장되었습니다! 정보 탐색 페이지와 챗봇에 반영됩니다.');
+                } else {
+                    alert('⚠️ 서버 저장에 실패했습니다. 다시 시도해 주세요.');
+                }
+            }).catch(e => {
+                console.error('프로필 DB 저장 실패:', e);
+                alert('⚠️ 저장 중 오류가 발생했습니다. 네트워크를 확인해 주세요.');
+            });
         }
-
 
         async function loadBookmarkedDocs() {
             const bookmarks = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
@@ -545,7 +414,7 @@ function currentIncomePct() {
             const isUrl = s => typeof s === 'string' && /^https?:\/\//.test(s);
             const bookmarked = allPolicies.filter(p => bookmarks.includes(p['정책_ID']) && hasDocs(p['제출_서류']));
             if (bookmarked.length === 0) {
-                container.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">찜한 정책중 제출 서류 정보가 있는 정책이 없습니다.</p>';
+                container.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;">찜한 정책 중 제출 서류 정보가 있는 정책이 없습니다.</p>';
                 return;
             }
             const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
@@ -565,11 +434,16 @@ function currentIncomePct() {
                         </div>
                     </div>
                     <div style="display:flex;flex-direction:column;gap:0.7rem;margin-bottom:1.2rem;">
-                        ${docs.map((doc, i) => `
+                        ${docs.map((doc, i) => {
+                            const iss = typeof docIssue === 'function' ? docIssue(doc) : null;
+                            const issueLink = iss ? `<a href="${iss.url}" target="_blank" style="font-size:0.74rem;font-weight:700;color:#0ea5e9;text-decoration:none;border:1px solid #bae6fd;border-radius:6px;padding:1px 7px;white-space:nowrap;margin-left:auto;">${iss.issuer} ↗</a>` : '';
+                            return `
                         <div style="display:flex;align-items:center;gap:0.7rem;">
                             <input type="checkbox" id="doc-${pid}-${i}" data-docname="${doc}" ${docChecks[`${pid}-${i}`] ? 'checked' : ''} onchange="saveDocCheck('${pid}', ${i}, ${docs.length}, this)" style="width:16px;height:16px;accent-color:#0ea5e9;flex-shrink:0;cursor:pointer;">
                             <label for="doc-${pid}-${i}" style="font-size:0.85rem;font-weight:600;color:#1e293b;cursor:pointer;${docChecks[`${pid}-${i}`] ? 'text-decoration:line-through;color:#94a3b8;' : ''}">${doc}</label>
-                        </div>`).join('')}
+                            ${issueLink}
+                        </div>`;
+                        }).join('')}
                     </div>
                     ${link !== '#' ? `<a href="${link}" target="_blank" class="btn-link">신청 페이지 바로가기 ↗</a>` : ''}
                 </div>`;
@@ -615,22 +489,19 @@ function currentIncomePct() {
         function applyCheck(cb, checked) {
             cb.checked = checked;
             const label = document.querySelector(`label[for="${cb.id}"]`);
-            if (label) {
-                label.style.textDecoration = checked ? 'line-through' : '';
-                label.style.color = checked ? '#94a3b8' : '#1e293b';
-            }
+            if (label) { label.style.textDecoration = checked ? 'line-through' : ''; label.style.color = checked ? '#94a3b8' : '#1e293b'; }
         }
 
         function saveDocCheck(policyId, docIdx, total, cb) {
             const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
             const docName = cb.dataset.docname;
             docChecks[`${policyId}-${docIdx}`] = cb.checked;
-            pushDocCheck(policyId, docIdx, cb.checked);   // 서버(계정)에 반영
+            pushDocCheck(policyId, docIdx, docName, cb.checked);
             document.querySelectorAll(`input[data-docname="${docName}"]`).forEach(other => {
                 if (other === cb) return;
                 const [, pid, idx] = other.id.match(/doc-(.+)-(\d+)$/);
                 docChecks[`${pid}-${idx}`] = cb.checked;
-                pushDocCheck(pid, parseInt(idx, 10), cb.checked);   // 동기화된 항목도 서버 반영
+                pushDocCheck(pid, parseInt(idx, 10), docName, cb.checked);
                 applyCheck(other, cb.checked);
                 const otherBoxes = document.querySelectorAll(`[id^="doc-${pid}-"]`);
                 const otherDone = [...otherBoxes].filter(c => c.checked).length;
@@ -646,8 +517,7 @@ function currentIncomePct() {
             const bar = document.getElementById(`prog-${policyId}`);
             if (bar) bar.style.width = pct + '%';
         }
-
     </script>
-<script src="chatbot.js"></script>
+    <script src="chatbot.js"></script>
 </body>
 </html>
