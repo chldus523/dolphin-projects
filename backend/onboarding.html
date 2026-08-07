@@ -466,8 +466,7 @@
                 careElderly:  document.getElementById('ob-care-elderly').checked,
                 careDisabled: document.getElementById('ob-care-disabled').checked,
             };
-            localStorage.setItem('userProfile', JSON.stringify(profile));
-            // DB에도 저장 후 이동
+            // DB 저장 후 성공 시 캐시 갱신 및 이동, 실패 시 알림
             fetch('/api/profile', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -486,9 +485,16 @@
                     household: profile.household,
                 })
             }).then(res => {
-                if (!res.ok) console.warn('온보딩 프로필 DB 저장 실패');
-            }).catch(e => console.error('온보딩 프로필 DB 저장 실패:', e))
-            .finally(() => { window.location.href = 'home.html'; });
+                if (res.ok) {
+                    localStorage.setItem('userProfile', JSON.stringify(profile));
+                    window.location.href = 'home.html';
+                } else {
+                    alert('⚠️ 프로필 저장에 실패했습니다. 다시 시도해 주세요.');
+                }
+            }).catch(e => {
+                console.error('온보딩 프로필 DB 저장 실패:', e);
+                alert('⚠️ 서버 연결에 실패했습니다. 네트워크를 확인해 주세요.');
+            });
         }
 
         function skipOnboarding() {

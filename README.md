@@ -123,11 +123,14 @@ CREATE TABLE IF NOT EXISTS policy_bookmarks (
 );
 
 CREATE TABLE IF NOT EXISTS document_checks (
-    userid VARCHAR(100) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userid VARCHAR(50) NOT NULL,
     policy_id VARCHAR(50) NOT NULL,
     doc_index INT NOT NULL,
-    checked TINYINT DEFAULT 0,
-    UNIQUE KEY uq_user_doc (userid, policy_id, doc_index)
+    doc_name VARCHAR(200) DEFAULT '',
+    checked TINYINT(1) DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_doc (userid, policy_id, doc_index)
 );
 
 INSERT INTO users (userid, password) VALUES ('test', '1234');
