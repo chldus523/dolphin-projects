@@ -421,7 +421,7 @@
             container.innerHTML = bookmarked.map(p => {
                 const pid = p['정책_ID'];
                 const docs = p['제출_서류'].split(',').map(d => d.trim()).filter(Boolean);
-                const done = docs.filter((_, i) => docChecks[`${pid}-${i}`]).length;
+                const done = docs.filter((doc, i) => docChecks[`${pid}-${doc}`] || docChecks[`${pid}-${i}`]).length;
                 const pct = docs.length ? Math.round((done / docs.length) * 100) : 0;
                 const link = isUrl(p['참조_링크']) ? p['참조_링크'] : '#';
                 return `
@@ -439,8 +439,8 @@
                             const issueLink = iss ? `<a href="${iss.url}" target="_blank" style="font-size:0.74rem;font-weight:700;color:#0ea5e9;text-decoration:none;border:1px solid #bae6fd;border-radius:6px;padding:1px 7px;white-space:nowrap;margin-left:auto;">${iss.issuer} ↗</a>` : '';
                             return `
                         <div style="display:flex;align-items:center;gap:0.7rem;">
-                            <input type="checkbox" id="doc-${pid}-${i}" data-docname="${doc}" ${docChecks[`${pid}-${i}`] ? 'checked' : ''} onchange="saveDocCheck('${pid}', ${i}, ${docs.length}, this)" style="width:16px;height:16px;accent-color:#0ea5e9;flex-shrink:0;cursor:pointer;">
-                            <label for="doc-${pid}-${i}" style="font-size:0.85rem;font-weight:600;color:#1e293b;cursor:pointer;${docChecks[`${pid}-${i}`] ? 'text-decoration:line-through;color:#94a3b8;' : ''}">${doc}</label>
+                            <input type="checkbox" id="doc-${pid}-${i}" data-docname="${doc}" ${(docChecks[`${pid}-${doc}`] || docChecks[`${pid}-${i}`]) ? 'checked' : ''} onchange="saveDocCheck('${pid}', ${i}, ${docs.length}, this)" style="width:16px;height:16px;accent-color:#0ea5e9;flex-shrink:0;cursor:pointer;">
+                            <label for="doc-${pid}-${i}" style="font-size:0.85rem;font-weight:600;color:#1e293b;cursor:pointer;${(docChecks[`${pid}-${i}`] || docChecks[`${pid}-${doc}`]) ? 'text-decoration:line-through;color:#94a3b8;' : ''}">${doc}</label>
                             ${issueLink}
                         </div>`;
                         }).join('')}
@@ -496,6 +496,7 @@
             const docChecks = JSON.parse(localStorage.getItem('docChecks') || '{}');
             const docName = cb.dataset.docname;
             docChecks[`${policyId}-${docIdx}`] = cb.checked;
+            docChecks[`${policyId}-${docName}`] = cb.checked;
             pushDocCheck(policyId, docIdx, docName, cb.checked);
             document.querySelectorAll(`input[data-docname="${docName}"]`).forEach(other => {
                 if (other === cb) return;

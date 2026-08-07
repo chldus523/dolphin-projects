@@ -75,7 +75,6 @@
                     // 아래 localStorage 값은 화면 표시·본인 글 판별용 UI 미러일 뿐이며,
                     // 서버는 이 값을 신뢰하지 않습니다. (community/mypage/explore 등이 이 값을 읽음)
                     localStorage.setItem('userid', userid);
-                    localStorage.setItem('userid', userid);
 // 로그인 후 DB에서 프로필 불러와서 localStorage 갱신
 fetch('/api/profile', { credentials: 'include' })
     .then(r => r.json())
@@ -93,7 +92,6 @@ fetch('/api/profile', { credentials: 'include' })
     })
     .catch(() => {})
     .finally(() => { window.location.href = 'home.html'; });
-                    window.location.href = 'home.html';
                 } else {
                     alert(result.message);
                 }
