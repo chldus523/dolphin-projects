@@ -35,6 +35,8 @@ const sessionStore = new MySQLStore({
     expiration: 86400000,
 });
 
+app.set('trust proxy', 1);
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'dolgorae-secret-key',
     resave: false,
@@ -42,8 +44,8 @@ app.use(session({
     store: sessionStore,
     cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: true,
+        sameSite: 'none',
         maxAge: 1000 * 60 * 60 * 24
     }
 }));
