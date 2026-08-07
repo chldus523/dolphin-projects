@@ -428,7 +428,8 @@
                 <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:1.4rem 1.6rem;">
                     <div style="font-size:0.9rem;font-weight:700;color:#0369a1;margin-bottom:0.6rem;">📌 ${p['정책명']}</div>
                     <div style="margin-bottom:1rem;">
-                        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:#64748b;margin-bottom:4px;"><span>준비 현황</span><span>${done} / ${docs.length}</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:#64748b;margin-bottom:4px;"><span>준비 현황</span>
+                            <span id="prog-label-${pid}">${done} / ${docs.length}</span>
                         <div style="background:#e2e8f0;border-radius:10px;height:6px;overflow:hidden;">
                             <div id="prog-${pid}" style="height:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border-radius:10px;width:${pct}%;transition:width 0.4s;"></div>
                         </div>
@@ -506,6 +507,8 @@
     const pct = Math.round((done / total) * 100);
     const bar = document.getElementById(`prog-${policyId}`);
     if (bar) bar.style.width = pct + '%';
+    const progLabel = document.getElementById(`prog-label-${policyId}`);
+    if (progLabel) progLabel.textContent = `${done} / ${total}`;
 }
     </script>
     <script src="chatbot.js"></script>
