@@ -68,7 +68,7 @@ var DOC_CATALOG = [
     // 장애인등록증·복지카드는 주민센터 방문 신청 — 정부24 안내 페이지로 연결
     { keywords: ['장애인등록증', '장애인 증명', '장애인증명', '복지카드'],
       issuer: '정부24 안내',
-      url: 'https://www.gov.kr/portal/service/serviceInfo/selectServicePage.do?svcCode=SVC_1425' },
+      url: 'https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=14600000110&tp_seq=01' },
 
     { keywords: ['한부모가족 증명', '한부모가족증명'],
       issuer: '정부24',
