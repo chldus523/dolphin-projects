@@ -498,18 +498,6 @@
             docChecks[`${policyId}-${docIdx}`] = cb.checked;
             docChecks[`${policyId}-${docName}`] = cb.checked;
             pushDocCheck(policyId, docIdx, docName, cb.checked);
-            document.querySelectorAll(`input[data-docname="${docName}"]`).forEach(other => {
-                if (other === cb) return;
-                const [, pid, idx] = other.id.match(/doc-(.+)-(\d+)$/);
-                docChecks[`${pid}-${idx}`] = cb.checked;
-                pushDocCheck(pid, parseInt(idx, 10), docName, cb.checked);
-                applyCheck(other, cb.checked);
-                const otherBoxes = document.querySelectorAll(`[id^="doc-${pid}-"]`);
-                const otherDone = [...otherBoxes].filter(c => c.checked).length;
-                const otherPct = Math.round((otherDone / otherBoxes.length) * 100);
-                const otherBar = document.getElementById(`prog-${pid}`);
-                if (otherBar) otherBar.style.width = otherPct + '%';
-            });
             localStorage.setItem('docChecks', JSON.stringify(docChecks));
             applyCheck(cb, cb.checked);
             const checkboxes = document.querySelectorAll(`[id^="doc-${policyId}-"]`);
