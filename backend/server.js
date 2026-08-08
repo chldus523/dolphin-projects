@@ -246,6 +246,13 @@ ${policyText}
 `.trim();
 }
 
+// 외국어 감지 함수 (전역)
+function hasForeignChars(text) {
+    const cjk = text.match(/[\u3040-\u30ff\u4e00-\u9fff]/g) || [];
+    const russian = text.match(/[\u0400-\u04ff]/g) || [];
+    return (cjk.length + russian.length) > 1;
+}
+
 app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
 
 app.post('/register', async (req, res) => {
@@ -396,36 +403,26 @@ app.post('/chat', async (req, res) => {
         });
         const rawReply = completion.choices[0]?.message?.content ?? '답변을 가져오지 못했어요.';
 
-// 외국어 감지 후처리
-function hasForeignChars(text) {
-    // 한자, 일본어, 러시아어 감지 (영어 소문자는 URL 등에 허용)
-    const cjk = text.match(/[\u3040-\u30ff\u4e00-\u9fff]/g) || [];
-    const russian = text.match(/[\u0400-\u04ff]/g) || [];
-    const foreign = cjk.length + russian.length;
-    return foreign > 1;
-}
+        let reply = rawReply;
+        if (hasForeignChars(rawReply)) {
+            console.log('[외국어 감지] 재시도...');
+            try {
+                const retry = await groq.chat.completions.create({
+                    model: CHAT_MODEL,
+                    messages: [
+                        { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) + '\n\n[경고] 방금 외국어가 섞인 답변이 감지됐습니다. 반드시 순수 한국어로만 답변하세요.' },
+                        ...messages.slice(-20)
+                    ],
+                    temperature: 0.1,
+                    max_tokens: 1024,
+                });
+                reply = retry.choices[0]?.message?.content ?? rawReply;
+            } catch (e) {
+                reply = rawReply;
+            }
+        }
 
-let reply = rawReply;
-if (hasForeignChars(rawReply)) {
-    console.log('[외국어 감지] 재시도...');
-    try {
-        const retry = await groq.chat.completions.create({
-            model: CHAT_MODEL,
-            messages: [
-                { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) + '\n\n[경고] 방금 외국어가 섞인 답변이 감지됐습니다. 반드시 순수 한국어로만 답변하세요.' },
-                ...messages.slice(-20)
-            ],
-            temperature: 0.1,
-            content: buildSystemPrompt(filteredPolicies, profile) + '\n\n[절대 규칙] 한국어만 사용. 한자·일본어·러시아어 1글자도 금지. 위반 시 답변 무효.'
-            max_tokens: 1024,
-        });
-        reply = retry.choices[0]?.message?.content ?? rawReply;
-    } catch (e) {
-        reply = rawReply;
-    }
-}
-
-res.json({ reply });
+        res.json({ reply });
     } catch (error) {
         console.error('[Groq API Error]', error.message);
         if (error.status === 413 || (error.message && error.message.includes('too large'))) {
