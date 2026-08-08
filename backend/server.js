@@ -391,16 +391,18 @@ app.post('/chat', async (req, res) => {
                 { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) },
                 ...messages.slice(-20)
             ],
-            temperature: 0.1,
+            temperature: 0.6,
             max_tokens: 1024,
         });
         const rawReply = completion.choices[0]?.message?.content ?? '답변을 가져오지 못했어요.';
 
 // 외국어 감지 후처리
 function hasForeignChars(text) {
-    const foreign = text.match(/[\u3040-\u30ff\u4e00-\u9fff\u0400-\u04ff\u0041-\u007a]/g) || [];
-    const korean = text.match(/[\uac00-\ud7a3]/g) || [];
-    return foreign.length > 2 && foreign.length > korean.length * 0.03;
+    // 한자, 일본어, 러시아어 감지 (영어 소문자는 URL 등에 허용)
+    const cjk = text.match(/[\u3040-\u30ff\u4e00-\u9fff]/g) || [];
+    const russian = text.match(/[\u0400-\u04ff]/g) || [];
+    const foreign = cjk.length + russian.length;
+    return foreign > 1;
 }
 
 let reply = rawReply;
@@ -414,6 +416,7 @@ if (hasForeignChars(rawReply)) {
                 ...messages.slice(-20)
             ],
             temperature: 0.1,
+            content: buildSystemPrompt(filteredPolicies, profile) + '\n\n[절대 규칙] 한국어만 사용. 한자·일본어·러시아어 1글자도 금지. 위반 시 답변 무효.'
             max_tokens: 1024,
         });
         reply = retry.choices[0]?.message?.content ?? rawReply;
