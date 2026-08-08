@@ -391,7 +391,7 @@ app.post('/chat', async (req, res) => {
                 { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) },
                 ...messages.slice(-20)
             ],
-            temperature: 0.6,
+            temperature: 0.1,
             max_tokens: 1024,
         });
         const rawReply = completion.choices[0]?.message?.content ?? '답변을 가져오지 못했어요.';
@@ -400,7 +400,7 @@ app.post('/chat', async (req, res) => {
 function hasForeignChars(text) {
     const foreign = text.match(/[\u3040-\u30ff\u4e00-\u9fff\u0400-\u04ff\u0041-\u007a]/g) || [];
     const korean = text.match(/[\uac00-\ud7a3]/g) || [];
-    return foreign.length > 5 && foreign.length > korean.length * 0.1;
+    return foreign.length > 2 && foreign.length > korean.length * 0.03;
 }
 
 let reply = rawReply;
@@ -413,7 +413,7 @@ if (hasForeignChars(rawReply)) {
                 { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) + '\n\n[경고] 방금 외국어가 섞인 답변이 감지됐습니다. 반드시 순수 한국어로만 답변하세요.' },
                 ...messages.slice(-20)
             ],
-            temperature: 0.3,
+            temperature: 0.1,
             max_tokens: 1024,
         });
         reply = retry.choices[0]?.message?.content ?? rawReply;
