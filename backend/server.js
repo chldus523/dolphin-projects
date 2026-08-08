@@ -394,8 +394,35 @@ app.post('/chat', async (req, res) => {
             temperature: 0.6,
             max_tokens: 1024,
         });
-        const reply = completion.choices[0]?.message?.content ?? '답변을 가져오지 못했어요.';
-        res.json({ reply });
+        const rawReply = completion.choices[0]?.message?.content ?? '답변을 가져오지 못했어요.';
+
+// 외국어 감지 후처리
+function hasForeignChars(text) {
+    const foreign = text.match(/[\u3040-\u30ff\u4e00-\u9fff\u0400-\u04ff\u0041-\u007a]/g) || [];
+    const korean = text.match(/[\uac00-\ud7a3]/g) || [];
+    return foreign.length > 5 && foreign.length > korean.length * 0.1;
+}
+
+let reply = rawReply;
+if (hasForeignChars(rawReply)) {
+    console.log('[외국어 감지] 재시도...');
+    try {
+        const retry = await groq.chat.completions.create({
+            model: CHAT_MODEL,
+            messages: [
+                { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) + '\n\n[경고] 방금 외국어가 섞인 답변이 감지됐습니다. 반드시 순수 한국어로만 답변하세요.' },
+                ...messages.slice(-20)
+            ],
+            temperature: 0.3,
+            max_tokens: 1024,
+        });
+        reply = retry.choices[0]?.message?.content ?? rawReply;
+    } catch (e) {
+        reply = rawReply;
+    }
+}
+
+res.json({ reply });
     } catch (error) {
         console.error('[Groq API Error]', error.message);
         if (error.status === 413 || (error.message && error.message.includes('too large'))) {
