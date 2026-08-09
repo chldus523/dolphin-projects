@@ -229,8 +229,10 @@
                             <div id="guide-prog-bar" style="height:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border-radius:10px;width:0%;transition:width 0.4s;"></div>
                         </div>
                     </div>
+                    <div id="guide-content">
                     <div id="guide-checklist" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.2rem;min-height:120px;"></div>
                     <a id="guide-apply-link" href="#" target="_blank" class="btn-doc-link" style="display:block;text-align:center;">신청 페이지 바로가기 ↗</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -552,9 +554,31 @@
         window.addEventListener('load', async () => {
             await pullUserData();
             bookmarks = JSON.parse(localStorage.getItem('bookmarkedPolicies') || '[]');
-            loadPolicies().then(() => { buildGuideData(); syncSidebarTop(); });
+            loadPolicies().then(() => { buildGuideData(); syncSidebarTop(); initGuideToggle(); });
         });
         window.addEventListener('resize', syncSidebarTop);
+
+        function toggleGuide() {
+            const isMobile = window.innerWidth <= 820;
+            if (!isMobile) return;
+            const content = document.getElementById('guide-content');
+            const icon = document.getElementById('guide-toggle-icon');
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? '' : 'none';
+            icon.textContent = isHidden ? '▲' : '▼';
+        }
+        function initGuideToggle() {
+            const content = document.getElementById('guide-content');
+            const icon = document.getElementById('guide-toggle-icon');
+            if (window.innerWidth <= 820) {
+                if (content) content.style.display = 'none';
+                if (icon) icon.textContent = '▼';
+            } else {
+                if (content) content.style.display = '';
+                if (icon) icon.textContent = '▲';
+            }
+        }
+        window.addEventListener('resize', initGuideToggle);
     </script>
 <script src="chatbot.js"></script>
 </body>
