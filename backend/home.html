@@ -214,5 +214,16 @@
         }
     </script>
     <script src="chatbot.js"></script>
-    </body>
+    <script src="survey-banner.js"></script>
+<script>
+    window.addEventListener('load', () => {
+        if (localStorage.getItem('show_survey_onboarding') === 'true') {
+            localStorage.removeItem('show_survey_onboarding');
+            setTimeout(() => {
+                SurveyBanner.show('onboarding', 'https://forms.gle/efadc4Ja7qNmK5uC6');
+            }, 1500);
+        }
+    });
+</script>
+</body>
 </html>

@@ -112,6 +112,12 @@
         wrap.appendChild(bubble);
         widgetChat.appendChild(wrap);
         widgetChat.scrollTop = widgetChat.scrollHeight;
+        // 봇 답변 후 피드백 버튼
+        if (role === 'bot' && typeof SurveyBanner !== 'undefined') {
+            setTimeout(() => {
+                SurveyBanner.showChatFeedback(bubble, 'https://forms.gle/nXgSB9fxkDQmM3mY8');
+            }, 500);
+        }
     }
 
     function addMsg(role, text) {

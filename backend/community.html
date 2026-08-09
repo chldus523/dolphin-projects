@@ -425,6 +425,17 @@ if (content.length < 10 || content.length > 2000) { alert('본문은 10자 이�
         syncSidebarTop();
         window.addEventListener('resize', syncSidebarTop);
     </script>
+    <script src="survey-banner.js"></script>
+<script>
+    // 커뮤니티: 게시글 열람 후 배너 노출
+    const _origOpenPost = window.openPost;
+    window.openPost = function(...args) {
+        if (_origOpenPost) _origOpenPost(...args);
+        setTimeout(() => {
+            SurveyBanner.show('community', 'https://forms.gle/HZ8zeVBMAX74mEGW8');
+        }, 3000);
+    };
+</script>
     <script src="chatbot.js"></script>
 </body>
 </html>
