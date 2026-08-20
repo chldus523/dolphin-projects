@@ -22,7 +22,6 @@ const SurveyBanner = (() => {
         const status = getStatus();
         const s = status[type];
         if (!s) return true;
-        if (s.completed) return false;
         if (s.hiddenUntil && Date.now() < s.hiddenUntil) return false;
         return true;
     }
