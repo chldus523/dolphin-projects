@@ -399,7 +399,7 @@ app.post('/chat', async (req, res) => {
                 ...messages.slice(-20)
             ],
             temperature: 0.6,
-            max_tokens: 1024,
+            max_tokens: 2048,
         });
         const rawReply = completion.choices[0]?.message?.content ?? '답변을 가져오지 못했어요.';
 
