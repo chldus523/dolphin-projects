@@ -68,7 +68,7 @@ db.getConnection((err, connection) => {
 });
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-const CHAT_MODEL = 'llama-3.1-8b-instant';
+const CHAT_MODEL = 'openai/gpt-oss-120b';
 
 let POLICIES = [];
 try {
