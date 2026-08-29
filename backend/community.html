@@ -159,6 +159,7 @@
             <div class="feed-container" id="feed-container">
                 <div class="no-posts">불러오는 중...</div>
             </div>
+            <div id="pagination" style="display:flex;justify-content:center;margin-top:1.5rem;"></div>
         </section>
     </main>
 
@@ -253,36 +254,51 @@
             return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
         }
 
-        let scrapped = JSON.parse(localStorage.getItem('scrappedPosts') || '[]');
-        function updateScrapCount() { document.getElementById('scrap-count').textContent = scrapped.length; }
-        function toggleScrap(id, btn) {
-            const idx = scrapped.indexOf(id);
-            if (idx === -1) { scrapped.push(id); btn.textContent = '⭐ 스크랩 취소'; btn.classList.add('scrapped'); }
-            else { scrapped.splice(idx, 1); btn.textContent = '⭐ 스크랩'; btn.classList.remove('scrapped'); }
-            localStorage.setItem('scrappedPosts', JSON.stringify(scrapped));
-            updateScrapCount();
-        }
-        // ⚠️ 임시 조치: 브라우저(localStorage) 기준으로만 중복 클릭을 막습니다.
-        // 계정 기준으로 정확히 막으려면 서버에 좋아요 이력 테이블을 추가해야 합니다 (다음 단계 예정).
-        let likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
-        async function likePost(id, btn) {
-            if (likedPosts.includes(id)) return;
+        // 스크랩도 서버(post_scraps)로 관리. 버튼 클릭 시 서버에 반영하고, 성공하면 UI를 갱신한다.
+        async function toggleScrap(id, btn) {
+            const isScrapped = btn.classList.contains('scrapped');
             btn.disabled = true;
-            await fetch(`/posts/${id}/like`, { method: 'POST' });
-            const count = parseInt(btn.dataset.count) + 1;
-            btn.dataset.count = count;
-            btn.textContent = `👍 ${count}`;
-            likedPosts.push(id);
-            localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+            try {
+                const res = await fetch(`/posts/${id}/scrap`, {
+                    method: isScrapped ? 'DELETE' : 'POST',
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (!data.success) { alert(data.error || '스크랩 처리에 실패했습니다.'); return; }
+                if (data.scrapped) { btn.textContent = '⭐ 스크랩 취소'; btn.classList.add('scrapped'); }
+                else { btn.textContent = '⭐ 스크랩'; btn.classList.remove('scrapped'); }
+            } catch (e) {
+                alert('네트워크 오류로 스크랩 처리에 실패했습니다.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+        // ⚠️ 이제 좋아요/스크랩 상태는 서버(post_likes, post_scraps 테이블)에서 계정 단위로 관리됩니다.
+        // localStorage는 더 이상 사용하지 않아요 (다른 브라우저/기기에서도 동일하게 보이도록).
+        async function likePost(id, btn) {
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/posts/${id}/like`, { method: 'POST', credentials: 'include' });
+                const data = await res.json();
+                if (!data.success) { btn.disabled = false; alert(data.error || '좋아요에 실패했습니다.'); return; }
+                if (!data.alreadyLiked) {
+                    const count = parseInt(btn.dataset.count) + 1;
+                    btn.dataset.count = count;
+                    btn.textContent = `👍 ${count}`;
+                }
+                btn.style.opacity = '0.55';
+                btn.style.cursor = 'not-allowed';
+            } catch (e) {
+                btn.disabled = false;
+                alert('네트워크 오류로 좋아요에 실패했습니다.');
+            }
         }
         async function deletePost(postId) {
             if (!confirm('이 글을 삭제할까요?')) return;
             const res = await fetch(`/posts/${postId}`, { method: 'DELETE', credentials: 'include' });
             const data = await res.json();
             if (data.success) {
-                scrapped = scrapped.filter(id => id !== postId);
-                localStorage.setItem('scrappedPosts', JSON.stringify(scrapped));
-                updateScrapCount();
+                // post_likes/post_scraps는 FK ON DELETE CASCADE라 DB에서 자동으로 같이 정리된다.
                 document.getElementById(`post-${postId}`)?.remove();
             } else { alert(data.error || '삭제에 실패했습니다.'); }
         }
@@ -322,9 +338,17 @@
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:2px;">
                         <span style="font-size:0.82rem;font-weight:700;color:#0f172a;">${escapeHtml(c.userid)}</span>
                         <span style="font-size:0.72rem;color:#94a3b8;">${timeAgo(c.created_at)}</span>
+                        ${c.userid === loggedInUser ? `<button onclick="deleteComment(${c.id}, ${postId})" style="margin-left:auto;background:none;border:none;color:#cbd5e1;font-size:0.78rem;cursor:pointer;font-family:'Pretendard',sans-serif;">삭제</button>` : ''}
                     </div>
                     <p style="font-size:0.85rem;color:#334155;line-height:1.5;">${escapeHtml(c.content)}</p>
                 </div>`).join('');
+        }
+        async function deleteComment(commentId, postId) {
+            if (!confirm('이 댓글을 삭제할까요?')) return;
+            const res = await fetch(`/comments/${commentId}`, { method: 'DELETE', credentials: 'include' });
+            const data = await res.json();
+            if (data.success) { loadComments(postId); }
+            else { alert(data.error || '댓글 삭제에 실패했습니다.'); }
         }
         async function submitComment(postId) {
             const input = document.getElementById(`comment-input-${postId}`);
@@ -348,7 +372,8 @@
             container.innerHTML = posts.map(p => {
                 const cs = CAT_STYLE[p.category] || { color: '#475569', bg: '#f1f5f9' };
                 const emoji = CAT_EMOJI[p.category] || '';
-                const isScrapped = scrapped.includes(p.id);
+                const isScrapped = !!p.scrapped;
+                const isLiked = !!p.liked;
                 return `
                 <div class="feed-item" id="post-${p.id}">
                     <div class="feed-top">
@@ -366,7 +391,7 @@
                     <div class="feed-bottom">
                         <div class="feed-stats">
                             <span class="stat-item">
-                                <button onclick="event.stopPropagation(); likePost(${p.id}, this)" data-count="${p.likes}" ${likedPosts.includes(p.id) ? 'disabled' : ''} style="background:none;border:none;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;${likedPosts.includes(p.id) ? 'cursor:not-allowed;opacity:0.55;' : 'cursor:pointer;'}">👍 ${p.likes}</button>
+                                <button onclick="event.stopPropagation(); likePost(${p.id}, this)" data-count="${p.likes}" ${isLiked ? 'disabled' : ''} style="background:none;border:none;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;${isLiked ? 'cursor:not-allowed;opacity:0.55;' : 'cursor:pointer;'}">👍 ${p.likes}</button>
                             </span>
                             <span class="stat-item">
                                 <button id="cbtn-${p.id}" onclick="event.stopPropagation(); toggleThread(${p.id})" data-count="${p.comment_count || 0}" style="background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(p.comment_count)}">${commentBtnLabel(p.comment_count)}</button>
@@ -374,7 +399,7 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:0.5rem;">
                             ${p.userid === loggedInUser ? `<button onclick="deletePost(${p.id})" style="background:none;border:1px solid #fecaca;color:#ef4444;border-radius:8px;padding:0.35rem 0.7rem;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'Pretendard',sans-serif;">🗑️ 삭제</button>` : ''}
-                            <button class="btn-scrap ${isScrapped ? 'scrapped' : ''}" onclick="toggleScrap(${p.id}, this)">${isScrapped ? '⭐ 스크랩 취소' : '⭐ 스크랩'}</button>
+                            <button class="btn-scrap ${isScrapped ? 'scrapped' : ''}" onclick="event.stopPropagation(); toggleScrap(${p.id}, this)">${isScrapped ? '⭐ 스크랩 취소' : '⭐ 스크랩'}</button>
                         </div>
                     </div>
                     <div class="comment-section" id="comments-${p.id}" style="display:none;border-top:1px solid #e2e8f0;margin-top:0.8rem;padding-top:0.9rem;">
@@ -388,31 +413,58 @@
             }).join('');
         }
         let currentCategory = '전체';
-        async function loadPosts() {
+        let currentPage = 1;
+        const PAGE_SIZE = 10;
+        async function loadPosts(page = 1) {
+            currentPage = page;
             const search = document.getElementById('search-input').value.trim();
             const params = new URLSearchParams();
             if (currentCategory !== '전체') params.append('category', currentCategory);
             if (search) params.append('search', search);
-            const res = await fetch(`/posts?${params.toString()}`);
-            const posts = await res.json();
-            renderPosts(posts);
+            params.append('page', page);
+            params.append('pageSize', PAGE_SIZE);
+            const res = await fetch(`/posts?${params.toString()}`, { credentials: 'include' });
+            const data = await res.json();
+            renderPosts(data.posts);
+            renderPagination(data);
+            updateScrapCount(data.posts);
+        }
+        function renderPagination({ page, totalPages }) {
+            const el = document.getElementById('pagination');
+            if (!el) return;
+            if (totalPages <= 1) { el.innerHTML = ''; return; }
+            let html = '';
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button onclick="loadPosts(${i})" style="min-width:32px;padding:0.4rem 0.6rem;margin:0 3px;border-radius:8px;border:1.5px solid ${i === page ? '#0ea5e9' : '#e2e8f0'};background:${i === page ? '#0ea5e9' : '#fff'};color:${i === page ? '#fff' : '#475569'};font-weight:700;font-size:0.85rem;cursor:pointer;font-family:'Pretendard',sans-serif;">${i}</button>`;
+            }
+            el.innerHTML = html;
         }
         function selectCategory(cat, el) {
             document.querySelectorAll('.category-item').forEach(li => li.classList.remove('active'));
             el.classList.add('active');
             currentCategory = cat;
             document.getElementById('search-input').value = '';
-            loadPosts();
+            loadPosts(1);
+        }
+        // 스크랩 개수는 이제 서버가 내려주는 scrapped 값 기준으로 센다 (전체 글 기준으로 다시 계산).
+        function updateScrapCount(loadedPosts) {
+            const count = loadedPosts ? loadedPosts.filter(p => p.scrapped).length : null;
+            if (count !== null && currentCategory === '전체') {
+                document.getElementById('scrap-count').textContent = count;
+            }
         }
         async function showScrapped(el) {
             document.querySelectorAll('.category-item').forEach(li => li.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('search-input').value = '';
+            document.getElementById('pagination').innerHTML = '';
             const feed = document.getElementById('feed-container');
-            if (scrapped.length === 0) { feed.innerHTML = '<div class="no-posts">⭐ 스크랩한 글이 없습니다.</div>'; return; }
-            const res = await fetch('/posts');
-            const all = await res.json();
-            renderPosts(all.filter(p => scrapped.includes(p.id)));
+            const res = await fetch('/posts?pageSize=1000', { credentials: 'include' });
+            const data = await res.json();
+            const scrappedPosts = data.posts.filter(p => p.scrapped);
+            document.getElementById('scrap-count').textContent = scrappedPosts.length;
+            if (scrappedPosts.length === 0) { feed.innerHTML = '<div class="no-posts">⭐ 스크랩한 글이 없습니다.</div>'; return; }
+            renderPosts(scrappedPosts);
         }
         document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') loadPosts(); });
         function openModal() { document.getElementById('writeModal').classList.add('open'); }
@@ -430,7 +482,6 @@ if (content.length < 10 || content.length > 2000) { alert('본문은 10자 이�
             if (data.success) { closeModal(); loadPosts(); }
             else { alert(data.error || '게시글 저장에 실패했습니다.'); }
         }
-        updateScrapCount();
         loadPosts().then(() => {
             const targetId = new URLSearchParams(window.location.search).get('post');
             if (targetId) {

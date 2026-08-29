@@ -381,16 +381,39 @@ app.get('/api/policies', (req, res) => { res.json(POLICIES); });
 
 app.get('/posts', (req, res) => {
     const { category, search } = req.query;
-    let query = `SELECT p.*, COUNT(c.id) AS comment_count FROM posts p LEFT JOIN comments c ON c.post_id = p.id`;
-    const params = [];
+    const userid = req.session.userid || null;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const pageSize = Math.min(Math.max(parseInt(req.query.pageSize) || 10, 1), 100);
+    const offset = (page - 1) * pageSize;
+
     const conditions = [];
-    if (category && category !== '전체') { conditions.push('p.category = ?'); params.push(category); }
-    if (search) { conditions.push('(p.title LIKE ? OR p.content LIKE ?)'); params.push(`%${search}%`, `%${search}%`); }
-    if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
-    query += ' GROUP BY p.id ORDER BY p.created_at DESC';
-    db.query(query, params, (err, results) => {
-        if (err) return res.status(500).json({ error: '조회 실패' });
-        res.json(results);
+    const whereParams = [];
+    if (category && category !== '전체') { conditions.push('p.category = ?'); whereParams.push(category); }
+    if (search) { conditions.push('(p.title LIKE ? OR p.content LIKE ?)'); whereParams.push(`%${search}%`, `%${search}%`); }
+    const whereClause = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
+
+    // 전체 개수 (페이지네이션 UI용)
+    db.query(`SELECT COUNT(*) AS total FROM posts p${whereClause}`, whereParams, (countErr, countRows) => {
+        if (countErr) return res.status(500).json({ error: '조회 실패' });
+        const totalCount = countRows[0].total;
+
+        let query = `
+            SELECT p.*, COUNT(DISTINCT c.id) AS comment_count,
+                ${userid ? 'MAX(pl.userid IS NOT NULL) AS liked, MAX(ps.userid IS NOT NULL) AS scrapped' : '0 AS liked, 0 AS scrapped'}
+            FROM posts p
+            LEFT JOIN comments c ON c.post_id = p.id
+            ${userid ? 'LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.userid = ?' : ''}
+            ${userid ? 'LEFT JOIN post_scraps ps ON ps.post_id = p.id AND ps.userid = ?' : ''}
+            ${whereClause}
+            GROUP BY p.id ORDER BY p.created_at DESC
+            LIMIT ? OFFSET ?
+        `;
+        const params = [...(userid ? [userid, userid] : []), ...whereParams, pageSize, offset];
+        db.query(query, params, (err, results) => {
+            if (err) return res.status(500).json({ error: '조회 실패' });
+            const posts = results.map(r => ({ ...r, liked: !!r.liked, scrapped: !!r.scrapped }));
+            res.json({ posts, page, pageSize, totalCount, totalPages: Math.max(Math.ceil(totalCount / pageSize), 1) });
+        });
     });
 });
 
@@ -423,10 +446,57 @@ app.delete('/posts/:id', (req, res) => {
     });
 });
 
+// 계정 단위 좋아요: post_likes에 (userid, post_id) 조합이 PK라서 같은 사람이 두 번 못 누른다.
 app.post('/posts/:id/like', (req, res) => {
-    db.query('UPDATE posts SET likes = likes + 1 WHERE id = ?', [req.params.id], (err) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
+    const postId = req.params.id;
+    db.query('INSERT IGNORE INTO post_likes (userid, post_id) VALUES (?, ?)', [userid, postId], (err, result) => {
         if (err) return res.status(500).json({ error: '좋아요 실패' });
-        res.json({ success: true });
+        if (result.affectedRows === 0) {
+            // 이미 좋아요를 누른 상태 (중복 요청) → 카운트는 그대로 두고 현재 상태만 알려준다.
+            return res.json({ success: true, liked: true, alreadyLiked: true });
+        }
+        db.query('UPDATE posts SET likes = likes + 1 WHERE id = ?', [postId], (err2) => {
+            if (err2) return res.status(500).json({ error: '좋아요 실패' });
+            res.json({ success: true, liked: true });
+        });
+    });
+});
+
+// 좋아요 취소
+app.delete('/posts/:id/like', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
+    const postId = req.params.id;
+    db.query('DELETE FROM post_likes WHERE userid = ? AND post_id = ?', [userid, postId], (err, result) => {
+        if (err) return res.status(500).json({ error: '좋아요 취소 실패' });
+        if (result.affectedRows === 0) {
+            return res.json({ success: true, liked: false, wasNotLiked: true });
+        }
+        db.query('UPDATE posts SET likes = GREATEST(likes - 1, 0) WHERE id = ?', [postId], (err2) => {
+            if (err2) return res.status(500).json({ error: '좋아요 취소 실패' });
+            res.json({ success: true, liked: false });
+        });
+    });
+});
+
+// 계정 단위 스크랩 (기존 localStorage 방식 대체)
+app.post('/posts/:id/scrap', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
+    db.query('INSERT IGNORE INTO post_scraps (userid, post_id) VALUES (?, ?)', [userid, req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: '스크랩 실패' });
+        res.json({ success: true, scrapped: true });
+    });
+});
+
+app.delete('/posts/:id/scrap', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
+    db.query('DELETE FROM post_scraps WHERE userid = ? AND post_id = ?', [userid, req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: '스크랩 취소 실패' });
+        res.json({ success: true, scrapped: false });
     });
 });
 
@@ -446,6 +516,21 @@ app.post('/posts/:id/comments', (req, res) => {
     db.query('INSERT INTO comments (post_id, userid, content) VALUES (?, ?, ?)', [req.params.id, userid, content], (err, result) => {
         if (err) return res.status(500).json({ error: '댓글 작성 실패' });
         res.json({ success: true, id: result.insertId });
+    });
+});
+
+// 본인 댓글만 삭제 가능
+app.delete('/comments/:id', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
+    db.query('SELECT userid, post_id FROM comments WHERE id = ?', [req.params.id], (err, rows) => {
+        if (err) return res.status(500).json({ error: '삭제 실패' });
+        if (rows.length === 0) return res.status(404).json({ error: '댓글을 찾을 수 없습니다.' });
+        if (rows[0].userid !== userid) return res.status(403).json({ error: '본인이 작성한 댓글만 삭제할 수 있습니다.' });
+        db.query('DELETE FROM comments WHERE id = ?', [req.params.id], (err2) => {
+            if (err2) return res.status(500).json({ error: '삭제 실패' });
+            res.json({ success: true, postId: rows[0].post_id });
+        });
     });
 });
 
