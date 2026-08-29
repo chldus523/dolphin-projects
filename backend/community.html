@@ -262,12 +262,18 @@
             localStorage.setItem('scrappedPosts', JSON.stringify(scrapped));
             updateScrapCount();
         }
+        // ⚠️ 임시 조치: 브라우저(localStorage) 기준으로만 중복 클릭을 막습니다.
+        // 계정 기준으로 정확히 막으려면 서버에 좋아요 이력 테이블을 추가해야 합니다 (다음 단계 예정).
+        let likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
         async function likePost(id, btn) {
+            if (likedPosts.includes(id)) return;
             btn.disabled = true;
             await fetch(`/posts/${id}/like`, { method: 'POST' });
             const count = parseInt(btn.dataset.count) + 1;
             btn.dataset.count = count;
             btn.textContent = `👍 ${count}`;
+            likedPosts.push(id);
+            localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
         }
         async function deletePost(postId) {
             if (!confirm('이 글을 삭제할까요?')) return;
@@ -289,10 +295,20 @@
             btn.textContent = commentBtnLabel(count);
             btn.style.cssText = `background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(count)}`;
         }
-        function toggleComments(postId) {
-            const section = document.getElementById(`comments-${postId}`);
-            const willOpen = section.style.display === 'none';
-            section.style.display = willOpen ? 'block' : 'none';
+        // 목록에서는 짧은 미리보기만, 줄바꿈은 자연스러운 공백으로 정리해서 2줄 정도만 보이게
+        function makePreview(content, maxLen = 90) {
+            const flat = String(content ?? '').replace(/\s*\n+\s*/g, ' ').trim();
+            return flat.length > maxLen ? flat.slice(0, maxLen) + '…' : flat;
+        }
+        // 제목/미리보기를 누르면 전체 본문 + 댓글을 함께 펼쳐서 보여줌
+        function toggleThread(postId) {
+            const full = document.getElementById(`full-${postId}`);
+            const preview = document.getElementById(`preview-${postId}`);
+            const comments = document.getElementById(`comments-${postId}`);
+            const willOpen = full.style.display === 'none';
+            full.style.display = willOpen ? 'block' : 'none';
+            preview.style.display = willOpen ? 'none' : '-webkit-box';
+            comments.style.display = willOpen ? 'block' : 'none';
             if (willOpen) loadComments(postId);
         }
         async function loadComments(postId) {
@@ -340,17 +356,20 @@
                         <span class="feed-author">${escapeHtml(p.userid)}</span>
                         <span class="feed-time">${timeAgo(p.created_at)}</span>
                     </div>
-                    <div class="feed-content">
+                    <div class="feed-content" onclick="toggleThread(${p.id})">
                         <h3>${escapeHtml(p.title)}</h3>
-                        <p>${escapeHtml(p.content)}</p>
+                        <p class="feed-preview" id="preview-${p.id}">${escapeHtml(makePreview(p.content))}</p>
+                        <div class="feed-full" id="full-${p.id}" style="display:none;">
+                            <p class="feed-full-text">${escapeHtml(p.content)}</p>
+                        </div>
                     </div>
                     <div class="feed-bottom">
                         <div class="feed-stats">
                             <span class="stat-item">
-                                <button onclick="likePost(${p.id}, this)" data-count="${p.likes}" style="background:none;border:none;cursor:pointer;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;">👍 ${p.likes}</button>
+                                <button onclick="event.stopPropagation(); likePost(${p.id}, this)" data-count="${p.likes}" ${likedPosts.includes(p.id) ? 'disabled' : ''} style="background:none;border:none;font-size:0.85rem;color:#475569;font-family:'Pretendard',sans-serif;${likedPosts.includes(p.id) ? 'cursor:not-allowed;opacity:0.55;' : 'cursor:pointer;'}">👍 ${p.likes}</button>
                             </span>
                             <span class="stat-item">
-                                <button id="cbtn-${p.id}" onclick="toggleComments(${p.id})" data-count="${p.comment_count || 0}" style="background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(p.comment_count)}">${commentBtnLabel(p.comment_count)}</button>
+                                <button id="cbtn-${p.id}" onclick="event.stopPropagation(); toggleThread(${p.id})" data-count="${p.comment_count || 0}" style="background:none;border:none;cursor:pointer;font-size:0.85rem;font-family:'Pretendard',sans-serif;${commentBtnStyle(p.comment_count)}">${commentBtnLabel(p.comment_count)}</button>
                             </span>
                         </div>
                         <div style="display:flex;align-items:center;gap:0.5rem;">

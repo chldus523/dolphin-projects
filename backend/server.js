@@ -79,19 +79,27 @@ try {
     console.warn('⚠️ policies.json 로드 실패, 기본 데이터 사용:', e.message);
 }
 
+// 정보탐색 페이지(explore.html)와 반드시 동일하게 유지해야 하는 6개 카테고리.
+// policies.json의 '카테고리' 값과 정확히 일치해야 필터가 실제로 동작한다.
+const POLICY_CATEGORIES = ['돌봄', '주거', '금융', '생활', '교육·취업', '건강·심리'];
+
 function filterPolicies(userMessage, profile = null) {
     const ageMatch = userMessage.match(/(\d+)\s*(?:살|세)/);
     const profileAge = profile && parseInt(profile.age, 10);
     const age = Number.isFinite(profileAge) ? profileAge : (ageMatch ? parseInt(ageMatch[1]) : null);
 
+    // 사용자가 쓰는 다양한 표현을 6개 공식 카테고리 중 하나로 변환한다.
+    // (기존 코드는 '취업'/'건강' 키로 필터링했는데, 실제 데이터 카테고리는
+    //  '교육·취업' / '건강·심리' 라서 단 한 건도 매칭되지 않는 버그가 있었음)
     const keywords = {
-        돌봄: /돌봄|돌봐|간병|치매|장애|요양/.test(userMessage),
-        주거: /월세|주거|집|임대|전세|보증/.test(userMessage),
-        취업: /취업|일자리|직업|구직|알바|자격증/.test(userMessage),
-        금융: /저축|계좌|도약|금융|적금/.test(userMessage),
-        생활: /생활|식비|의료|건강|문화/.test(userMessage),
+        '돌봄':     /돌봄|돌봐|간병|치매|장애|요양/.test(userMessage),
+        '주거':     /월세|주거|집|임대|전세|보증/.test(userMessage),
+        '금융':     /저축|계좌|도약|금융|적금/.test(userMessage),
+        '생활':     /생활비|식비|문화|긴급지원|생계/.test(userMessage),
+        '교육·취업': /취업|일자리|직업|구직|알바|자격증|교육|학자금|훈련|장학/.test(userMessage),
+        '건강·심리': /건강|의료|병원|심리|상담|정신|우울|스트레스/.test(userMessage),
     };
-    const activeCategories = Object.keys(keywords).filter(k => keywords[k]);
+    const activeCategories = POLICY_CATEGORIES.filter(cat => keywords[cat]);
 
     let filtered = POLICIES;
 
@@ -118,12 +126,20 @@ function filterPolicies(userMessage, profile = null) {
         if (guFiltered.length > 0) filtered = guFiltered;
     }
 
+    // 카테고리 의도가 감지됐는데도 매칭되는 정책이 하나도 없다면,
+    // 무관한 카테고리 정책을 그대로 섞어 보내지 않고 "결과 없음"으로 명확히 표시한다.
+    let categoryNoMatch = false;
     if (activeCategories.length > 0) {
         const catFiltered = filtered.filter(p => activeCategories.includes(p['카테고리']));
-        if (catFiltered.length > 0) filtered = catFiltered;
+        if (catFiltered.length > 0) {
+            filtered = catFiltered;
+        } else {
+            categoryNoMatch = true;
+            filtered = [];
+        }
     }
 
-    return filtered.slice(0, 15);
+    return { policies: filtered.slice(0, 5), categoryNoMatch, matchedCategories: activeCategories };
 }
 
 const INCOME_FLOOR = { '1순위': 0, '2순위': 120, '전체': 150 };
@@ -168,10 +184,19 @@ function buildProfileText(profile) {
     ].join('\n');
 }
 
+// 정책을 15개 짧게 자르는 대신, 관련도 높은 최대 5개를 충분한 정보와 함께 전달한다.
 function buildPolicyText(policies) {
-    return policies.map(p => {
-        return `[${p['정책명']}] 카테고리:${p['카테고리']} | 연령:${p['최소_연령']}~${p['최대_연령']}세 | 소득:${p['소득_기준']} | 혜택:${p['지원_금액(혜택)'].slice(0,50)} | 신청:${p['신청_기간']} | 서류:${(p['제출_서류'] || '').slice(0,60)}`;
-    }).join('\n');
+    if (!policies.length) return '(조건에 맞는 정책을 찾지 못했습니다)';
+    return policies.map((p, i) => [
+        `${i + 1}. [${p['정책명']}] (카테고리: ${p['카테고리']})`,
+        `- 신청 대상: 만 ${p['최소_연령']}~${p['최대_연령']}세 / 가구 조건: ${p['가구수_조건'] || '제한없음'}`,
+        `- 소득 기준: ${p['소득_기준'] || '제한없음'} / 재산 기준: ${p['재산_기준'] || '-'}`,
+        `- 지원 내용: ${p['지원_금액(혜택)']}`,
+        `- 신청 기간: ${p['신청_기간']}`,
+        `- 필요 서류: ${p['제출_서류'] || '해당 기관에 문의'}`,
+        `- 담당 기관 / 안내처: ${p['참조_링크'] || '관할 행정복지센터'}`,
+        `- 유의사항(중복 제한 등): ${p['중복_제한_ID'] || '특이사항 없음'}`,
+    ].join('\n')).join('\n\n');
 }
 
 const PROFANITY_PATTERNS = [/씨발|시발|개새끼|병신|지랄|꺼져|닥쳐|미친놈|미친년/];
@@ -188,9 +213,12 @@ function checkInputGuardrail(messages) {
     return { blocked: false };
 }
 
-function buildSystemPrompt(filteredPolicies, profile = null) {
+function buildSystemPrompt(filteredPolicies, profile = null, matchInfo = {}) {
     const policyText = buildPolicyText(filteredPolicies);
     const profileText = buildProfileText(profile);
+    const noMatchNote = matchInfo.categoryNoMatch
+        ? `\n[검색 결과 안내]\n사용자의 질문은 "${(matchInfo.matchedCategories || []).join(', ')}" 관련 내용으로 보이지만, 현재 데이터베이스에는 조건에 맞는 정책이 없다. 이 경우 무관한 다른 카테고리의 정책을 대신 추천하지 말 것. 대신 페르소나(따뜻하고 공감적인 말투)를 유지하면서, 예를 들어 "지금 확인해보니 말씀하신 조건에 딱 맞는 정책은 저희가 갖고 있는 목록에는 없어요 :( 다만 관할 행정복지센터나 복지로(www.bokjiro.go.kr)에는 더 다양한 정책이 있을 수 있으니 함께 확인해보시는 것도 좋아요"처럼 부드럽고 미안한 티가 나지 않게, 딱딱하게 "없습니다"라고 단정짓지 않으면서 안내한다. 필요하면 나이·소득·지역 등 조건을 다시 확인하는 질문을 자연스럽게 이어간다.\n`
+        : '';
 
     return `
 [언어 규칙 - 절대 위반 금지]
@@ -230,11 +258,13 @@ URL이 불명확하면 "해당 기관에 직접 문의하거나 복지로(www.bo
 
 3. 서류 안내: 사용자가 특정 정책의 서류나 신청 방법을 물으면, 아래 데이터의 서류 항목을 번호 목록으로 직접 안내한다. 절대 "어떤 어려움을 겪고 계신지 알려주세요"처럼 회피하지 않는다.
 
+4. 추천 이유 설명: 정책을 소개할 때는 왜 이 사용자에게 해당되는지(나이·소득·가구 조건이 어떻게 부합하는지)를 한두 문장으로 함께 설명한다.
+
 ${profileText}
 
 [정책 데이터베이스 - ${filteredPolicies.length}개 조건 매칭]
 ${policyText}
-
+${noMatchNote}
 [대화 원칙]
 절대 위 데이터에 없는 복지 제도를 만들어내거나 확실하지 않은 정보를 단정지어 말하지 말 것.
 불확실한 정보는 "정확한 내용은 관할 행정복지센터나 복지로(www.bokjiro.go.kr)에서 확인하시는 것을 추천드려요"라고 안내한다.
@@ -389,13 +419,13 @@ app.post('/chat', async (req, res) => {
         return res.json({ reply: guardrail.message });
     }
     const lastUserMessage = messages.filter(m => m.role === 'user').map(m => m.content).join(' ');
-    const filteredPolicies = filterPolicies(lastUserMessage, profile);
-    console.log(`[정책 필터링] ${POLICIES.length}개 → ${filteredPolicies.length}개`);
+    const { policies: filteredPolicies, categoryNoMatch, matchedCategories } = filterPolicies(lastUserMessage, profile);
+    console.log(`[정책 필터링] ${POLICIES.length}개 → ${filteredPolicies.length}개 (카테고리 매칭 실패=${categoryNoMatch})`);
     try {
         const completion = await groq.chat.completions.create({
             model: CHAT_MODEL,
             messages: [
-                { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) },
+                { role: 'system', content: buildSystemPrompt(filteredPolicies, profile, { categoryNoMatch, matchedCategories }) },
                 ...messages.slice(-20)
             ],
             temperature: 0.6,
@@ -410,7 +440,7 @@ app.post('/chat', async (req, res) => {
                 const retry = await groq.chat.completions.create({
                     model: CHAT_MODEL,
                     messages: [
-                        { role: 'system', content: buildSystemPrompt(filteredPolicies, profile) + '\n\n[경고] 방금 외국어가 섞인 답변이 감지됐습니다. 반드시 순수 한국어로만 답변하세요.' },
+                        { role: 'system', content: buildSystemPrompt(filteredPolicies, profile, { categoryNoMatch, matchedCategories }) + '\n\n[경고] 방금 외국어가 섞인 답변이 감지됐습니다. 반드시 순수 한국어로만 답변하세요.' },
                         ...messages.slice(-20)
                     ],
                     temperature: 0.1,
