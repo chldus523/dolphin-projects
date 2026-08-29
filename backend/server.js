@@ -202,13 +202,18 @@ function buildPolicyText(policies) {
 const PROFANITY_PATTERNS = [/씨발|시발|개새끼|병신|지랄|꺼져|닥쳐|미친놈|미친년/];
 const PII_PATTERNS = [/\d{6}[-\s]?\d{7}/, /\d{3}[-\s]?\d{3,4}[-\s]?\d{4}/, /\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}/];
 
+// 가드레일은 "사용자가 입력한 내용"만 검사해야 한다.
+// (예전 코드는 messages 배열 전체(=챗봇 자신의 과거 답변까지) 이어붙여서 검사했는데,
+//  챗봇 답변에 포함된 URL의 쿼리 파라미터 숫자(예: ?key=2309130006)가
+//  전화번호 패턴과 우연히 일치해서, 한 번 걸리면 그 뒤 대화 내내 계속
+//  "개인정보 포함"으로 오탐되는 버그가 있었다.)
 function checkInputGuardrail(messages) {
-    const allText = messages.map(m => m.content || '').join(' ');
+    const userText = messages.filter(m => m.role === 'user').map(m => m.content || '').join(' ');
     for (const pattern of PROFANITY_PATTERNS) {
-        if (pattern.test(allText)) return { blocked: true, reason: 'profanity', message: '죄송해요, 욕설이나 비속어가 포함된 메시지에는 답변하기 어려워요. 편안한 말투로 다시 질문해 주시면 성심껏 도와드릴게요 🐬' };
+        if (pattern.test(userText)) return { blocked: true, reason: 'profanity', message: '죄송해요, 욕설이나 비속어가 포함된 메시지에는 답변하기 어려워요. 편안한 말투로 다시 질문해 주시면 성심껏 도와드릴게요 🐬' };
     }
     for (const pattern of PII_PATTERNS) {
-        if (pattern.test(allText)) return { blocked: true, reason: 'pii', message: '주민등록번호, 전화번호, 카드번호 같은 개인정보는 채팅으로 입력하지 말아주세요! 안전을 위해 해당 내용을 빼고 다시 질문해 주시면 안내해 드릴게요 🔒' };
+        if (pattern.test(userText)) return { blocked: true, reason: 'pii', message: '주민등록번호, 전화번호, 카드번호 같은 개인정보는 채팅으로 입력하지 말아주세요! 안전을 위해 해당 내용을 빼고 다시 질문해 주시면 안내해 드릴게요 🔒' };
     }
     return { blocked: false };
 }
