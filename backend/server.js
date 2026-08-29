@@ -103,6 +103,10 @@ function filterPolicies(userMessage, profile = null) {
 
     let filtered = POLICIES;
 
+    // 신청 기간이 명확하게 지난 정책은 애초에 후보에서 제외한다.
+    const notExpired = filtered.filter(p => !isApplicationPeriodClearlyExpired(p['신청_기간']));
+    if (notExpired.length > 0) filtered = notExpired;
+
     if (age !== null) {
         const ageFiltered = filtered.filter(p => {
             const min = parseInt(p['최소_연령']) || 0;
@@ -143,6 +147,30 @@ function filterPolicies(userMessage, profile = null) {
 }
 
 const INCOME_FLOOR = { '1순위': 0, '2순위': 120, '전체': 150 };
+
+// 명확하게 마감이 지난 정책만 걸러낸다 (애매하면 절대 걸러내지 않음 - 잘못 걸러내는 게 더 위험하므로 보수적으로 판단).
+// "상시", "-", "매년 O월" 같은 반복/불명확 표현은 건드리지 않고, 시스템 프롬프트에서 모델이
+// 그 불확실성을 사용자에게 솔직히 안내하도록 별도로 지시한다.
+function isApplicationPeriodClearlyExpired(periodText, today = new Date()) {
+    const text = (periodText || '').trim();
+    if (!text || text === '-' ) return false;
+
+    // 패턴 1: "26.06.15~26.12.31" 같은 YY.MM.DD~YY.MM.DD 형식
+    let m = text.match(/(\d{2})\.(\d{1,2})\.(\d{1,2})\s*~\s*(\d{2})\.(\d{1,2})\.(\d{1,2})/);
+    if (m) {
+        const endDate = new Date(2000 + parseInt(m[4]), parseInt(m[5]) - 1, parseInt(m[6]));
+        return endDate < today;
+    }
+
+    // 패턴 2: "~2026년 2월 배분 예정" 처럼 특정 연월이 마감/종료 시점으로 명시된 경우
+    m = text.match(/~\s*(\d{4})년\s*(\d{1,2})월/);
+    if (m) {
+        const endOfMonth = new Date(parseInt(m[1]), parseInt(m[2]), 0); // 그 달 마지막 날
+        return endOfMonth < today;
+    }
+
+    return false; // 판단 불가능한 표현은 건드리지 않는다
+}
 
 function userIncomePct(profile) {
     if (!profile) return null;
@@ -264,6 +292,12 @@ URL이 불명확하면 "해당 기관에 직접 문의하거나 복지로(www.bo
 3. 서류 안내: 사용자가 특정 정책의 서류나 신청 방법을 물으면, 아래 데이터의 서류 항목을 번호 목록으로 직접 안내한다. 절대 "어떤 어려움을 겪고 계신지 알려주세요"처럼 회피하지 않는다.
 
 4. 추천 이유 설명: 정책을 소개할 때는 왜 이 사용자에게 해당되는지(나이·소득·가구 조건이 어떻게 부합하는지)를 한두 문장으로 함께 설명한다.
+
+5. 신청 기간 안내 - 중요 규칙:
+오늘 날짜는 ${new Date().toISOString().slice(0, 10)} 이다.
+정책 데이터의 "신청 기간"이 "-"(정보 없음)이거나 애매하면, "지금 신청 가능해요"처럼 단정적으로 말하지 말 것. 대신 "신청 기간 정보가 별도로 없으니, 안내 페이지나 담당 기관에서 최신 신청 가능 여부를 꼭 확인해 보세요"처럼 솔직하게 안내한다.
+신청 기간이 "매년 O월", "매년 초 공고"처럼 매년 반복되는 표현이면, 이미 올해 그 시기가 지났을 수 있으니 "올해 신청 시기는 지났을 수 있어요. 내년 O월경 다시 확인해 보세요"처럼 시점을 감안해서 안내한다.
+신청 기간이 구체적인 날짜로 명시돼 있으면 그 기간 안에 있는지 오늘 날짜와 비교해서 안내한다.
 
 ${profileText}
 
