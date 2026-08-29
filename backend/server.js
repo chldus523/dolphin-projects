@@ -432,6 +432,31 @@ app.post('/posts', (req, res) => {
     });
 });
 
+// 본인 글만 수정 가능
+app.put('/posts/:id', (req, res) => {
+    const userid = req.session.userid;
+    if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
+    const category = (req.body.category || '').trim();
+    const title    = (req.body.title || '').trim();
+    const content  = (req.body.content || '').trim();
+    if (!category || !title || !content) return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
+    if (title.length < 2 || title.length > 100) return res.status(400).json({ error: '제목은 2자 이상 100자 이내로 입력해 주세요.' });
+    if (content.length < 10 || content.length > 2000) return res.status(400).json({ error: '내용은 10자 이상 2000자 이내로 입력해 주세요.' });
+    db.query('SELECT userid FROM posts WHERE id = ?', [req.params.id], (err, rows) => {
+        if (err) return res.status(500).json({ error: '수정 실패' });
+        if (rows.length === 0) return res.status(404).json({ error: '글을 찾을 수 없습니다.' });
+        if (rows[0].userid !== userid) return res.status(403).json({ error: '본인이 작성한 글만 수정할 수 있습니다.' });
+        db.query(
+            'UPDATE posts SET category = ?, title = ?, content = ?, updated_at = NOW() WHERE id = ?',
+            [category, title, content, req.params.id],
+            (err2) => {
+                if (err2) return res.status(500).json({ error: '수정 실패' });
+                res.json({ success: true });
+            }
+        );
+    });
+});
+
 app.delete('/posts/:id', (req, res) => {
     const userid = req.session.userid;
     if (!userid) return res.status(401).json({ error: '로그인이 필요합니다.' });
